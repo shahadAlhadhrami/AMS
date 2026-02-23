@@ -6,7 +6,7 @@ This document maps out the Data Flow Diagram (DFD) for the AMS from Level 0 (Con
 The Level 0 context diagram defines the boundary of the AMS system and its primary interactions with external entities.
 
 ```mermaid
-graph TD
+flowchart TD
     %% External Entities
     Coord([Coordinator])
     Sup([Supervisor])
@@ -15,7 +15,7 @@ graph TD
     SIS([Student Information System / External])
 
     %% Main System Process
-    System{{Assessment Management System (AMS)}}
+    System[Assessment Management System - AMS]
 
     %% Data Flows (Coordinator)
     Coord -- "Master Data (Users, Courses)" --> System
