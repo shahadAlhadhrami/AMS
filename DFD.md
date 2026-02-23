@@ -6,40 +6,43 @@ This document maps out the Data Flow Diagram (DFD) for the AMS from Level 0 (Con
 The Level 0 context diagram defines the boundary of the AMS system and its primary interactions with external entities.
 
 ```mermaid
-flowchart TD
-    %% External Entities
-    Coord([Coordinator])
-    Sup([Supervisor])
-    Rev([Reviewer])
-    Stu([Student])
-    SIS([Student Information System / External])
+flowchart LR
+    %% Professional Styling
+    classDef system fill:#2563eb,color:#fff,stroke:#1e40af,stroke-width:4px,font-weight:bold;
+    classDef entity fill:#f8fafc,stroke:#475569,stroke-width:2px,color:#1e293b;
 
-    %% Main System Process
-    System[Assessment Management System - AMS]
+    %% Central System
+    System[("Assessment Management System<br>(AMS Core)")]:::system
 
-    %% Data Flows (Coordinator)
-    Coord -- "Master Data (Users, Courses)" --> System
-    Coord -- "Workflow Rules (Phase Templates, Rubrics)" --> System
-    Coord -- "Semester/Project Allocations" --> System
-    Coord -- "Manual Override Scores" --> System
-    System -- "System Reports & Dashboard Data" --> Coord
+    %% External Entities (Left Side - Inputs)
+    subgraph Inputs [Administrators & Staff]
+        direction TB
+        Coord([Coordinator]):::entity
+        Sup([Supervisor]):::entity
+        Rev([Reviewer]):::entity
+    end
 
-    %% Data Flows (Supervisor)
-    Sup -- "Internal Marks (Group/Individual)" --> System
-    Sup -- "Proxy Evidence (If Needed)" --> System
-    System -- "Assigned Projects & Assessment Status" --> Sup
-    System -- "Consolidated Marks for Supervisees" --> Sup
+    %% External Entities (Right Side - Outputs/Consumers)
+    subgraph Outputs [Beneficiaries & External Systems]
+        direction TB
+        Stu([Student]):::entity
+        SIS([Student Info System]):::entity
+    end
 
-    %% Data Flows (Reviewer)
-    Rev -- "External Marks (Group/Individual)" --> System
-    System -- "Assigned Review Projects & Rubrics" --> Rev
+    %% Left Side Data Flows
+    Coord -- "Master Data & Rubrics" --> System
+    Coord -- "Project Allocations" --> System
+    Sup -- "Internal Marks" --> System
+    Rev -- "External Marks" --> System
 
-    %% Data Flows (Student)
-    System -- "Final Consolidated & Internal Marks" --> Stu
-    System -- "General Feedback" --> Stu
+    %% Right Side Data Flows
+    System -- "Final Dashboard" --> Coord
+    System -- "Supervisee Progress" --> Sup
+    System -- "Final & Internal Marks" --> Stu
+    System -- "Grade Export (CSV)" --> SIS
 
-    %% Data Flows (SIS)
-    System -- "Final Grades Export (CSV)" --> SIS
+    %% Spacing adjustments
+    Inputs ~~~ System ~~~ Outputs
 ```
 
 ---
@@ -53,65 +56,64 @@ The Level 1 DFD breaks down the main system into its distinct functional areas (
 *   **Data Stores (Databases):** Cylinders
 
 ```mermaid
-flowchart TD
+flowchart LR
+    %% Styling
+    classDef process fill:#eff6ff,stroke:#3b82f6,stroke-width:2px,color:#1e3a8a;
+    classDef store fill:#fff7ed,stroke:#c2410c,stroke-width:2px,color:#7c2d12;
+    classDef entity fill:#f8fafc,stroke:#475569,stroke-width:2px,color:#1e293b;
+
     %% External Entities
-    Coord([Coordinator])
-    Sup([Supervisor])
-    Rev([Reviewer])
-    Stu([Student])
-    SIS([Student Info System])
+    Coord([Coordinator]):::entity
+    Sup([Supervisor]):::entity
+    Rev([Reviewer]):::entity
+    Stu([Student]):::entity
+    SIS([Student Info System]):::entity
 
-    %% Data Stores
-    D1[(D1: Master Data)]
-    D2[(D2: Template Pool)]
-    D3[(D3: Academic Sandbox)]
-    D4[(D4: Evaluations)]
-    D5[(D5: Consolidated Marks)]
+    subgraph SetupPhase [1. System & Workflow Setup]
+        direction LR
+        P1((1.0 Manage Master Data)):::process
+        P2((2.0 Build Workflow Rules)):::process
+        P3((3.0 Configure Semester Sandbox)):::process
+        D1[(D1: Master Data)]:::store
+        D2[(D2: Template Pool)]:::store
+    end
 
-    %% Processes
-    P1((1.0 Manage<br>Master Data))
-    P2((2.0 Build<br>Workflow Rules))
-    P3((3.0 Configure<br>Semester Sandbox))
-    P4((4.0 Process<br>Assessments))
-    P5((5.0 Consolidate<br>Grades))
-    P6((6.0 Generate<br>Reports & Export))
+    subgraph ExecutionPhase [2. Assessment & Reporting]
+        direction LR
+        P4((4.0 Process Assessments)):::process
+        P5((5.0 Consolidate Grades)):::process
+        P6((6.0 Generate Reports & Export)):::process
+        D3[(D3: Academic Sandbox)]:::store
+        D4[(D5: Evaluations)]:::store
+        D5[(D6: Consolidated Marks)]:::store
+    end
 
-    %% Flows for P1 (Manage Master Data)
-    Coord -- "Upload/Edit Users, Specializations" --> P1
-    P1 -- "Store Core Entities" --> D1
+    %% Flows for Setup
+    Coord -- "Data" --> P1
+    P1 --> D1
+    Coord -- "Rubrics" --> P2
+    P2 --> D2
+    D1 -.-> P2
+    Coord -- "Allocations" --> P3
+    D1 -.-> P3
+    D2 -.-> P3
+    P3 --> D3
 
-    %% Flows for P2 (Build Workflow Rules)
-    Coord -- "Create Criteria, Rubrics, Phase logic" --> P2
-    P2 -- "Save Templates" --> D2
-    D1 -. "Validate Roles" .-> P2
-
-    %% Flows for P3 (Configure Semester Sandbox)
-    Coord -- "Define Semester, Upload Project Allocations" --> P3
-    D1 -. "Fetch Students/Staff" .-> P3
-    D2 -. "Fetch Form Rules" .-> P3
-    P3 -- "Save Active Project Groupings" --> D3
-
-    %% Flows for P4 (Process Assessments)
-    D3 -. "Fetch Active Project State" .-> P4
-    D2 -. "Fetch Required Rubric Form" .-> P4
-    Sup -- "Submit Supervisor Rubrics" --> P4
-    Rev -- "Submit Reviewer Rubrics" --> P4
-    Coord -- "Unlock Assessment Request" --> P4
-    P4 -- "Store Scores & Feedback" --> D4
-
-    %% Flows for P5 (Consolidate Grades)
-    D4 -. "Read Completed Evaluations" .-> P5
-    D3 -. "Fetch Phase Logic" .-> P5
-    P5 -- "Calculate Auto-Math & Overrides" --> D5
-    Coord -- "Override Request" --> P5
-
-    %% Flows for P6 (Generate Reports)
-    D5 -. "Read Final Scores" .-> P6
-    D4 -. "Read Component Scores" .-> P6
-    P6 -- "Display Allowed Marks" --> Stu
-    P6 -- "Export File" --> SIS
+    %% Flows for Execution
+    D3 -.-> P4
+    D2 -.-> P4
+    Sup -- "Marks" --> P4
+    Rev -- "Marks" --> P4
+    P4 --> D4
+    D4 -.-> P5
+    D3 -.-> P5
+    P5 --> D5
+    Coord -- "Overrides" --> P5
+    D5 -.-> P6
+    D4 -.-> P6
+    P6 -- "Reports" --> Stu
+    P6 -- "Exports" --> SIS
     P6 -- "Dashboards" --> Coord
-    P6 -- "Supervisee Dashboards" --> Sup
 ```
 
 ### Detailed Breakdown of Level 1 Processes
