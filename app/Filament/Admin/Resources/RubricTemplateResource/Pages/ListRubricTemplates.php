@@ -87,7 +87,7 @@ class ListRubricTemplates extends ListRecords
             return;
         }
 
-        $headers = fgetcsv($handle);
+        $headers = fgetcsv($handle, length: 0, escape: '');
         if (! $headers) {
             fclose($handle);
             Notification::make()
@@ -112,7 +112,7 @@ class ListRubricTemplates extends ListRecords
 
         $rows = [];
         $rowNumber = 1;
-        while (($row = fgetcsv($handle)) !== false) {
+        while (($row = fgetcsv($handle, length: 0, escape: '')) !== false) {
             $rowNumber++;
             $rowData = array_combine($headers, array_pad($row, count($headers), ''));
             $rows[] = $rowData;

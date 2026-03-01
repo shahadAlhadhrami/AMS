@@ -109,7 +109,7 @@ class BulkImportUsers extends Page
             return;
         }
 
-        $headers = fgetcsv($handle);
+        $headers = fgetcsv($handle, length: 0, escape: '');
 
         if (! $headers) {
             fclose($handle);
@@ -139,7 +139,7 @@ class BulkImportUsers extends Page
         $rows = [];
         $rowNumber = 1;
 
-        while (($row = fgetcsv($handle)) !== false) {
+        while (($row = fgetcsv($handle, length: 0, escape: '')) !== false) {
             $rowNumber++;
             $rowData = array_combine($headers, array_pad($row, count($headers), ''));
             $rowData['_row'] = $rowNumber;
