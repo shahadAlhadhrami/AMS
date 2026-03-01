@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\Criterion;
+use App\Observers\CriterionObserver;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -23,5 +25,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::before(function ($user, $ability) {
             return $user->hasRole('Super Admin') ? true : null;
         });
+
+        Criterion::observe(CriterionObserver::class);
     }
 }

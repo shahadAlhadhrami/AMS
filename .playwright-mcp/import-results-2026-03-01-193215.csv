@@ -1,0 +1,4 @@
+university_id,name,email,role,password
+STU001,"Alice Student",alice@ams.test,Student,VzdQeOzKF5dc
+STU002,"Bob Reviewer",bob@ams.test,Reviewer,JyihacGGDty3
+STU003,"Carol Supervisor",carol@ams.test,Supervisor,b3vZY04lY9aE
