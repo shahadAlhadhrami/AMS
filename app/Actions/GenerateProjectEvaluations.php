@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Models\Evaluation;
 use App\Models\Project;
+use App\Notifications\EvaluatorAssignedNotification;
 use Illuminate\Support\Facades\DB;
 
 class GenerateProjectEvaluations
@@ -56,6 +57,7 @@ class GenerateProjectEvaluations
 
                     if ($evaluation->wasRecentlyCreated) {
                         $createdCount++;
+                        $evaluation->evaluator->notify(new EvaluatorAssignedNotification($project, $evaluation));
                     }
                 }
             }

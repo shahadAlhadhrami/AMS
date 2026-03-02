@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Evaluation;
 use App\Models\EvaluationScore;
+use App\Notifications\AllEvaluationsSubmittedNotification;
 use Illuminate\Support\Facades\DB;
 
 class EvaluationService
@@ -145,6 +146,22 @@ class EvaluationService
         }
 
         $evaluation->update(['status' => 'submitted']);
+
+        // Check if all evaluations for this project are now submitted
+        $project = $evaluation->project;
+        $allSubmitted = ! $project->evaluations()
+            ->where('status', '!=', 'submitted')
+            ->exists();
+
+        if ($allSubmitted) {
+            app(GradeConsolidationService::class)->consolidate($project);
+
+            // Notify coordinators that all evaluations are submitted
+            $project->load('semester.coordinators');
+            foreach ($project->semester->coordinators as $coordinator) {
+                $coordinator->notify(new AllEvaluationsSubmittedNotification($project));
+            }
+        }
 
         return true;
     }

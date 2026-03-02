@@ -2,24 +2,24 @@
 
 namespace App\Policies;
 
-use App\Models\Evaluation;
+use App\Models\ConsolidatedMark;
 use App\Models\User;
 
-class EvaluationPolicy
+class ConsolidatedMarkPolicy
 {
     public function viewAny(User $user): bool
     {
         return $user->hasAnyRole(['Super Admin', 'Coordinator']);
     }
 
-    public function view(User $user, Evaluation $evaluation): bool
+    public function view(User $user, ConsolidatedMark $consolidatedMark): bool
     {
         if ($user->hasRole('Super Admin')) {
             return true;
         }
 
         return $user->hasRole('Coordinator')
-            && $evaluation->project->semester->coordinators()
+            && $consolidatedMark->project->semester->coordinators()
                 ->where('users.id', $user->id)
                 ->exists();
     }
@@ -29,12 +29,12 @@ class EvaluationPolicy
         return false;
     }
 
-    public function update(User $user, Evaluation $evaluation): bool
+    public function update(User $user, ConsolidatedMark $consolidatedMark): bool
     {
         return false;
     }
 
-    public function delete(User $user, Evaluation $evaluation): bool
+    public function delete(User $user, ConsolidatedMark $consolidatedMark): bool
     {
         return false;
     }

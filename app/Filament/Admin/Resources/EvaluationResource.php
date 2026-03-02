@@ -4,6 +4,7 @@ namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\EvaluationResource\Pages;
 use App\Models\Evaluation;
+use App\Notifications\EvaluationUnlockedNotification;
 use Filament\Actions;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
@@ -110,6 +111,13 @@ class EvaluationResource extends Resource
                             'status' => 'draft',
                             'unlocked_by' => auth()->id(),
                         ]);
+
+                        // Clear stale consolidated marks and reset project status
+                        $record->project->consolidatedMarks()->delete();
+                        $record->project->update(['status' => 'evaluating']);
+
+                        // Notify evaluator that their evaluation was unlocked
+                        $record->evaluator->notify(new EvaluationUnlockedNotification($record));
                     })
                     ->visible(fn (Evaluation $record): bool => $record->status === 'submitted'),
                 Actions\Action::make('proxyEntry')
