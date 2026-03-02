@@ -411,26 +411,28 @@ Admin Panel (/admin)
 
 ---
 
-### A-13: Bulk Import Page
+### A-13: Bulk Import (Distributed Architecture)
 
 | Field | Value |
 |-------|-------|
-| **Filament Type** | Custom Page (`Pages/BulkImport.php`) |
-| **Purpose** | Centralized CSV upload interface |
-| **Navigation** | Sidebar → Tools → Bulk Import |
+| **Status** | Implemented (distributed across multiple screens) |
 | **Access** | Coordinator |
 
-**UI Structure — Tabs:**
+> **Architecture Decision:** The original design specified a single page with 3 tabs. During implementation, the import functionality was distributed to place each import action where users naturally expect it. This provides better UX since users can import directly from the relevant resource page.
 
-| Tab | Fields | Result |
-|-----|--------|--------|
-| **Import Users** | FileUpload (CSV), column mapping preview, "Import" button, download template link | Creates user records with roles |
-| **Import Projects & Groups** | FileUpload (CSV), column mapping preview, "Import" button, download template link | Creates projects, assigns students, supervisor, reviewers |
-| **Import Rubric** | FileUpload (CSV), rubric structure preview, "Import" button, download template link | Creates one rubric template with criteria and score levels |
+**Implemented Import Locations:**
 
-Each tab shows:
+| Import Type | Location | File |
+|-------------|----------|------|
+| **Import Users** | Standalone page: Sidebar → Tools → Bulk Import | `Pages/BulkImportUsers.php` |
+| **Import Projects & Groups** | Header action on Projects list page: Sidebar → Academic Setup → Projects → "Import from CSV" button | `ProjectResource/Pages/ListProjects.php` |
+| **Import Rubric** | Header action on Rubric Templates list page: Sidebar → Template Pool → Rubric Templates → "Import from CSV" button | `RubricTemplateResource/Pages/ListRubricTemplates.php` |
+
+All imports include:
+- CSV file upload with validation
+- Preview with row-by-row validation and error reporting
+- Download template functionality
 - Success/error count after import
-- Detailed error log with row numbers for failed records
 
 ---
 
@@ -456,16 +458,21 @@ Each tab shows:
 | Field | Value |
 |-------|-------|
 | **Filament Type** | Custom Page with Wizard component (`Pages/SemesterSetupWizard.php`) |
+| **Status** | Implemented |
 | **Purpose** | Guided flow for setting up a new semester end-to-end |
-| **Navigation** | Sidebar → Academic Setup (or action button from Semester list) |
-| **Access** | Coordinator |
-| **Priority** | Could (convenience feature; all steps can be done individually via other screens) |
+| **Navigation** | Sidebar → Academic Setup → Semester Setup Wizard (also accessible via "Setup Wizard" button on Semester list) |
+| **Access** | Super Admin, Coordinator |
 
 **Wizard Steps:**
-1. **Create Semester** — name, academic_year, dates
-2. **Select Phase Template(s)** — choose from pool
-3. **Import/Create Projects** — manual form or CSV upload
-4. **Review Summary** — overview of created semester data
+1. **Create Semester** — name, academic_year, start_date, end_date (auto-assigns current coordinator)
+2. **Select Phase Template(s)** — CheckboxList from phase template pool (filters Step 3 options)
+3. **Import/Create Projects** — Radio toggle between Manual entry (Repeater form) or CSV import (with preview & validation), or Skip
+4. **Review Summary** — Read-only overview of semester, selected templates, and created projects
+
+**Key Features:**
+- Idempotent: going back to Step 1 updates the existing semester rather than creating a duplicate
+- Step 3 CSV import reuses the same validation rules as the standalone Projects CSV import
+- "Finish Setup" button redirects to the Semester edit page
 
 ---
 
