@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use Illuminate\Support\HtmlString;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -27,6 +28,7 @@ class StudentPanelProvider extends PanelProvider
             ->login()
             ->passwordReset()
             ->profile()
+            ->brandName(new HtmlString('<style>@import url("https://fonts.googleapis.com/css2?family=Anta&display=swap");</style><div style="width:100%; text-align:center;"><span style="font-family: \'Anta\', sans-serif; font-weight:400; letter-spacing:0.08em; font-size:2.5rem; line-height:1; color:#d97706;">AMS</span></div>'))
             ->colors([
                 'primary' => Color::Amber,
             ])
