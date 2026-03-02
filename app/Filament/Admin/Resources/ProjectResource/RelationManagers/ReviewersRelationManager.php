@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Resources\ProjectResource\RelationManagers;
 
 use App\Models\User;
+use Filament\Actions;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -24,7 +25,7 @@ class ReviewersRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('email'),
             ])
             ->headerActions([
-                Tables\Actions\AttachAction::make()
+                Actions\AttachAction::make()
                     ->recordSelectOptionsQuery(function (Builder $query) {
                         $supervisorId = $this->ownerRecord->supervisor_id;
 
@@ -34,7 +35,7 @@ class ReviewersRelationManager extends RelationManager
                     ->recordTitle(fn (User $record): string => "{$record->name} ({$record->university_id})")
                     ->preloadRecordSelect()
                     ->searchable()
-                    ->form(fn (Tables\Actions\AttachAction $action): array => [
+                    ->form(fn (Actions\AttachAction $action): array => [
                         $action->getRecordSelect()
                             ->rules([
                                 function () {
@@ -51,10 +52,10 @@ class ReviewersRelationManager extends RelationManager
                     ]),
             ])
             ->actions([
-                Tables\Actions\DetachAction::make(),
+                Actions\DetachAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\DetachBulkAction::make(),
+                Actions\DetachBulkAction::make(),
             ]);
     }
 }

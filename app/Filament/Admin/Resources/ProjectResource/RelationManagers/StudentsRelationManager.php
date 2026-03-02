@@ -4,6 +4,7 @@ namespace App\Filament\Admin\Resources\ProjectResource\RelationManagers;
 
 use App\Models\Project;
 use App\Models\User;
+use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
@@ -26,14 +27,14 @@ class StudentsRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('email'),
             ])
             ->headerActions([
-                Tables\Actions\AttachAction::make()
+                Actions\AttachAction::make()
                     ->recordSelectOptionsQuery(function (Builder $query) {
                         return $query->role('Student');
                     })
                     ->recordTitle(fn (User $record): string => "{$record->name} ({$record->university_id})")
                     ->preloadRecordSelect()
                     ->searchable()
-                    ->form(fn (Tables\Actions\AttachAction $action): array => [
+                    ->form(fn (Actions\AttachAction $action): array => [
                         $action->getRecordSelect()
                             ->rules([
                                 function () {
@@ -65,10 +66,10 @@ class StudentsRelationManager extends RelationManager
                     ]),
             ])
             ->actions([
-                Tables\Actions\DetachAction::make(),
+                Actions\DetachAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\DetachBulkAction::make(),
+                Actions\DetachBulkAction::make(),
             ]);
     }
 }

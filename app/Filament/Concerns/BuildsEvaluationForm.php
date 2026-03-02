@@ -4,6 +4,8 @@ namespace App\Filament\Concerns;
 
 use App\Models\Criterion;
 use Filament\Forms;
+use Filament\Schemas\Components\Fieldset;
+use Filament\Schemas\Components\Section;
 
 trait BuildsEvaluationForm
 {
@@ -21,7 +23,7 @@ trait BuildsEvaluationForm
         $groupCriteria = $criteria->where('is_individual', false);
 
         if ($groupCriteria->isNotEmpty()) {
-            $schema[] = Forms\Components\Section::make('Group Criteria')
+            $schema[] = Section::make('Group Criteria')
                 ->description('These criteria are scored once for the entire group.')
                 ->schema(
                     $groupCriteria->flatMap(fn (Criterion $criterion) => $this->buildCriterionFields($criterion, null, $isReadOnly)
@@ -33,13 +35,13 @@ trait BuildsEvaluationForm
         $individualCriteria = $criteria->where('is_individual', true);
 
         if ($individualCriteria->isNotEmpty()) {
-            $schema[] = Forms\Components\Section::make('Individual Criteria')
+            $schema[] = Section::make('Individual Criteria')
                 ->description('These criteria are scored individually for each student.')
                 ->schema(
-                    $individualCriteria->map(fn (Criterion $criterion) => Forms\Components\Section::make($criterion->title.' ('.$criterion->max_score.' marks)')
+                    $individualCriteria->map(fn (Criterion $criterion) => Section::make($criterion->title.' ('.$criterion->max_score.' marks)')
                         ->description($criterion->description)
                         ->schema(
-                            $students->map(fn ($student) => Forms\Components\Fieldset::make($student->name.' ('.$student->university_id.')')
+                            $students->map(fn ($student) => Fieldset::make($student->name.' ('.$student->university_id.')')
                                 ->schema(
                                     $this->buildCriterionFields($criterion, $student->id, $isReadOnly)
                                 )

@@ -5,8 +5,9 @@ namespace App\Filament\Admin\Resources;
 use App\Filament\Admin\Resources\EvaluationResource\Pages;
 use App\Models\Evaluation;
 use Filament\Actions;
-use Filament\Infolists;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -124,22 +125,22 @@ class EvaluationResource extends Resource
     {
         return $infolist
             ->schema([
-                Infolists\Components\Section::make('Evaluation Details')
+                Section::make('Evaluation Details')
                     ->schema([
-                        Infolists\Components\TextEntry::make('project.title')
+                        TextEntry::make('project.title')
                             ->label('Project'),
-                        Infolists\Components\TextEntry::make('rubricTemplate.name')
+                        TextEntry::make('rubricTemplate.name')
                             ->label('Rubric Template'),
-                        Infolists\Components\TextEntry::make('evaluator.name')
+                        TextEntry::make('evaluator.name')
                             ->label('Evaluator'),
-                        Infolists\Components\TextEntry::make('evaluator_role')
+                        TextEntry::make('evaluator_role')
                             ->badge()
                             ->color(fn (string $state): string => match ($state) {
                                 'Supervisor' => 'info',
                                 'Reviewer' => 'warning',
                                 default => 'gray',
                             }),
-                        Infolists\Components\TextEntry::make('status')
+                        TextEntry::make('status')
                             ->badge()
                             ->color(fn (string $state): string => match ($state) {
                                 'pending' => 'gray',
@@ -147,13 +148,13 @@ class EvaluationResource extends Resource
                                 'submitted' => 'success',
                                 default => 'gray',
                             }),
-                        Infolists\Components\TextEntry::make('onBehalfOfUser.name')
+                        TextEntry::make('onBehalfOfUser.name')
                             ->label('Proxy By')
                             ->placeholder('--'),
-                        Infolists\Components\TextEntry::make('unlockedByUser.name')
+                        TextEntry::make('unlockedByUser.name')
                             ->label('Unlocked By')
                             ->placeholder('--'),
-                        Infolists\Components\TextEntry::make('general_feedback')
+                        TextEntry::make('general_feedback')
                             ->label('General Feedback')
                             ->columnSpanFull()
                             ->placeholder('No feedback provided.'),

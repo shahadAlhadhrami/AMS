@@ -16,6 +16,7 @@ class Evaluation extends Model
         'rubric_template_id',
         'evaluator_id',
         'evaluator_role',
+        'fill_order',
         'on_behalf_of_user_id',
         'evidence_attachment_path',
         'status',

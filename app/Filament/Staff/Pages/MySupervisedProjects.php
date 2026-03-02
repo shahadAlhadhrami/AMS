@@ -3,6 +3,7 @@
 namespace App\Filament\Staff\Pages;
 
 use App\Models\Project;
+use Filament\Actions;
 use Filament\Pages\Page;
 use Filament\Tables;
 use Filament\Tables\Concerns\InteractsWithTable;
@@ -79,11 +80,11 @@ class MySupervisedProjects extends Page implements HasTable
                     ]),
             ])
             ->actions([
-                Tables\Actions\Action::make('viewProject')
+                Actions\Action::make('viewProject')
                     ->label('View')
                     ->icon('heroicon-o-eye')
                     ->url(fn (Project $record) => ProjectDetail::getUrl(['project' => $record->id])),
-                Tables\Actions\Action::make('fillAssessment')
+                Actions\Action::make('fillAssessment')
                     ->label('Fill Assessment')
                     ->icon('heroicon-o-pencil-square')
                     ->color('primary')

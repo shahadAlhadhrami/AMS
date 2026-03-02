@@ -4,6 +4,7 @@ namespace App\Filament\Staff\Pages;
 
 use App\Models\Evaluation;
 use App\Services\EvaluationService;
+use Filament\Actions;
 use Filament\Pages\Page;
 use Filament\Tables;
 use Filament\Tables\Concerns\InteractsWithTable;
@@ -60,7 +61,7 @@ class MyReviewAssignments extends Page implements HasTable
                     }),
             ])
             ->actions([
-                Tables\Actions\Action::make('fillAssessment')
+                Actions\Action::make('fillAssessment')
                     ->label('Fill Assessment')
                     ->icon('heroicon-o-pencil-square')
                     ->color('primary')
@@ -68,12 +69,12 @@ class MyReviewAssignments extends Page implements HasTable
                     ->visible(fn (Evaluation $record) => in_array($record->status, ['pending', 'draft'])
                         && app(EvaluationService::class)->isFillOrderMet($record)
                     ),
-                Tables\Actions\Action::make('viewAssessment')
+                Actions\Action::make('viewAssessment')
                     ->label('View')
                     ->icon('heroicon-o-eye')
                     ->url(fn (Evaluation $record) => EvaluationForm::getUrl(['evaluation' => $record->id]))
                     ->visible(fn (Evaluation $record) => $record->status === 'submitted'),
-                Tables\Actions\Action::make('viewProject')
+                Actions\Action::make('viewProject')
                     ->label('Project Detail')
                     ->icon('heroicon-o-document-text')
                     ->url(fn (Evaluation $record) => ProjectDetail::getUrl(['project' => $record->project_id])),

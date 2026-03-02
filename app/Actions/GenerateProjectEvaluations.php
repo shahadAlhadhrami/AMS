@@ -49,6 +49,7 @@ class GenerateProjectEvaluations
                         ],
                         [
                             'evaluator_role' => $rule->evaluator_role,
+                            'fill_order' => $rule->fill_order,
                             'status' => 'pending',
                         ]
                     );
