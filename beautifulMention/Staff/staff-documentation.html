@@ -1,0 +1,2026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AMS - Staff Panel Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        h1 {
+            color: #047857;
+            border-bottom: 3px solid #047857;
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            color: #065f46;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 8px;
+            margin-top: 40px;
+        }
+
+        h3 {
+            color: #047857;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        h4 {
+            color: #065f46;
+            margin-top: 15px;
+            margin-bottom: 8px;
+        }
+
+        p {
+            margin-bottom: 12px;
+        }
+
+        ul, ol {
+            margin-bottom: 12px;
+            padding-left: 24px;
+        }
+
+        li {
+            margin-bottom: 4px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 0.9em;
+        }
+
+        th {
+            background-color: #047857;
+            color: white;
+            padding: 10px 12px;
+            text-align: left;
+        }
+
+        td {
+            padding: 8px 12px;
+            border: 1px solid #e5e7eb;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+
+        img {
+            max-width: 100%;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin: 15px 0;
+        }
+
+        .screen-section {
+            page-break-before: always;
+            margin-top: 60px;
+        }
+
+        .screen-section:first-of-type {
+            page-break-before: auto;
+        }
+
+        .route-badge {
+            background: #d1fae5;
+            color: #047857;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.85em;
+        }
+
+        .toc {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 8px;
+            padding: 20px 30px;
+        }
+
+        .toc a {
+            color: #047857;
+            text-decoration: none;
+        }
+
+        .toc a:hover {
+            text-decoration: underline;
+        }
+
+        .toc ol {
+            margin-bottom: 0;
+        }
+
+        .toc li {
+            padding: 4px 0;
+            font-size: 1.05em;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: linear-gradient(135deg, #047857, #10b981);
+            color: white;
+            border-radius: 12px;
+        }
+
+        .header h1 {
+            color: white;
+            border: none;
+            font-size: 2em;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #d1fae5;
+            margin: 5px 0;
+        }
+
+        .header .subtitle {
+            font-size: 1.3em;
+            color: #ecfdf5;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .info-box {
+            background: #f0fdf4;
+            border-left: 4px solid #047857;
+            padding: 12px 18px;
+            margin: 15px 0;
+            border-radius: 0 6px 6px 0;
+        }
+
+        .info-box strong {
+            color: #047857;
+        }
+
+        .test-table th:first-child {
+            width: 140px;
+        }
+
+        .test-table th:nth-child(2) {
+            width: 260px;
+        }
+
+        code {
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.9em;
+            color: #047857;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .badge-gray {
+            background: #f3f4f6;
+            color: #4b5563;
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .db-section {
+            margin-top: 20px;
+        }
+
+        .section-label {
+            display: inline-block;
+            background: #047857;
+            color: white;
+            padding: 3px 12px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .screenshot-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .screenshot-container img {
+            display: block;
+            margin: 0 auto;
+        }
+
+        .screenshot-caption {
+            text-align: center;
+            font-size: 0.85em;
+            color: #6b7280;
+            margin-top: -8px;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+
+        @media print {
+            .screen-section {
+                page-break-before: always;
+            }
+
+            .header {
+                background: #047857 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            th {
+                background-color: #047857 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .no-print {
+                display: none;
+            }
+
+            .toc {
+                background: #f0fdf4 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .info-box {
+                background: #f0fdf4 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .route-badge {
+                background: #d1fae5 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            tr:nth-child(even) {
+                background-color: #f9fafb !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .badge-gray {
+                background: #f3f4f6 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .badge-warning {
+                background: #fef3c7 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .badge-success {
+                background: #d1fae5 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .badge-info {
+                background: #dbeafe !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            body {
+                padding: 0;
+            }
+
+            img {
+                max-width: 90%;
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ============================================================ -->
+    <!--  HEADER                                                       -->
+    <!-- ============================================================ -->
+    <div class="header">
+        <h1>Academic Management System (AMS)</h1>
+        <p class="subtitle">Staff Panel &mdash; System Documentation</p>
+        <p>Date: March 2026</p>
+        <p>System URL: <strong style="color: white;">https://ams.test/staff</strong></p>
+    </div>
+
+    <!-- ============================================================ -->
+    <!--  TABLE OF CONTENTS                                            -->
+    <!-- ============================================================ -->
+    <h2>Table of Contents</h2>
+    <div class="toc">
+        <ol>
+            <li><a href="#login">Login</a></li>
+            <li><a href="#password-reset">Password Reset</a></li>
+            <li><a href="#dashboard">Dashboard</a></li>
+            <li><a href="#supervised-projects">My Supervised Projects</a></li>
+            <li><a href="#review-assignments">My Review Assignments</a></li>
+            <li><a href="#project-detail">Project Detail</a></li>
+            <li><a href="#evaluation-form">Evaluation Form</a></li>
+        </ol>
+    </div>
+
+    <!-- ============================================================ -->
+    <!--  1. LOGIN                                                     -->
+    <!-- ============================================================ -->
+    <div class="screen-section" id="login">
+        <h2>1. Login</h2>
+        <p><span class="route-badge">/staff/login</span></p>
+
+        <div class="screenshot-container">
+            <img src="photos/01-login.png" alt="Staff Login Screen">
+        </div>
+        <p class="screenshot-caption">Figure 1 &mdash; Staff panel login page with email and password fields</p>
+
+        <h3>Description</h3>
+        <p>
+            The Login screen serves as the authentication entry point for the Staff panel, used by both
+            <strong>Supervisors</strong> and <strong>Reviewers</strong>. Built on the Filament 5 authentication
+            system, the page presents an emerald-themed login form requiring an <strong>email address</strong>
+            and <strong>password</strong>. All form submissions include Laravel CSRF token protection to prevent
+            cross-site request forgery attacks.
+        </p>
+        <div class="info-box">
+            <strong>Multi-Factor Authentication (MFA):</strong> The Staff panel enforces MFA. After a successful
+            email/password validation, users who have a configured <code>app_authentication_secret</code> are
+            prompted to enter a one-time code from their authenticator application before being granted access
+            to the dashboard.
+        </div>
+
+        <h3>Functional Flow</h3>
+        <ol>
+            <li>User navigates to <code>/staff/login</code>.</li>
+            <li>User enters email address and password.</li>
+            <li>System validates credentials against the <code>users</code> table.</li>
+            <li>If valid and the user has an <code>app_authentication_secret</code>, the MFA one-time code prompt is displayed.</li>
+            <li>Upon successful authentication, the user is redirected to the Staff Dashboard (<code>/staff</code>).</li>
+            <li>A session record is created in the <code>sessions</code> table.</li>
+        </ol>
+
+        <h3>Database Verification</h3>
+        <div class="db-section">
+            <span class="section-label">Related Tables</span>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Table</th>
+                        <th>Column</th>
+                        <th>Type</th>
+                        <th>Constraints</th>
+                        <th>Screen Mapping</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td rowspan="3"><code>users</code></td>
+                        <td><code>email</code></td>
+                        <td>varchar(255)</td>
+                        <td>NOT NULL, UNIQUE</td>
+                        <td>Email input field</td>
+                    </tr>
+                    <tr>
+                        <td><code>password</code></td>
+                        <td>varchar(255)</td>
+                        <td>NOT NULL</td>
+                        <td>Password input field (hashed)</td>
+                    </tr>
+                    <tr>
+                        <td><code>app_authentication_secret</code></td>
+                        <td>text</td>
+                        <td>NULLABLE</td>
+                        <td>MFA one-time code prompt trigger</td>
+                    </tr>
+                    <tr>
+                        <td><code>sessions</code></td>
+                        <td><code>user_id</code></td>
+                        <td>bigint FK</td>
+                        <td>NULLABLE, FK users.id</td>
+                        <td>Active session after login</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Test Cases</h3>
+        <table class="test-table">
+            <thead>
+                <tr>
+                    <th>Test ID</th>
+                    <th>Test Case</th>
+                    <th>Expected Result</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>STF-AUTH-01</code></td>
+                    <td>Submit valid email and password for a staff user</td>
+                    <td>User is authenticated and redirected to the Staff Dashboard at <code>/staff</code></td>
+                </tr>
+                <tr>
+                    <td><code>STF-AUTH-02</code></td>
+                    <td>Submit valid email and password for a user with MFA configured</td>
+                    <td>One-time code prompt is displayed after initial credential validation</td>
+                </tr>
+                <tr>
+                    <td><code>STF-AUTH-03</code></td>
+                    <td>Submit valid credentials with correct one-time MFA code</td>
+                    <td>MFA passes, user is redirected to the Staff Dashboard</td>
+                </tr>
+                <tr>
+                    <td><code>STF-AUTH-04</code></td>
+                    <td>Submit invalid email or password</td>
+                    <td>Error message displayed: credentials do not match; user remains on login page</td>
+                </tr>
+                <tr>
+                    <td><code>STF-AUTH-05</code></td>
+                    <td>Submit form with one or both fields empty</td>
+                    <td>Validation error displayed for required fields; form is not submitted</td>
+                </tr>
+                <tr>
+                    <td><code>STF-AUTH-06</code></td>
+                    <td>Authenticated user navigates to <code>/staff/login</code></td>
+                    <td>User is redirected to the Staff Dashboard (already logged in)</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ============================================================ -->
+    <!--  2. PASSWORD RESET                                            -->
+    <!-- ============================================================ -->
+    <div class="screen-section" id="password-reset">
+        <h2>2. Password Reset</h2>
+        <p><span class="route-badge">/staff/password-reset</span></p>
+
+        <div class="screenshot-container">
+            <img src="photos/02-password-reset.png" alt="Staff Password Reset Screen">
+        </div>
+        <p class="screenshot-caption">Figure 2 &mdash; Password reset request form</p>
+
+        <h3>Description</h3>
+        <p>
+            The Password Reset screen allows staff users who have forgotten their credentials to request a
+            password reset link. The form collects the user's email address and, if valid, dispatches a
+            tokenized reset link to that address. The reset token is stored in the
+            <code>password_reset_tokens</code> table and is time-limited to prevent abuse.
+        </p>
+
+        <h3>Functional Flow</h3>
+        <ol>
+            <li>User clicks the "Forgot your password?" link on the login page.</li>
+            <li>User is navigated to <code>/staff/password-reset</code>.</li>
+            <li>User enters their registered email address.</li>
+            <li>System checks whether the email exists in the <code>users</code> table.</li>
+            <li>If valid, a tokenized reset link is generated and sent to the provided email.</li>
+            <li>A record is created in the <code>password_reset_tokens</code> table with the email, hashed token, and timestamp.</li>
+            <li>User follows the link from email to set a new password.</li>
+        </ol>
+
+        <h3>Database Verification</h3>
+        <div class="db-section">
+            <span class="section-label">Related Tables</span>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Table</th>
+                        <th>Column</th>
+                        <th>Type</th>
+                        <th>Constraints</th>
+                        <th>Screen Mapping</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td rowspan="3"><code>password_reset_tokens</code></td>
+                        <td><code>email</code></td>
+                        <td>varchar(255)</td>
+                        <td>PRIMARY KEY</td>
+                        <td>Email input field</td>
+                    </tr>
+                    <tr>
+                        <td><code>token</code></td>
+                        <td>varchar(255)</td>
+                        <td>NOT NULL</td>
+                        <td>Hashed reset token sent via email</td>
+                    </tr>
+                    <tr>
+                        <td><code>created_at</code></td>
+                        <td>timestamp</td>
+                        <td>NULLABLE</td>
+                        <td>Token creation time for expiry validation</td>
+                    </tr>
+                    <tr>
+                        <td><code>users</code></td>
+                        <td><code>email</code></td>
+                        <td>varchar(255)</td>
+                        <td>NOT NULL, UNIQUE</td>
+                        <td>Validated against user input</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Test Cases</h3>
+        <table class="test-table">
+            <thead>
+                <tr>
+                    <th>Test ID</th>
+                    <th>Test Case</th>
+                    <th>Expected Result</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>STF-AUTH-07</code></td>
+                    <td>Submit a valid registered email address</td>
+                    <td>Confirmation message displayed; reset link email sent; token stored in <code>password_reset_tokens</code></td>
+                </tr>
+                <tr>
+                    <td><code>STF-AUTH-08</code></td>
+                    <td>Submit an email address not registered in the system</td>
+                    <td>Error message displayed indicating the email is not found</td>
+                </tr>
+                <tr>
+                    <td><code>STF-AUTH-09</code></td>
+                    <td>Submit the form with an empty email field</td>
+                    <td>Validation error for required field; form is not submitted</td>
+                </tr>
+                <tr>
+                    <td><code>STF-AUTH-10</code></td>
+                    <td>Use an expired reset token link</td>
+                    <td>Error message displayed; user prompted to request a new reset link</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ============================================================ -->
+    <!--  3. DASHBOARD                                                 -->
+    <!-- ============================================================ -->
+    <div class="screen-section" id="dashboard">
+        <h2>3. Dashboard</h2>
+        <p><span class="route-badge">/staff</span></p>
+
+        <div class="screenshot-container">
+            <img src="photos/03-dashboard.png" alt="Staff Dashboard">
+        </div>
+        <p class="screenshot-caption">Figure 3 &mdash; Staff dashboard with evaluation stats, supervised projects, and review assignments widgets</p>
+
+        <h3>Description</h3>
+        <p>
+            The Dashboard is the main hub for staff users after authentication. It provides a comprehensive
+            overview of the user's current workload through a set of role-aware widgets. The dashboard content
+            adapts based on the authenticated user's roles (Supervisor, Reviewer, or both).
+        </p>
+
+        <h4>Header Widgets</h4>
+        <div class="info-box">
+            <strong>PendingEvaluationsWidget:</strong> Displays three stat cards showing the count of evaluations
+            assigned to the current user, segmented by status:
+            <ul style="margin-top: 8px; margin-bottom: 0;">
+                <li><span class="badge badge-warning">Pending</span> &mdash; Evaluations not yet started</li>
+                <li><span class="badge badge-info">Draft</span> &mdash; Evaluations in progress (saved but not submitted)</li>
+                <li><span class="badge badge-success">Submitted</span> &mdash; Evaluations completed and submitted</li>
+            </ul>
+        </div>
+
+        <h4>Footer Widgets</h4>
+        <p>The footer area contains two role-specific widgets:</p>
+        <ul>
+            <li>
+                <strong>SupervisedProjectsWidget</strong> (visible only to users with the <em>Supervisor</em> role):
+                A summary table listing the user's supervised projects with columns for project title, semester,
+                student count, evaluation progress, and project status.
+            </li>
+            <li>
+                <strong>ReviewAssignmentsWidget</strong> (visible only to users with the <em>Reviewer</em> role):
+                A summary table listing the user's review evaluations with columns for project name, semester,
+                rubric, and evaluation status.
+            </li>
+        </ul>
+
+        <h3>Database Verification</h3>
+        <div class="db-section">
+            <span class="section-label">Related Tables</span>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Table</th>
+                        <th>Column</th>
+                        <th>Type</th>
+                        <th>Constraints</th>
+                        <th>Screen Mapping</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td rowspan="2"><code>evaluations</code></td>
+                        <td><code>evaluator_id</code></td>
+                        <td>bigint FK</td>
+                        <td>NOT NULL, FK users.id</td>
+                        <td>Current logged-in user; filters eval counts</td>
+                    </tr>
+                    <tr>
+                        <td><code>status</code></td>
+                        <td>varchar(255)</td>
+                        <td>NOT NULL</td>
+                        <td>Stat card segmentation (pending/draft/submitted)</td>
+                    </tr>
+                    <tr>
+                        <td rowspan="2"><code>projects</code></td>
+                        <td><code>supervisor_id</code></td>
+                        <td>bigint FK</td>
+                        <td>NOT NULL, FK users.id</td>
+                        <td>Filters supervised projects to current user</td>
+                    </tr>
+                    <tr>
+                        <td><code>status</code></td>
+                        <td>varchar(255)</td>
+                        <td>NOT NULL</td>
+                        <td>Project status badge in supervised projects widget</td>
+                    </tr>
+                    <tr>
+                        <td><code>users</code></td>
+                        <td><code>id</code></td>
+                        <td>bigint PK</td>
+                        <td>AUTO INCREMENT</td>
+                        <td>Authenticated user identity</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Test Cases</h3>
+        <table class="test-table">
+            <thead>
+                <tr>
+                    <th>Test ID</th>
+                    <th>Test Case</th>
+                    <th>Expected Result</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>STF-DASH-01</code></td>
+                    <td>Authenticated staff user navigates to dashboard</td>
+                    <td>Dashboard loads successfully with PendingEvaluationsWidget showing stat cards</td>
+                </tr>
+                <tr>
+                    <td><code>STF-DASH-02</code></td>
+                    <td>Supervisor logs in and views dashboard</td>
+                    <td>SupervisedProjectsWidget is visible in footer area with correct project data</td>
+                </tr>
+                <tr>
+                    <td><code>STF-DASH-03</code></td>
+                    <td>Reviewer logs in and views dashboard</td>
+                    <td>ReviewAssignmentsWidget is visible in footer area with correct evaluation data</td>
+                </tr>
+                <tr>
+                    <td><code>STF-DASH-04</code></td>
+                    <td>User with both Supervisor and Reviewer roles views dashboard</td>
+                    <td>Both SupervisedProjectsWidget and ReviewAssignmentsWidget are visible</td>
+                </tr>
+                <tr>
+                    <td><code>STF-DASH-05</code></td>
+                    <td>Verify evaluation stat card counts</td>
+                    <td>Pending, Draft, and Submitted counts accurately reflect the current user's evaluations in the database</td>
+                </tr>
+                <tr>
+                    <td><code>STF-DASH-06</code></td>
+                    <td>User with no evaluations views dashboard</td>
+                    <td>Stat cards display zero counts; no errors are thrown</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ============================================================ -->
+    <!--  4. MY SUPERVISED PROJECTS                                    -->
+    <!-- ============================================================ -->
+    <div class="screen-section" id="supervised-projects">
+        <h2>4. My Supervised Projects</h2>
+        <p><span class="route-badge">/staff/my-supervised-projects</span></p>
+
+        <div class="screenshot-container">
+            <img src="photos/04-supervised-projects.png" alt="My Supervised Projects Screen">
+        </div>
+        <p class="screenshot-caption">Figure 4 &mdash; Full-page table of supervised projects with status badges and evaluation progress</p>
+
+        <h3>Description</h3>
+        <p>
+            The My Supervised Projects page presents a full-page data table listing all projects where the
+            currently authenticated user is assigned as the <strong>Supervisor</strong>. This page is
+            <strong>only accessible by users with the Supervisor role</strong>; non-supervisor users are
+            denied access.
+        </p>
+
+        <h4>Table Columns</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Column</th>
+                    <th>Description</th>
+                    <th>Features</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Title</strong></td>
+                    <td>The project title</td>
+                    <td>Searchable</td>
+                </tr>
+                <tr>
+                    <td><strong>Students</strong></td>
+                    <td>List of students assigned to the project</td>
+                    <td>Comma-separated names</td>
+                </tr>
+                <tr>
+                    <td><strong>Semester</strong></td>
+                    <td>The academic semester</td>
+                    <td>&mdash;</td>
+                </tr>
+                <tr>
+                    <td><strong>Course Code</strong></td>
+                    <td>The associated course code</td>
+                    <td>&mdash;</td>
+                </tr>
+                <tr>
+                    <td><strong>Phase Template</strong></td>
+                    <td>The phase template applied to the project</td>
+                    <td>&mdash;</td>
+                </tr>
+                <tr>
+                    <td><strong>Status</strong></td>
+                    <td>Project lifecycle status</td>
+                    <td>
+                        <span class="badge badge-gray">Setup</span>
+                        <span class="badge badge-warning">Evaluating</span>
+                        <span class="badge badge-success">Completed</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Progress</strong></td>
+                    <td>Evaluation progress expressed as submitted/total evaluations</td>
+                    <td>e.g., "2/5"</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>Filters</h4>
+        <ul>
+            <li><strong>Status Filter:</strong> Filter projects by their current status (Setup, Evaluating, Completed).</li>
+        </ul>
+
+        <h4>Actions</h4>
+        <ul>
+            <li><strong>View:</strong> Opens the Project Detail page for the selected project.</li>
+            <li><strong>Fill Assessment:</strong> Opens the Evaluation Form. This action is only available when the project status is <em>Evaluating</em> and there are pending or draft evaluations assigned to the current user for that project.</li>
+        </ul>
+
+        <h3>Database Verification</h3>
+        <div class="db-section">
+            <span class="section-label">Related Tables</span>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Table</th>
+                        <th>Column</th>
+                        <th>Type</th>
+                        <th>Constraints</th>
+                        <th>Screen Mapping</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td rowspan="6"><code>projects</code></td>
+                        <td><code>supervisor_id</code></td>
+                        <td>bigint FK</td>
+                        <td>NOT NULL, FK users.id</td>
+                        <td>Filters table to current user's supervised projects</td>
+                    </tr>
+                    <tr>
+                        <td><code>title</code></td>
+                        <td>varchar(255)</td>
+                        <td>NOT NULL</td>
+                        <td>Title column (searchable)</td>
+                    </tr>
+                    <tr>
+                        <td><code>semester_id</code></td>
+                        <td>bigint FK</td>
+                        <td>NOT NULL, FK semesters.id</td>
+                        <td>Semester column</td>
+                    </tr>
+                    <tr>
+                        <td><code>course_id</code></td>
+                        <td>bigint FK</td>
+                        <td>NOT NULL, FK courses.id</td>
+                        <td>Course Code column</td>
+                    </tr>
+                    <tr>
+                        <td><code>phase_template_id</code></td>
+                        <td>bigint FK</td>
+                        <td>NULLABLE, FK phase_templates.id</td>
+                        <td>Phase Template column</td>
+                    </tr>
+                    <tr>
+                        <td><code>status</code></td>
+                        <td>varchar(255)</td>
+                        <td>NOT NULL</td>
+                        <td>Status badge column</td>
+                    </tr>
+                    <tr>
+                        <td><code>project_student</code></td>
+                        <td><code>project_id</code>, <code>user_id</code></td>
+                        <td>bigint FK, bigint FK</td>
+                        <td>Composite key</td>
+                        <td>Students list column</td>
+                    </tr>
+                    <tr>
+                        <td rowspan="2"><code>evaluations</code></td>
+                        <td><code>project_id</code></td>
+                        <td>bigint FK</td>
+                        <td>NOT NULL, FK projects.id</td>
+                        <td>Progress column (total evaluations per project)</td>
+                    </tr>
+                    <tr>
+                        <td><code>evaluator_id</code></td>
+                        <td>bigint FK</td>
+                        <td>NOT NULL, FK users.id</td>
+                        <td>Fill Assessment action availability</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Test Cases</h3>
+        <table class="test-table">
+            <thead>
+                <tr>
+                    <th>Test ID</th>
+                    <th>Test Case</th>
+                    <th>Expected Result</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>STF-SUP-01</code></td>
+                    <td>Supervisor navigates to My Supervised Projects page</td>
+                    <td>Page loads successfully with a table of projects supervised by the current user</td>
+                </tr>
+                <tr>
+                    <td><code>STF-SUP-02</code></td>
+                    <td>Non-supervisor user attempts to access the page</td>
+                    <td>Access is denied; user is redirected or shown a 403 Forbidden response</td>
+                </tr>
+                <tr>
+                    <td><code>STF-SUP-03</code></td>
+                    <td>Verify projects are filtered to the current user only</td>
+                    <td>Only projects where <code>supervisor_id</code> matches the current user's ID are shown</td>
+                </tr>
+                <tr>
+                    <td><code>STF-SUP-04</code></td>
+                    <td>Apply Status filter to show only "Evaluating" projects</td>
+                    <td>Table shows only projects with "Evaluating" status; other projects are hidden</td>
+                </tr>
+                <tr>
+                    <td><code>STF-SUP-05</code></td>
+                    <td>Check Fill Assessment button on an "Evaluating" project with pending evaluations</td>
+                    <td>Fill Assessment action button is visible and clickable</td>
+                </tr>
+                <tr>
+                    <td><code>STF-SUP-06</code></td>
+                    <td>Check Fill Assessment button on a "Setup" or "Completed" project</td>
+                    <td>Fill Assessment action button is not visible</td>
+                </tr>
+                <tr>
+                    <td><code>STF-SUP-07</code></td>
+                    <td>Verify Progress column values</td>
+                    <td>Progress shows accurate submitted/total evaluation counts matching database records</td>
+                </tr>
+                <tr>
+                    <td><code>STF-SUP-08</code></td>
+                    <td>Search for a project by title</td>
+                    <td>Table filters to show only projects matching the search term</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ============================================================ -->
+    <!--  5. MY REVIEW ASSIGNMENTS                                     -->
+    <!-- ============================================================ -->
+    <div class="screen-section" id="review-assignments">
+        <h2>5. My Review Assignments</h2>
+        <p><span class="route-badge">/staff/my-review-assignments</span></p>
+
+        <div class="screenshot-container">
+            <img src="photos/05-review-assignments.png" alt="My Review Assignments Screen">
+        </div>
+        <p class="screenshot-caption">Figure 5 &mdash; Table of review evaluations assigned to the current user with fill order and status</p>
+
+        <h3>Description</h3>
+        <p>
+            The My Review Assignments page displays a data table of all evaluations assigned to the currently
+            authenticated user in the <strong>Reviewer</strong> role. This page is <strong>only accessible by
+            users with the Reviewer role</strong>; non-reviewer users are denied access.
+        </p>
+
+        <h4>Table Columns</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Column</th>
+                    <th>Description</th>
+                    <th>Features</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Project Title</strong></td>
+                    <td>Title of the associated project</td>
+                    <td>Searchable</td>
+                </tr>
+                <tr>
+                    <td><strong>Semester</strong></td>
+                    <td>The academic semester of the project</td>
+                    <td>&mdash;</td>
+                </tr>
+                <tr>
+                    <td><strong>Rubric Name</strong></td>
+                    <td>The rubric template used for this evaluation</td>
+                    <td>&mdash;</td>
+                </tr>
+                <tr>
+                    <td><strong>Fill Order</strong></td>
+                    <td>The sequence number derived from phase rubric rules</td>
+                    <td>Determines dependency order</td>
+                </tr>
+                <tr>
+                    <td><strong>Status</strong></td>
+                    <td>Current evaluation status</td>
+                    <td>
+                        <span class="badge badge-warning">Pending</span>
+                        <span class="badge badge-info">Draft</span>
+                        <span class="badge badge-success">Submitted</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>Fill Order Enforcement</h4>
+        <div class="info-box">
+            <strong>Dependency Rule:</strong> The fill order mechanism ensures that evaluations are completed
+            in the correct sequence. Specifically, supervisors must submit their evaluations before reviewers
+            can begin theirs. The <code>fill_order</code> value is derived from the
+            <code>phase_rubric_rules</code> table. A reviewer's <strong>Fill Assessment</strong> action is only
+            enabled when all evaluations with a lower <code>fill_order</code> for the same project have been
+            submitted.
+        </div>
+
+        <h4>Actions</h4>
+        <ul>
+            <li><strong>Fill Assessment:</strong> Opens the Evaluation Form. Available only when the evaluation status is <em>Pending</em> or <em>Draft</em> and the fill order dependency is satisfied (all preceding evaluations are submitted).</li>
+            <li><strong>View Assessment:</strong> Opens the Evaluation Form in read-only mode. Available only when the evaluation status is <em>Submitted</em>.</li>
+            <li><strong>Project Detail:</strong> Links to the Project Detail page for the associated project.</li>
+        </ul>
+
+        <h3>Database Verification</h3>
+        <div class="db-section">
+            <span class="section-label">Related Tables</span>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Table</th>
+                        <th>Column</th>
+                        <th>Type</th>
+                        <th>Constraints</th>
+                        <th>Screen Mapping</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td rowspan="6"><code>evaluations</code></td>
+                        <td><code>evaluator_id</code></td>
+                        <td>bigint FK</td>
+                        <td>NOT NULL, FK users.id</td>
+                        <td>Current logged-in user; filters table</td>
+                    </tr>
+                    <tr>
+                        <td><code>evaluator_role</code></td>
+                        <td>varchar(255)</td>
+                        <td>NOT NULL</td>
+                        <td>Must be "reviewer" for this page</td>
+                    </tr>
+                    <tr>
+                        <td><code>project_id</code></td>
+                        <td>bigint FK</td>
+                        <td>NOT NULL, FK projects.id</td>
+                        <td>Project Title column</td>
+                    </tr>
+                    <tr>
+                        <td><code>rubric_template_id</code></td>
+                        <td>bigint FK</td>
+                        <td>NOT NULL, FK rubric_templates.id</td>
+                        <td>Rubric Name column</td>
+                    </tr>
+                    <tr>
+                        <td><code>status</code></td>
+                        <td>varchar(255)</td>
+                        <td>NOT NULL</td>
+                        <td>Status badge column</td>
+                    </tr>
+                    <tr>
+                        <td><code>fill_order</code></td>
+                        <td>integer</td>
+                        <td>NOT NULL</td>
+                        <td>Fill Order column; dependency enforcement</td>
+                    </tr>
+                    <tr>
+                        <td><code>phase_rubric_rules</code></td>
+                        <td><code>fill_order</code>, <code>evaluator_role</code></td>
+                        <td>integer, varchar</td>
+                        <td>NOT NULL</td>
+                        <td>Source of fill_order values and role mapping</td>
+                    </tr>
+                    <tr>
+                        <td><code>projects</code></td>
+                        <td><code>title</code>, <code>semester_id</code></td>
+                        <td>varchar, bigint FK</td>
+                        <td>NOT NULL</td>
+                        <td>Project Title and Semester columns</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Test Cases</h3>
+        <table class="test-table">
+            <thead>
+                <tr>
+                    <th>Test ID</th>
+                    <th>Test Case</th>
+                    <th>Expected Result</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>STF-REV-01</code></td>
+                    <td>Reviewer navigates to My Review Assignments page</td>
+                    <td>Page loads successfully with a table of evaluations assigned to the current user as reviewer</td>
+                </tr>
+                <tr>
+                    <td><code>STF-REV-02</code></td>
+                    <td>Non-reviewer user attempts to access the page</td>
+                    <td>Access is denied; user is redirected or shown a 403 Forbidden response</td>
+                </tr>
+                <tr>
+                    <td><code>STF-REV-03</code></td>
+                    <td>Reviewer has a pending evaluation where fill order dependency is not met (supervisor has not yet submitted)</td>
+                    <td>Fill Assessment action button is disabled or hidden</td>
+                </tr>
+                <tr>
+                    <td><code>STF-REV-04</code></td>
+                    <td>Reviewer has a pending evaluation where fill order dependency is met</td>
+                    <td>Fill Assessment action button is visible and clickable</td>
+                </tr>
+                <tr>
+                    <td><code>STF-REV-05</code></td>
+                    <td>Reviewer clicks View Assessment on a submitted evaluation</td>
+                    <td>Evaluation form opens in read-only mode showing submitted scores and feedback</td>
+                </tr>
+                <tr>
+                    <td><code>STF-REV-06</code></td>
+                    <td>Reviewer clicks Project Detail link</td>
+                    <td>User is navigated to the Project Detail page for the associated project</td>
+                </tr>
+                <tr>
+                    <td><code>STF-REV-07</code></td>
+                    <td>Search for an evaluation by project title</td>
+                    <td>Table filters to show only evaluations matching the search term</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ============================================================ -->
+    <!--  6. PROJECT DETAIL                                            -->
+    <!-- ============================================================ -->
+    <div class="screen-section" id="project-detail">
+        <h2>6. Project Detail</h2>
+        <p><span class="route-badge">/staff/project-detail/{project}</span></p>
+
+        <div class="screenshot-container">
+            <img src="photos/06-project-detail.png" alt="Project Detail Screen">
+        </div>
+        <p class="screenshot-caption">Figure 6 &mdash; Detailed project view with metadata, participants, and evaluations list</p>
+
+        <h3>Description</h3>
+        <p>
+            The Project Detail page provides a comprehensive view of a specific project's information. This
+            page is <strong>only accessible by the project's supervisor or one of its assigned reviewers</strong>;
+            staff members unrelated to the project are denied access.
+        </p>
+
+        <h4>Displayed Information</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Section</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Project Metadata</strong></td>
+                    <td>Title, Semester, Course, Phase Template, Specialization, Supervisor name</td>
+                </tr>
+                <tr>
+                    <td><strong>Students</strong></td>
+                    <td>List of students assigned to the project via the <code>project_student</code> pivot table</td>
+                </tr>
+                <tr>
+                    <td><strong>Reviewers</strong></td>
+                    <td>List of reviewers assigned to the project via the <code>project_reviewer</code> pivot table</td>
+                </tr>
+                <tr>
+                    <td><strong>Evaluations</strong></td>
+                    <td>List of all evaluations for the project showing: evaluator name, rubric template, evaluator role, and submission status</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Database Verification</h3>
+        <div class="db-section">
+            <span class="section-label">Related Tables</span>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Table</th>
+                        <th>Column</th>
+                        <th>Type</th>
+                        <th>Constraints</th>
+                        <th>Screen Mapping</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td rowspan="6"><code>projects</code></td>
+                        <td><code>title</code></td>
+                        <td>varchar(255)</td>
+                        <td>NOT NULL</td>
+                        <td>Project title heading</td>
+                    </tr>
+                    <tr>
+                        <td><code>semester_id</code></td>
+                        <td>bigint FK</td>
+                        <td>NOT NULL, FK semesters.id</td>
+                        <td>Semester field</td>
+                    </tr>
+                    <tr>
+                        <td><code>course_id</code></td>
+                        <td>bigint FK</td>
+                        <td>NOT NULL, FK courses.id</td>
+                        <td>Course field</td>
+                    </tr>
+                    <tr>
+                        <td><code>phase_template_id</code></td>
+                        <td>bigint FK</td>
+                        <td>NULLABLE, FK phase_templates.id</td>
+                        <td>Phase Template field</td>
+                    </tr>
+                    <tr>
+                        <td><code>specialization_id</code></td>
+                        <td>bigint FK</td>
+                        <td>NULLABLE, FK specializations.id</td>
+                        <td>Specialization field</td>
+                    </tr>
+                    <tr>
+                        <td><code>supervisor_id</code></td>
+                        <td>bigint FK</td>
+                        <td>NOT NULL, FK users.id</td>
+                        <td>Supervisor name; authorization check</td>
+                    </tr>
+                    <tr>
+                        <td><code>project_student</code></td>
+                        <td><code>project_id</code>, <code>user_id</code></td>
+                        <td>bigint FK, bigint FK</td>
+                        <td>Composite key</td>
+                        <td>Students list section</td>
+                    </tr>
+                    <tr>
+                        <td><code>project_reviewer</code></td>
+                        <td><code>project_id</code>, <code>user_id</code></td>
+                        <td>bigint FK, bigint FK</td>
+                        <td>Composite key</td>
+                        <td>Reviewers list section; authorization check</td>
+                    </tr>
+                    <tr>
+                        <td rowspan="4"><code>evaluations</code></td>
+                        <td><code>project_id</code></td>
+                        <td>bigint FK</td>
+                        <td>NOT NULL, FK projects.id</td>
+                        <td>Evaluations list section</td>
+                    </tr>
+                    <tr>
+                        <td><code>evaluator_id</code></td>
+                        <td>bigint FK</td>
+                        <td>NOT NULL, FK users.id</td>
+                        <td>Evaluator name in evaluations list</td>
+                    </tr>
+                    <tr>
+                        <td><code>rubric_template_id</code></td>
+                        <td>bigint FK</td>
+                        <td>NOT NULL, FK rubric_templates.id</td>
+                        <td>Rubric column in evaluations list</td>
+                    </tr>
+                    <tr>
+                        <td><code>evaluator_role</code></td>
+                        <td>varchar(255)</td>
+                        <td>NOT NULL</td>
+                        <td>Role column in evaluations list</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Test Cases</h3>
+        <table class="test-table">
+            <thead>
+                <tr>
+                    <th>Test ID</th>
+                    <th>Test Case</th>
+                    <th>Expected Result</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>STF-PRJ-01</code></td>
+                    <td>Supervisor navigates to a project they supervise</td>
+                    <td>Page loads with all project information displayed correctly</td>
+                </tr>
+                <tr>
+                    <td><code>STF-PRJ-02</code></td>
+                    <td>Reviewer navigates to a project they are assigned to</td>
+                    <td>Page loads with all project information displayed correctly</td>
+                </tr>
+                <tr>
+                    <td><code>STF-PRJ-03</code></td>
+                    <td>Staff user unrelated to the project attempts to access the page</td>
+                    <td>Access is denied; user receives 403 Forbidden response</td>
+                </tr>
+                <tr>
+                    <td><code>STF-PRJ-04</code></td>
+                    <td>Verify all project metadata fields are populated correctly</td>
+                    <td>Title, Semester, Course, Phase Template, Specialization, and Supervisor name all match database records</td>
+                </tr>
+                <tr>
+                    <td><code>STF-PRJ-05</code></td>
+                    <td>Verify students list displays correctly</td>
+                    <td>All students from <code>project_student</code> pivot table for this project are shown</td>
+                </tr>
+                <tr>
+                    <td><code>STF-PRJ-06</code></td>
+                    <td>Verify reviewers list displays correctly</td>
+                    <td>All reviewers from <code>project_reviewer</code> pivot table for this project are shown</td>
+                </tr>
+                <tr>
+                    <td><code>STF-PRJ-07</code></td>
+                    <td>Verify evaluations list displays correct data</td>
+                    <td>Each evaluation shows evaluator name, rubric, role, and status matching database records</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ============================================================ -->
+    <!--  7. EVALUATION FORM                                           -->
+    <!-- ============================================================ -->
+    <div class="screen-section" id="evaluation-form">
+        <h2>7. Evaluation Form</h2>
+        <p><span class="route-badge">/staff/evaluation/{evaluation}</span></p>
+
+        <div class="screenshot-container">
+            <img src="photos/07-evaluation-form.png" alt="Evaluation Form Screen">
+        </div>
+        <p class="screenshot-caption">Figure 7 &mdash; Dynamic evaluation form with group and individual criteria sections, score levels, and feedback fields</p>
+
+        <h3>Description</h3>
+        <p>
+            The Evaluation Form is a dynamic assessment page built from rubric criteria associated with the
+            evaluation's rubric template. The page title displays the <strong>rubric name</strong>, and the
+            subheading shows the <strong>project title</strong> and <strong>evaluator role</strong>. The form
+            is constructed using the <code>BuildsEvaluationForm</code> trait, which dynamically generates form
+            fields based on the rubric's criteria and their score levels.
+        </p>
+
+        <h4>Form Structure</h4>
+        <div class="info-box">
+            <strong>Two-Section Layout:</strong> The form is divided into two distinct sections based on the
+            <code>is_individual</code> flag on each criterion:
+            <ul style="margin-top: 8px; margin-bottom: 0;">
+                <li><strong>Group Criteria</strong> (<code>is_individual = false</code>): Scored once for the entire project group. Each criterion appears as a single fieldset.</li>
+                <li><strong>Individual Criteria</strong> (<code>is_individual = true</code>): Scored per student. Each criterion is nested by criterion first, then by student fieldsets within it.</li>
+            </ul>
+        </div>
+
+        <h4>Per-Criterion Fields</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Score Level</strong></td>
+                    <td>Dropdown (Select)</td>
+                    <td>Options from <code>score_levels</code> table showing <em>label + score_value</em>. Selecting a level auto-populates the Score Awarded field.</td>
+                </tr>
+                <tr>
+                    <td><strong>Score Awarded</strong></td>
+                    <td>Numeric Input</td>
+                    <td>Range: 0 to <code>max_score</code> (from criterion). Step: 0.01. Displayed with a <code>/max</code> suffix indicator. Can be manually adjusted after auto-population.</td>
+                </tr>
+                <tr>
+                    <td><strong>Feedback</strong></td>
+                    <td>Textarea</td>
+                    <td>Free-text feedback for the specific criterion.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>General Feedback</h4>
+        <p>
+            A <strong>general feedback textarea</strong> appears at the bottom of the form, allowing the evaluator
+            to provide overall comments about the project or student performance beyond individual criteria.
+        </p>
+
+        <h4>Score Level Auto-Population</h4>
+        <p>
+            When a score level is selected from the dropdown, the <code>score_awarded</code> field is
+            automatically populated with the corresponding <code>score_value</code> from the
+            <code>score_levels</code> table. The evaluator may then manually adjust this value if needed, as
+            long as it remains within the valid range (0 to <code>max_score</code>).
+        </p>
+
+        <h4>Read-Only Mode</h4>
+        <p>
+            When the evaluation status is <strong>Submitted</strong>, all form fields are <strong>disabled</strong>
+            (read-only). The evaluator can view their scores and feedback but cannot modify them. The Save Draft
+            and Submit action buttons are hidden in this state.
+        </p>
+
+        <h4>Status Transitions</h4>
+        <div class="info-box">
+            <strong>Auto-Upgrade on First Open:</strong> When an evaluation with a <em>Pending</em> status is
+            first opened in the form, its status is automatically upgraded to <em>Draft</em>. This indicates
+            that the evaluator has begun reviewing the evaluation.
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Transition</th>
+                    <th>Trigger</th>
+                    <th>Validation</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Pending &rarr; Draft</td>
+                    <td>First time the form is opened</td>
+                    <td>None (automatic)</td>
+                </tr>
+                <tr>
+                    <td>Draft &rarr; Draft</td>
+                    <td>Save Draft button clicked</td>
+                    <td>None (partial data allowed)</td>
+                </tr>
+                <tr>
+                    <td>Draft &rarr; Submitted</td>
+                    <td>Submit button clicked</td>
+                    <td>All criteria must have scores assigned</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>Actions</h4>
+        <ul>
+            <li><strong>Save Draft:</strong> Saves the current form data without submitting. Allows partial completion; not all criteria need scores. Status remains <em>Draft</em>.</li>
+            <li><strong>Submit:</strong> Validates that all criteria have scores assigned, then marks the evaluation as <em>Submitted</em>. Once submitted, the evaluation is locked and becomes read-only.</li>
+        </ul>
+
+        <h4>Authorization and Fill Order</h4>
+        <ul>
+            <li><strong>Authorization:</strong> Only the assigned evaluator (<code>evaluator_id</code> matching the current user) can access the evaluation form.</li>
+            <li><strong>Fill Order Check:</strong> If the fill order dependency is not satisfied (i.e., evaluations with a lower <code>fill_order</code> for the same project have not yet been submitted), the system returns a <strong>403 Forbidden</strong> response, preventing premature access.</li>
+        </ul>
+
+        <h3>Database Verification</h3>
+        <div class="db-section">
+            <span class="section-label">Related Tables</span>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Table</th>
+                        <th>Column</th>
+                        <th>Type</th>
+                        <th>Constraints</th>
+                        <th>Screen Mapping</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td rowspan="7"><code>evaluations</code></td>
+                        <td><code>project_id</code></td>
+                        <td>bigint FK</td>
+                        <td>NOT NULL, FK projects.id</td>
+                        <td>Page subheading (project title)</td>
+                    </tr>
+                    <tr>
+                        <td><code>rubric_template_id</code></td>
+                        <td>bigint FK</td>
+                        <td>NOT NULL, FK rubric_templates.id</td>
+                        <td>Page title (rubric name)</td>
+                    </tr>
+                    <tr>
+                        <td><code>evaluator_id</code></td>
+                        <td>bigint FK</td>
+                        <td>NOT NULL, FK users.id</td>
+                        <td>Authorization check (must match current user)</td>
+                    </tr>
+                    <tr>
+                        <td><code>evaluator_role</code></td>
+                        <td>varchar(255)</td>
+                        <td>NOT NULL</td>
+                        <td>Page subheading (role display)</td>
+                    </tr>
+                    <tr>
+                        <td><code>status</code></td>
+                        <td>varchar(255)</td>
+                        <td>NOT NULL</td>
+                        <td>Determines form mode (editable vs. read-only)</td>
+                    </tr>
+                    <tr>
+                        <td><code>general_feedback</code></td>
+                        <td>text</td>
+                        <td>NULLABLE</td>
+                        <td>General feedback textarea at bottom of form</td>
+                    </tr>
+                    <tr>
+                        <td><code>fill_order</code></td>
+                        <td>integer</td>
+                        <td>NOT NULL</td>
+                        <td>Fill order dependency enforcement</td>
+                    </tr>
+                    <tr>
+                        <td rowspan="5"><code>evaluation_scores</code></td>
+                        <td><code>evaluation_id</code></td>
+                        <td>bigint FK</td>
+                        <td>NOT NULL, FK evaluations.id</td>
+                        <td>Links scores to this evaluation</td>
+                    </tr>
+                    <tr>
+                        <td><code>criterion_id</code></td>
+                        <td>bigint FK</td>
+                        <td>NOT NULL, FK criteria.id</td>
+                        <td>Associates score with specific criterion fieldset</td>
+                    </tr>
+                    <tr>
+                        <td><code>score_level_id</code></td>
+                        <td>bigint FK</td>
+                        <td>NULLABLE, FK score_levels.id</td>
+                        <td>Score Level dropdown selection</td>
+                    </tr>
+                    <tr>
+                        <td><code>student_id</code></td>
+                        <td>bigint FK</td>
+                        <td>NULLABLE, FK users.id</td>
+                        <td>NULL for group criteria; student ID for individual criteria</td>
+                    </tr>
+                    <tr>
+                        <td><code>score_awarded</code></td>
+                        <td>decimal(8,2)</td>
+                        <td>NULLABLE</td>
+                        <td>Score Awarded numeric input field</td>
+                    </tr>
+                    <tr>
+                        <td rowspan="4"><code>criteria</code></td>
+                        <td><code>rubric_template_id</code></td>
+                        <td>bigint FK</td>
+                        <td>NOT NULL, FK rubric_templates.id</td>
+                        <td>Links criteria to the evaluation's rubric</td>
+                    </tr>
+                    <tr>
+                        <td><code>title</code></td>
+                        <td>varchar(255)</td>
+                        <td>NOT NULL</td>
+                        <td>Criterion fieldset heading</td>
+                    </tr>
+                    <tr>
+                        <td><code>max_score</code></td>
+                        <td>decimal(8,2)</td>
+                        <td>NOT NULL</td>
+                        <td>Max value for Score Awarded; displayed as "/max" suffix</td>
+                    </tr>
+                    <tr>
+                        <td><code>is_individual</code></td>
+                        <td>boolean</td>
+                        <td>NOT NULL, DEFAULT false</td>
+                        <td>Determines Group vs. Individual section placement</td>
+                    </tr>
+                    <tr>
+                        <td rowspan="4"><code>score_levels</code></td>
+                        <td><code>criterion_id</code></td>
+                        <td>bigint FK</td>
+                        <td>NOT NULL, FK criteria.id</td>
+                        <td>Links score levels to their parent criterion</td>
+                    </tr>
+                    <tr>
+                        <td><code>label</code></td>
+                        <td>varchar(255)</td>
+                        <td>NOT NULL</td>
+                        <td>Dropdown option label text</td>
+                    </tr>
+                    <tr>
+                        <td><code>score_value</code></td>
+                        <td>decimal(8,2)</td>
+                        <td>NOT NULL</td>
+                        <td>Auto-populated into Score Awarded on selection</td>
+                    </tr>
+                    <tr>
+                        <td><code>sort_order</code></td>
+                        <td>integer</td>
+                        <td>NOT NULL</td>
+                        <td>Order of options within dropdown</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Test Cases</h3>
+        <table class="test-table">
+            <thead>
+                <tr>
+                    <th>Test ID</th>
+                    <th>Test Case</th>
+                    <th>Expected Result</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>STF-EVL-01</code></td>
+                    <td>Assigned evaluator opens a pending evaluation for the first time</td>
+                    <td>Form loads with criteria from the rubric template; evaluation status auto-upgrades from Pending to Draft</td>
+                </tr>
+                <tr>
+                    <td><code>STF-EVL-02</code></td>
+                    <td>Select a score level from the dropdown</td>
+                    <td>Score Awarded field is automatically populated with the selected score level's <code>score_value</code></td>
+                </tr>
+                <tr>
+                    <td><code>STF-EVL-03</code></td>
+                    <td>Manually enter a score in the Score Awarded field</td>
+                    <td>Value is accepted if within 0 to <code>max_score</code> range; rejected otherwise</td>
+                </tr>
+                <tr>
+                    <td><code>STF-EVL-04</code></td>
+                    <td>Click Save Draft with partial scores filled</td>
+                    <td>Data is saved; evaluation remains in Draft status; user can return later to continue</td>
+                </tr>
+                <tr>
+                    <td><code>STF-EVL-05</code></td>
+                    <td>Click Submit with all criteria scores provided</td>
+                    <td>Validation passes; evaluation status changes to Submitted; form becomes read-only</td>
+                </tr>
+                <tr>
+                    <td><code>STF-EVL-06</code></td>
+                    <td>Click Submit with missing scores on one or more criteria</td>
+                    <td>Validation fails; error message indicates which criteria are missing scores; evaluation remains Draft</td>
+                </tr>
+                <tr>
+                    <td><code>STF-EVL-07</code></td>
+                    <td>Open a submitted evaluation</td>
+                    <td>All form fields are disabled (read-only); Save Draft and Submit buttons are hidden</td>
+                </tr>
+                <tr>
+                    <td><code>STF-EVL-08</code></td>
+                    <td>Evaluator tries to access an evaluation where fill order dependency is not met</td>
+                    <td>System returns 403 Forbidden; evaluator cannot access the form</td>
+                </tr>
+                <tr>
+                    <td><code>STF-EVL-09</code></td>
+                    <td>User who is not the assigned evaluator tries to access the form</td>
+                    <td>Access is denied; user receives 403 Forbidden response</td>
+                </tr>
+                <tr>
+                    <td><code>STF-EVL-10</code></td>
+                    <td>Verify group criteria section displays correctly</td>
+                    <td>All criteria with <code>is_individual = false</code> appear in the Group Criteria section, each with score level, score awarded, and feedback fields</td>
+                </tr>
+                <tr>
+                    <td><code>STF-EVL-11</code></td>
+                    <td>Verify individual criteria section displays correctly</td>
+                    <td>All criteria with <code>is_individual = true</code> appear in the Individual Criteria section, with nested student fieldsets for each criterion</td>
+                </tr>
+                <tr>
+                    <td><code>STF-EVL-12</code></td>
+                    <td>Fill and submit general feedback</td>
+                    <td>General feedback is saved in the <code>general_feedback</code> column of the <code>evaluations</code> table</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ============================================================ -->
+    <!--  APPENDIX: COMPLETE DATABASE SCHEMA REFERENCE                 -->
+    <!-- ============================================================ -->
+    <div class="screen-section">
+        <h2>Appendix: Complete Database Schema Reference</h2>
+        <p>
+            The following table provides a consolidated view of all database tables and columns referenced
+            throughout this documentation, along with their data types, constraints, and the screens where
+            they are used.
+        </p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Table</th>
+                    <th>Column</th>
+                    <th>Type</th>
+                    <th>Constraints</th>
+                    <th>Referenced In</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td rowspan="4"><code>users</code></td>
+                    <td><code>id</code></td>
+                    <td>bigint PK</td>
+                    <td>AUTO INCREMENT</td>
+                    <td>All screens (authentication)</td>
+                </tr>
+                <tr>
+                    <td><code>email</code></td>
+                    <td>varchar(255)</td>
+                    <td>NOT NULL, UNIQUE</td>
+                    <td>Login, Password Reset</td>
+                </tr>
+                <tr>
+                    <td><code>password</code></td>
+                    <td>varchar(255)</td>
+                    <td>NOT NULL</td>
+                    <td>Login</td>
+                </tr>
+                <tr>
+                    <td><code>app_authentication_secret</code></td>
+                    <td>text</td>
+                    <td>NULLABLE</td>
+                    <td>Login (MFA)</td>
+                </tr>
+                <tr>
+                    <td><code>sessions</code></td>
+                    <td><code>user_id</code></td>
+                    <td>bigint FK</td>
+                    <td>NULLABLE, FK users.id</td>
+                    <td>Login</td>
+                </tr>
+                <tr>
+                    <td rowspan="3"><code>password_reset_tokens</code></td>
+                    <td><code>email</code></td>
+                    <td>varchar(255)</td>
+                    <td>PRIMARY KEY</td>
+                    <td>Password Reset</td>
+                </tr>
+                <tr>
+                    <td><code>token</code></td>
+                    <td>varchar(255)</td>
+                    <td>NOT NULL</td>
+                    <td>Password Reset</td>
+                </tr>
+                <tr>
+                    <td><code>created_at</code></td>
+                    <td>timestamp</td>
+                    <td>NULLABLE</td>
+                    <td>Password Reset</td>
+                </tr>
+                <tr>
+                    <td rowspan="7"><code>projects</code></td>
+                    <td><code>title</code></td>
+                    <td>varchar(255)</td>
+                    <td>NOT NULL</td>
+                    <td>Supervised Projects, Review Assignments, Project Detail</td>
+                </tr>
+                <tr>
+                    <td><code>supervisor_id</code></td>
+                    <td>bigint FK</td>
+                    <td>NOT NULL, FK users.id</td>
+                    <td>Supervised Projects, Dashboard, Project Detail</td>
+                </tr>
+                <tr>
+                    <td><code>semester_id</code></td>
+                    <td>bigint FK</td>
+                    <td>NOT NULL, FK semesters.id</td>
+                    <td>Supervised Projects, Project Detail</td>
+                </tr>
+                <tr>
+                    <td><code>course_id</code></td>
+                    <td>bigint FK</td>
+                    <td>NOT NULL, FK courses.id</td>
+                    <td>Supervised Projects, Project Detail</td>
+                </tr>
+                <tr>
+                    <td><code>phase_template_id</code></td>
+                    <td>bigint FK</td>
+                    <td>NULLABLE, FK phase_templates.id</td>
+                    <td>Supervised Projects, Project Detail</td>
+                </tr>
+                <tr>
+                    <td><code>specialization_id</code></td>
+                    <td>bigint FK</td>
+                    <td>NULLABLE, FK specializations.id</td>
+                    <td>Project Detail</td>
+                </tr>
+                <tr>
+                    <td><code>status</code></td>
+                    <td>varchar(255)</td>
+                    <td>NOT NULL</td>
+                    <td>Dashboard, Supervised Projects</td>
+                </tr>
+                <tr>
+                    <td><code>project_student</code></td>
+                    <td><code>project_id</code>, <code>user_id</code></td>
+                    <td>bigint FK, bigint FK</td>
+                    <td>Composite key</td>
+                    <td>Supervised Projects, Project Detail</td>
+                </tr>
+                <tr>
+                    <td><code>project_reviewer</code></td>
+                    <td><code>project_id</code>, <code>user_id</code></td>
+                    <td>bigint FK, bigint FK</td>
+                    <td>Composite key</td>
+                    <td>Project Detail</td>
+                </tr>
+                <tr>
+                    <td rowspan="7"><code>evaluations</code></td>
+                    <td><code>evaluator_id</code></td>
+                    <td>bigint FK</td>
+                    <td>NOT NULL, FK users.id</td>
+                    <td>Dashboard, Review Assignments, Evaluation Form</td>
+                </tr>
+                <tr>
+                    <td><code>evaluator_role</code></td>
+                    <td>varchar(255)</td>
+                    <td>NOT NULL</td>
+                    <td>Review Assignments, Project Detail, Evaluation Form</td>
+                </tr>
+                <tr>
+                    <td><code>project_id</code></td>
+                    <td>bigint FK</td>
+                    <td>NOT NULL, FK projects.id</td>
+                    <td>Review Assignments, Project Detail, Evaluation Form</td>
+                </tr>
+                <tr>
+                    <td><code>rubric_template_id</code></td>
+                    <td>bigint FK</td>
+                    <td>NOT NULL, FK rubric_templates.id</td>
+                    <td>Review Assignments, Evaluation Form</td>
+                </tr>
+                <tr>
+                    <td><code>status</code></td>
+                    <td>varchar(255)</td>
+                    <td>NOT NULL</td>
+                    <td>Dashboard, Review Assignments, Evaluation Form</td>
+                </tr>
+                <tr>
+                    <td><code>general_feedback</code></td>
+                    <td>text</td>
+                    <td>NULLABLE</td>
+                    <td>Evaluation Form</td>
+                </tr>
+                <tr>
+                    <td><code>fill_order</code></td>
+                    <td>integer</td>
+                    <td>NOT NULL</td>
+                    <td>Review Assignments, Evaluation Form</td>
+                </tr>
+                <tr>
+                    <td rowspan="5"><code>evaluation_scores</code></td>
+                    <td><code>evaluation_id</code></td>
+                    <td>bigint FK</td>
+                    <td>NOT NULL, FK evaluations.id</td>
+                    <td>Evaluation Form</td>
+                </tr>
+                <tr>
+                    <td><code>criterion_id</code></td>
+                    <td>bigint FK</td>
+                    <td>NOT NULL, FK criteria.id</td>
+                    <td>Evaluation Form</td>
+                </tr>
+                <tr>
+                    <td><code>score_level_id</code></td>
+                    <td>bigint FK</td>
+                    <td>NULLABLE, FK score_levels.id</td>
+                    <td>Evaluation Form</td>
+                </tr>
+                <tr>
+                    <td><code>student_id</code></td>
+                    <td>bigint FK</td>
+                    <td>NULLABLE, FK users.id</td>
+                    <td>Evaluation Form (individual criteria)</td>
+                </tr>
+                <tr>
+                    <td><code>score_awarded</code></td>
+                    <td>decimal(8,2)</td>
+                    <td>NULLABLE</td>
+                    <td>Evaluation Form</td>
+                </tr>
+                <tr>
+                    <td rowspan="4"><code>criteria</code></td>
+                    <td><code>rubric_template_id</code></td>
+                    <td>bigint FK</td>
+                    <td>NOT NULL, FK rubric_templates.id</td>
+                    <td>Evaluation Form</td>
+                </tr>
+                <tr>
+                    <td><code>title</code></td>
+                    <td>varchar(255)</td>
+                    <td>NOT NULL</td>
+                    <td>Evaluation Form</td>
+                </tr>
+                <tr>
+                    <td><code>max_score</code></td>
+                    <td>decimal(8,2)</td>
+                    <td>NOT NULL</td>
+                    <td>Evaluation Form</td>
+                </tr>
+                <tr>
+                    <td><code>is_individual</code></td>
+                    <td>boolean</td>
+                    <td>NOT NULL, DEFAULT false</td>
+                    <td>Evaluation Form</td>
+                </tr>
+                <tr>
+                    <td rowspan="4"><code>score_levels</code></td>
+                    <td><code>criterion_id</code></td>
+                    <td>bigint FK</td>
+                    <td>NOT NULL, FK criteria.id</td>
+                    <td>Evaluation Form</td>
+                </tr>
+                <tr>
+                    <td><code>label</code></td>
+                    <td>varchar(255)</td>
+                    <td>NOT NULL</td>
+                    <td>Evaluation Form</td>
+                </tr>
+                <tr>
+                    <td><code>score_value</code></td>
+                    <td>decimal(8,2)</td>
+                    <td>NOT NULL</td>
+                    <td>Evaluation Form</td>
+                </tr>
+                <tr>
+                    <td><code>sort_order</code></td>
+                    <td>integer</td>
+                    <td>NOT NULL</td>
+                    <td>Evaluation Form</td>
+                </tr>
+                <tr>
+                    <td><code>phase_rubric_rules</code></td>
+                    <td><code>fill_order</code>, <code>evaluator_role</code></td>
+                    <td>integer, varchar</td>
+                    <td>NOT NULL</td>
+                    <td>Review Assignments</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ============================================================ -->
+    <!--  APPENDIX: TEST CASE SUMMARY                                  -->
+    <!-- ============================================================ -->
+    <div class="screen-section">
+        <h2>Appendix: Test Case Summary</h2>
+        <p>
+            The following table consolidates all test cases documented across the Staff panel screens for quick
+            reference and test planning.
+        </p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Test ID</th>
+                    <th>Screen</th>
+                    <th>Test Case</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Authentication -->
+                <tr><td><code>STF-AUTH-01</code></td><td>Login</td><td>Submit valid email and password for a staff user</td></tr>
+                <tr><td><code>STF-AUTH-02</code></td><td>Login</td><td>Submit valid credentials for a user with MFA configured</td></tr>
+                <tr><td><code>STF-AUTH-03</code></td><td>Login</td><td>Submit valid credentials with correct one-time MFA code</td></tr>
+                <tr><td><code>STF-AUTH-04</code></td><td>Login</td><td>Submit invalid email or password</td></tr>
+                <tr><td><code>STF-AUTH-05</code></td><td>Login</td><td>Submit form with one or both fields empty</td></tr>
+                <tr><td><code>STF-AUTH-06</code></td><td>Login</td><td>Authenticated user navigates to login page</td></tr>
+                <tr><td><code>STF-AUTH-07</code></td><td>Password Reset</td><td>Submit a valid registered email address</td></tr>
+                <tr><td><code>STF-AUTH-08</code></td><td>Password Reset</td><td>Submit an unregistered email address</td></tr>
+                <tr><td><code>STF-AUTH-09</code></td><td>Password Reset</td><td>Submit form with empty email field</td></tr>
+                <tr><td><code>STF-AUTH-10</code></td><td>Password Reset</td><td>Use an expired reset token link</td></tr>
+                <!-- Dashboard -->
+                <tr><td><code>STF-DASH-01</code></td><td>Dashboard</td><td>Authenticated staff user navigates to dashboard</td></tr>
+                <tr><td><code>STF-DASH-02</code></td><td>Dashboard</td><td>Supervisor views dashboard with SupervisedProjectsWidget</td></tr>
+                <tr><td><code>STF-DASH-03</code></td><td>Dashboard</td><td>Reviewer views dashboard with ReviewAssignmentsWidget</td></tr>
+                <tr><td><code>STF-DASH-04</code></td><td>Dashboard</td><td>User with both roles sees both widgets</td></tr>
+                <tr><td><code>STF-DASH-05</code></td><td>Dashboard</td><td>Verify evaluation stat card counts</td></tr>
+                <tr><td><code>STF-DASH-06</code></td><td>Dashboard</td><td>User with no evaluations views dashboard</td></tr>
+                <!-- Supervised Projects -->
+                <tr><td><code>STF-SUP-01</code></td><td>Supervised Projects</td><td>Supervisor navigates to the page</td></tr>
+                <tr><td><code>STF-SUP-02</code></td><td>Supervised Projects</td><td>Non-supervisor attempts access</td></tr>
+                <tr><td><code>STF-SUP-03</code></td><td>Supervised Projects</td><td>Projects filtered to current user only</td></tr>
+                <tr><td><code>STF-SUP-04</code></td><td>Supervised Projects</td><td>Apply Status filter</td></tr>
+                <tr><td><code>STF-SUP-05</code></td><td>Supervised Projects</td><td>Fill Assessment button on evaluating project</td></tr>
+                <tr><td><code>STF-SUP-06</code></td><td>Supervised Projects</td><td>Fill Assessment hidden on non-evaluating project</td></tr>
+                <tr><td><code>STF-SUP-07</code></td><td>Supervised Projects</td><td>Verify Progress column accuracy</td></tr>
+                <tr><td><code>STF-SUP-08</code></td><td>Supervised Projects</td><td>Search for a project by title</td></tr>
+                <!-- Review Assignments -->
+                <tr><td><code>STF-REV-01</code></td><td>Review Assignments</td><td>Reviewer navigates to the page</td></tr>
+                <tr><td><code>STF-REV-02</code></td><td>Review Assignments</td><td>Non-reviewer attempts access</td></tr>
+                <tr><td><code>STF-REV-03</code></td><td>Review Assignments</td><td>Fill order dependency not met</td></tr>
+                <tr><td><code>STF-REV-04</code></td><td>Review Assignments</td><td>Fill order dependency met</td></tr>
+                <tr><td><code>STF-REV-05</code></td><td>Review Assignments</td><td>View Assessment on submitted evaluation</td></tr>
+                <tr><td><code>STF-REV-06</code></td><td>Review Assignments</td><td>Project Detail link navigation</td></tr>
+                <tr><td><code>STF-REV-07</code></td><td>Review Assignments</td><td>Search by project title</td></tr>
+                <!-- Project Detail -->
+                <tr><td><code>STF-PRJ-01</code></td><td>Project Detail</td><td>Supervisor accesses project they supervise</td></tr>
+                <tr><td><code>STF-PRJ-02</code></td><td>Project Detail</td><td>Reviewer accesses project they are assigned to</td></tr>
+                <tr><td><code>STF-PRJ-03</code></td><td>Project Detail</td><td>Unrelated staff attempts access</td></tr>
+                <tr><td><code>STF-PRJ-04</code></td><td>Project Detail</td><td>Verify all metadata fields</td></tr>
+                <tr><td><code>STF-PRJ-05</code></td><td>Project Detail</td><td>Verify students list</td></tr>
+                <tr><td><code>STF-PRJ-06</code></td><td>Project Detail</td><td>Verify reviewers list</td></tr>
+                <tr><td><code>STF-PRJ-07</code></td><td>Project Detail</td><td>Verify evaluations list data</td></tr>
+                <!-- Evaluation Form -->
+                <tr><td><code>STF-EVL-01</code></td><td>Evaluation Form</td><td>Open pending evaluation (auto-upgrade to draft)</td></tr>
+                <tr><td><code>STF-EVL-02</code></td><td>Evaluation Form</td><td>Score level auto-fills score awarded</td></tr>
+                <tr><td><code>STF-EVL-03</code></td><td>Evaluation Form</td><td>Manual score entry within valid range</td></tr>
+                <tr><td><code>STF-EVL-04</code></td><td>Evaluation Form</td><td>Save Draft with partial scores</td></tr>
+                <tr><td><code>STF-EVL-05</code></td><td>Evaluation Form</td><td>Submit with all scores provided</td></tr>
+                <tr><td><code>STF-EVL-06</code></td><td>Evaluation Form</td><td>Submit with missing scores</td></tr>
+                <tr><td><code>STF-EVL-07</code></td><td>Evaluation Form</td><td>Open submitted evaluation (read-only mode)</td></tr>
+                <tr><td><code>STF-EVL-08</code></td><td>Evaluation Form</td><td>Fill order dependency not met (403)</td></tr>
+                <tr><td><code>STF-EVL-09</code></td><td>Evaluation Form</td><td>Non-assigned evaluator attempts access</td></tr>
+                <tr><td><code>STF-EVL-10</code></td><td>Evaluation Form</td><td>Group criteria section display</td></tr>
+                <tr><td><code>STF-EVL-11</code></td><td>Evaluation Form</td><td>Individual criteria section display</td></tr>
+                <tr><td><code>STF-EVL-12</code></td><td>Evaluation Form</td><td>General feedback save and submit</td></tr>
+            </tbody>
+        </table>
+
+        <p style="margin-top: 30px; text-align: center; color: #6b7280; font-size: 0.9em;">
+            &mdash; End of Staff Panel Documentation &mdash;
+        </p>
+        <p style="text-align: center; color: #9ca3af; font-size: 0.8em;">
+            Academic Management System (AMS) &bull; Staff Panel &bull; March 2026
+        </p>
+    </div>
+
+</body>
+</html>

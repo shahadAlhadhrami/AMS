@@ -1,0 +1,5008 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AMS Admin Panel - System Documentation</title>
+<style>
+/* Base */
+*{box-sizing:border-box}
+body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;max-width:1100px;margin:0 auto;padding:20px;color:#333;line-height:1.6}
+h1{color:#1e40af;border-bottom:3px solid #1e40af;padding-bottom:10px}
+h2{color:#1e3a5f;border-bottom:2px solid #e5e7eb;padding-bottom:8px;margin-top:40px}
+h3{color:#374151;margin-top:25px}
+table{width:100%;border-collapse:collapse;margin:15px 0;font-size:.9em}
+th{background:#1e40af;color:#fff;padding:10px 12px;text-align:left}
+td{padding:8px 12px;border:1px solid #e5e7eb;vertical-align:top}
+tr:nth-child(even){background:#f9fafb}
+img{max-width:100%;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.1);margin:15px 0}
+.screen-section{page-break-before:always;margin-top:60px}
+.first-section{page-break-before:auto}
+.route{background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:4px;font-family:monospace;font-size:.85em}
+.toc{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:20px 30px;margin:20px 0}
+.toc ul{list-style:none;padding-left:0}.toc li{padding:3px 0}
+.toc a{color:#1e40af;text-decoration:none}.toc a:hover{text-decoration:underline}
+.toc-group{font-weight:600;margin-top:12px;color:#374151}
+.hdr{text-align:center;margin-bottom:40px;padding:30px;background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;border-radius:12px}
+.hdr h1{color:#fff;border:none;margin:0}.hdr p{color:#dbeafe;margin:5px 0}
+.desc{background:#f0f9ff;border-left:4px solid #3b82f6;padding:12px 16px;margin:10px 0;border-radius:0 8px 8px 0}
+@media print{
+.screen-section{page-break-before:always}
+.hdr{background:#1e40af!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+th{background:#1e40af!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{max-width:100%}.no-print{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+<h1>AMS Admin Panel</h1>
+<p>System Documentation &amp; Test Cases</p>
+<p>Assessment Management System - Built with Laravel 12 &amp; Filament 5</p>
+</div>
+
+<!-- ============================================================ -->
+<!-- TABLE OF CONTENTS                                              -->
+<!-- ============================================================ -->
+<div class="toc">
+<h2 style="margin-top:0">Table of Contents</h2>
+
+<p class="toc-group">Authentication</p>
+<ul>
+<li><a href="#screen-1">1. Login</a></li>
+<li><a href="#screen-2">2. Password Reset</a></li>
+<li><a href="#screen-3">3. MFA Challenge</a></li>
+</ul>
+
+<p class="toc-group">Dashboard</p>
+<ul>
+<li><a href="#screen-4">4. Dashboard</a></li>
+</ul>
+
+<p class="toc-group">User Management</p>
+<ul>
+<li><a href="#screen-5">5. Users List</a></li>
+<li><a href="#screen-6">6. Users Create</a></li>
+<li><a href="#screen-7">7. Users Edit</a></li>
+</ul>
+
+<p class="toc-group">Master Data - Departments</p>
+<ul>
+<li><a href="#screen-8">8. Departments List</a></li>
+<li><a href="#screen-9">9. Departments Create</a></li>
+<li><a href="#screen-10">10. Departments Edit</a></li>
+</ul>
+
+<p class="toc-group">Master Data - Specializations</p>
+<ul>
+<li><a href="#screen-11">11. Specializations List</a></li>
+<li><a href="#screen-12">12. Specializations Create</a></li>
+<li><a href="#screen-13">13. Specializations Edit</a></li>
+</ul>
+
+<p class="toc-group">Master Data - Courses</p>
+<ul>
+<li><a href="#screen-14">14. Courses List</a></li>
+<li><a href="#screen-15">15. Courses Create</a></li>
+<li><a href="#screen-16">16. Courses Edit</a></li>
+</ul>
+
+<p class="toc-group">Master Data - Grading Scales</p>
+<ul>
+<li><a href="#screen-17">17. Grading Scales List</a></li>
+<li><a href="#screen-18">18. Grading Scales Create</a></li>
+<li><a href="#screen-19">19. Grading Scales Edit</a></li>
+</ul>
+
+<p class="toc-group">Master Data - Semesters</p>
+<ul>
+<li><a href="#screen-20">20. Semesters List</a></li>
+<li><a href="#screen-21">21. Semesters Create</a></li>
+<li><a href="#screen-22">22. Semesters Edit</a></li>
+</ul>
+
+<p class="toc-group">Projects</p>
+<ul>
+<li><a href="#screen-23">23. Projects List</a></li>
+<li><a href="#screen-24">24. Projects Create</a></li>
+<li><a href="#screen-25">25. Projects Edit</a></li>
+</ul>
+
+<p class="toc-group">Rubric Templates</p>
+<ul>
+<li><a href="#screen-26">26. Rubric Templates List</a></li>
+<li><a href="#screen-27">27. Rubric Templates Create</a></li>
+<li><a href="#screen-28">28. Rubric Templates Edit</a></li>
+</ul>
+
+<p class="toc-group">Phase Templates</p>
+<ul>
+<li><a href="#screen-29">29. Phase Templates List</a></li>
+<li><a href="#screen-30">30. Phase Templates Create</a></li>
+<li><a href="#screen-31">31. Phase Templates Edit</a></li>
+</ul>
+
+<p class="toc-group">Evaluations</p>
+<ul>
+<li><a href="#screen-32">32. Evaluations List</a></li>
+<li><a href="#screen-33">33. Evaluations View</a></li>
+</ul>
+
+<p class="toc-group">Consolidated Marks</p>
+<ul>
+<li><a href="#screen-34">34. Consolidated Marks List</a></li>
+<li><a href="#screen-35">35. Consolidated Marks View</a></li>
+</ul>
+
+<p class="toc-group">Wizards &amp; Bulk Operations</p>
+<ul>
+<li><a href="#screen-36">36. Semester Setup Wizard</a></li>
+<li><a href="#screen-37">37. Bulk Import</a></li>
+<li><a href="#screen-38">38. Grade Export</a></li>
+</ul>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 1 - LOGIN                                               -->
+<!-- ============================================================ -->
+<div id="screen-1" class="screen-section first-section">
+<h2>Screen 1 - Login</h2>
+<p>Route: <span class="route">/admin/login</span></p>
+
+<img src="photos/01-login.png" alt="Login Screen">
+
+<div class="desc">
+The Login screen is the entry point to the AMS Admin Panel. It is powered by Filament 5's default authentication system and provides an email/password form protected by CSRF tokens. Upon successful credential verification, users are redirected to the admin dashboard. If the authenticated user has a configured <code>app_authentication_secret</code>, they are redirected to the MFA Challenge screen instead.
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-AUTH-001</td>
+<td>Valid login with correct credentials</td>
+<td>1. Navigate to <code>/admin/login</code><br>2. Enter valid email and password<br>3. Click "Sign in"</td>
+<td>User is redirected to <code>/admin</code> dashboard. Session is created in the <code>sessions</code> table.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-AUTH-002</td>
+<td>Invalid login with wrong password</td>
+<td>1. Navigate to <code>/admin/login</code><br>2. Enter valid email and incorrect password<br>3. Click "Sign in"</td>
+<td>Error message "These credentials do not match our records." is displayed. User remains on login page.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-AUTH-003</td>
+<td>Login with non-existent email</td>
+<td>1. Navigate to <code>/admin/login</code><br>2. Enter a non-registered email<br>3. Click "Sign in"</td>
+<td>Same generic error message displayed. No user enumeration vulnerability.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-AUTH-004</td>
+<td>CSRF token validation</td>
+<td>1. Open login page<br>2. Inspect form to verify <code>_token</code> hidden field<br>3. Attempt form submission with tampered token</td>
+<td>Request is rejected with 419 status code. CSRF protection is enforced.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-AUTH-005</td>
+<td>Login redirects to MFA when secret is set</td>
+<td>1. Ensure user has <code>app_authentication_secret</code> set<br>2. Login with correct email and password</td>
+<td>User is redirected to MFA challenge page instead of dashboard.</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>users</td>
+<td>email</td>
+<td>varchar</td>
+<td>UNIQUE, NOT NULL</td>
+<td>Email input field</td>
+</tr>
+<tr>
+<td>users</td>
+<td>password</td>
+<td>varchar</td>
+<td>NOT NULL (hashed)</td>
+<td>Password input field</td>
+</tr>
+<tr>
+<td>users</td>
+<td>app_authentication_secret</td>
+<td>text</td>
+<td>NULL</td>
+<td>Determines MFA redirect after login</td>
+</tr>
+<tr>
+<td>sessions</td>
+<td>id</td>
+<td>string</td>
+<td>PRIMARY KEY</td>
+<td>Created on successful login</td>
+</tr>
+<tr>
+<td>sessions</td>
+<td>user_id</td>
+<td>bigint</td>
+<td>FK (users.id), NULL</td>
+<td>Links session to authenticated user</td>
+</tr>
+<tr>
+<td>sessions</td>
+<td>ip_address</td>
+<td>varchar(45)</td>
+<td>NULL</td>
+<td>Captured from login request</td>
+</tr>
+<tr>
+<td>sessions</td>
+<td>user_agent</td>
+<td>text</td>
+<td>NULL</td>
+<td>Captured from login request</td>
+</tr>
+<tr>
+<td>sessions</td>
+<td>last_activity</td>
+<td>int</td>
+<td>INDEXED</td>
+<td>Updated on each request</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 2 - PASSWORD RESET                                      -->
+<!-- ============================================================ -->
+<div id="screen-2" class="screen-section">
+<h2>Screen 2 - Password Reset</h2>
+<p>Route: <span class="route">/admin/password-reset</span></p>
+
+<img src="photos/02-password-reset.png" alt="Password Reset Screen">
+
+<div class="desc">
+The Password Reset screen allows users who have forgotten their credentials to request a password reset link via email. The system generates a time-limited token stored in the <code>password_reset_tokens</code> table and sends a reset link to the user's registered email address. This follows Laravel's built-in password reset flow integrated through Filament 5.
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-AUTH-006</td>
+<td>Request reset with valid email</td>
+<td>1. Navigate to <code>/admin/password-reset</code><br>2. Enter registered email<br>3. Click "Send reset link"</td>
+<td>Success notification displayed. A row is inserted into <code>password_reset_tokens</code> table. Email is sent with reset link.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-AUTH-007</td>
+<td>Request reset with non-existent email</td>
+<td>1. Navigate to <code>/admin/password-reset</code><br>2. Enter unregistered email<br>3. Click "Send reset link"</td>
+<td>Same success-like notification displayed to prevent user enumeration. No token created in database.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-AUTH-008</td>
+<td>Reset link expiration</td>
+<td>1. Request a reset link<br>2. Wait beyond the configured expiration time<br>3. Click the link in the email</td>
+<td>Expired token error is shown. User must request a new reset link.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-AUTH-009</td>
+<td>Successful password change via reset link</td>
+<td>1. Request reset link<br>2. Click link in email<br>3. Enter new password and confirmation<br>4. Submit</td>
+<td>Password is updated in <code>users</code> table (hashed). User is redirected to login. Token is deleted from <code>password_reset_tokens</code>.</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>password_reset_tokens</td>
+<td>email</td>
+<td>string</td>
+<td>PRIMARY KEY</td>
+<td>Email input field</td>
+</tr>
+<tr>
+<td>password_reset_tokens</td>
+<td>token</td>
+<td>string</td>
+<td>NOT NULL (hashed)</td>
+<td>Generated token sent via email link</td>
+</tr>
+<tr>
+<td>password_reset_tokens</td>
+<td>created_at</td>
+<td>timestamp</td>
+<td>NULL</td>
+<td>Used for expiration check</td>
+</tr>
+<tr>
+<td>users</td>
+<td>password</td>
+<td>varchar</td>
+<td>NOT NULL</td>
+<td>Updated with new hashed password</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 3 - MFA CHALLENGE                                       -->
+<!-- ============================================================ -->
+<div id="screen-3" class="screen-section">
+<h2>Screen 3 - MFA Challenge</h2>
+<p>Route: <span class="route">/admin/login</span></p>
+
+<img src="photos/02b-mfa-challenge.png" alt="MFA Challenge Screen">
+
+<div class="desc">
+The MFA (Multi-Factor Authentication) Challenge screen appears after successful email/password authentication for users who have a configured <code>app_authentication_secret</code>. The user must enter a 6-digit TOTP (Time-based One-Time Password) code from their authenticator app (e.g., Google Authenticator, Authy). The code is validated against the stored secret. Users can also use recovery codes stored in <code>app_authentication_recovery_codes</code> if they lose access to their authenticator device.
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-AUTH-010</td>
+<td>Valid TOTP code submission</td>
+<td>1. Login with valid credentials (MFA-enabled user)<br>2. Enter correct 6-digit TOTP code<br>3. Submit</td>
+<td>User is authenticated and redirected to <code>/admin</code> dashboard.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-AUTH-011</td>
+<td>Invalid TOTP code submission</td>
+<td>1. Login with valid credentials (MFA-enabled user)<br>2. Enter incorrect TOTP code<br>3. Submit</td>
+<td>Error message displayed. User remains on MFA challenge page.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-AUTH-012</td>
+<td>Expired TOTP code</td>
+<td>1. Login with valid credentials<br>2. Wait for TOTP code to expire (30s window)<br>3. Enter the now-expired code</td>
+<td>Code is rejected. User must enter a current valid code.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-AUTH-013</td>
+<td>Recovery code usage</td>
+<td>1. Login with valid credentials (MFA-enabled user)<br>2. Click "Use recovery code"<br>3. Enter a valid recovery code</td>
+<td>User is authenticated. Used recovery code is consumed and removed from <code>app_authentication_recovery_codes</code>.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-AUTH-014</td>
+<td>Direct access to MFA page without prior login</td>
+<td>1. Navigate directly to MFA challenge URL without logging in first</td>
+<td>User is redirected back to <code>/admin/login</code>.</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>users</td>
+<td>app_authentication_secret</td>
+<td>text</td>
+<td>NULL</td>
+<td>Stores the TOTP secret key for code generation/validation</td>
+</tr>
+<tr>
+<td>users</td>
+<td>app_authentication_recovery_codes</td>
+<td>text</td>
+<td>NULL</td>
+<td>JSON array of one-time recovery codes</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 4 - DASHBOARD                                           -->
+<!-- ============================================================ -->
+<div id="screen-4" class="screen-section">
+<h2>Screen 4 - Dashboard</h2>
+<p>Route: <span class="route">/admin</span></p>
+
+<img src="photos/03-dashboard.png" alt="Dashboard Screen">
+
+<div class="desc">
+The Dashboard is the main landing page after login. It provides a high-level overview of the system's current state through four widgets:<br>
+<strong>1. PendingEvaluationsWidget</strong> - Displays statistics for evaluations in pending, draft, and submitted states.<br>
+<strong>2. ProjectStatusWidget</strong> - A pie chart visualizing the distribution of project statuses (setup, evaluating, completed).<br>
+<strong>3. SubmissionProgressWidget</strong> - A bar chart showing evaluation submission progress over time.<br>
+<strong>4. RecentActivityWidget</strong> - A table listing the last 20 activity log entries from the system.
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-DASH-001</td>
+<td>Dashboard loads with all four widgets</td>
+<td>1. Login as admin<br>2. Navigate to <code>/admin</code></td>
+<td>All four widgets render: PendingEvaluationsWidget, ProjectStatusWidget, SubmissionProgressWidget, RecentActivityWidget.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-DASH-002</td>
+<td>PendingEvaluationsWidget shows correct counts</td>
+<td>1. Verify evaluation counts in database<br>2. Compare with widget display</td>
+<td>Widget shows correct counts for pending, draft, and submitted evaluations matching <code>evaluations</code> table grouped by status.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-DASH-003</td>
+<td>ProjectStatusWidget pie chart accuracy</td>
+<td>1. Count projects by status in database<br>2. Compare with pie chart segments</td>
+<td>Pie chart segments match the number of projects in setup, evaluating, and completed statuses from <code>projects</code> table.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-DASH-004</td>
+<td>RecentActivityWidget displays last 20 entries</td>
+<td>1. Check <code>activity_log</code> table<br>2. Verify widget shows latest 20 records</td>
+<td>Table displays the 20 most recent activity log entries in descending order by creation date.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-DASH-005</td>
+<td>Dashboard with empty data</td>
+<td>1. Clear all evaluations, projects, and activity logs<br>2. Load dashboard</td>
+<td>Widgets display gracefully with zero counts, empty charts, and "No records" message in activity table.</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>evaluations</td>
+<td>status</td>
+<td>enum('pending','draft','submitted')</td>
+<td>NOT NULL</td>
+<td>PendingEvaluationsWidget counts</td>
+</tr>
+<tr>
+<td>projects</td>
+<td>status</td>
+<td>enum('setup','evaluating','completed')</td>
+<td>NOT NULL</td>
+<td>ProjectStatusWidget pie chart segments</td>
+</tr>
+<tr>
+<td>evaluations</td>
+<td>created_at</td>
+<td>timestamp</td>
+<td>NOT NULL</td>
+<td>SubmissionProgressWidget bar chart timeline</td>
+</tr>
+<tr>
+<td>activity_log</td>
+<td>description</td>
+<td>text</td>
+<td>NOT NULL</td>
+<td>RecentActivityWidget description column</td>
+</tr>
+<tr>
+<td>activity_log</td>
+<td>causer_id</td>
+<td>bigint</td>
+<td>NULL</td>
+<td>RecentActivityWidget user/causer column</td>
+</tr>
+<tr>
+<td>activity_log</td>
+<td>event</td>
+<td>varchar</td>
+<td>NULL</td>
+<td>RecentActivityWidget event type column</td>
+</tr>
+<tr>
+<td>activity_log</td>
+<td>created_at</td>
+<td>timestamp</td>
+<td>NOT NULL</td>
+<td>RecentActivityWidget ordering &amp; timestamp column</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 5 - USERS LIST                                          -->
+<!-- ============================================================ -->
+<div id="screen-5" class="screen-section">
+<h2>Screen 5 - Users List</h2>
+<p>Route: <span class="route">/admin/users</span></p>
+
+<img src="photos/04-users-list.png" alt="Users List Screen">
+
+<div class="desc">
+The Users List screen displays all system users in a searchable, filterable data table. Columns include <code>university_id</code>, <code>name</code>, <code>email</code>, role badges (from Spatie roles), and <code>specialization</code>. The table supports global search across user fields, filtering by role and specialization, CSV import for bulk user creation, and row-level edit/delete actions.
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-USR-001</td>
+<td>Users table displays all columns correctly</td>
+<td>1. Navigate to <code>/admin/users</code><br>2. Verify all columns are visible</td>
+<td>Table displays university_id, name, email, roles (as badges), and specialization columns with correct data.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-USR-002</td>
+<td>Search users by name or email</td>
+<td>1. Type a known user's name in the search field<br>2. Observe filtered results</td>
+<td>Table filters to show only matching users. Search works across name and email fields.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-USR-003</td>
+<td>Filter users by role</td>
+<td>1. Click the role filter<br>2. Select a specific role<br>3. Observe filtered results</td>
+<td>Table shows only users assigned the selected role. Count updates accordingly.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-USR-004</td>
+<td>Filter users by specialization</td>
+<td>1. Click the specialization filter<br>2. Select a specialization<br>3. Observe results</td>
+<td>Table shows only users belonging to the selected specialization.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-USR-005</td>
+<td>Delete user action</td>
+<td>1. Click the delete action on a user row<br>2. Confirm deletion in the modal</td>
+<td>User is soft-deleted (<code>deleted_at</code> set). User no longer appears in the list.</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>users</td>
+<td>id</td>
+<td>bigint</td>
+<td>PRIMARY KEY, AUTO_INCREMENT</td>
+<td>Internal row identifier</td>
+</tr>
+<tr>
+<td>users</td>
+<td>university_id</td>
+<td>varchar</td>
+<td>UNIQUE, NOT NULL</td>
+<td>University ID column</td>
+</tr>
+<tr>
+<td>users</td>
+<td>name</td>
+<td>varchar</td>
+<td>NOT NULL</td>
+<td>Name column</td>
+</tr>
+<tr>
+<td>users</td>
+<td>email</td>
+<td>varchar</td>
+<td>UNIQUE, NOT NULL</td>
+<td>Email column</td>
+</tr>
+<tr>
+<td>users</td>
+<td>specialization_id</td>
+<td>bigint</td>
+<td>FK (specializations.id), NULL</td>
+<td>Specialization column (joined)</td>
+</tr>
+<tr>
+<td>users</td>
+<td>deleted_at</td>
+<td>timestamp</td>
+<td>NULL</td>
+<td>Soft delete - hidden when set</td>
+</tr>
+<tr>
+<td>model_has_roles</td>
+<td>role_id</td>
+<td>bigint</td>
+<td>FK (roles.id)</td>
+<td>Roles badges (via pivot)</td>
+</tr>
+<tr>
+<td>model_has_roles</td>
+<td>model_id</td>
+<td>bigint</td>
+<td>Composite PK with role_id, model_type</td>
+<td>Links role to specific user</td>
+</tr>
+<tr>
+<td>roles</td>
+<td>name</td>
+<td>string</td>
+<td>UNIQUE(name, guard_name)</td>
+<td>Role badge label text</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 6 - USERS CREATE                                        -->
+<!-- ============================================================ -->
+<div id="screen-6" class="screen-section">
+<h2>Screen 6 - Users Create</h2>
+<p>Route: <span class="route">/admin/users/create</span></p>
+
+<img src="photos/05-users-create.png" alt="Users Create Screen">
+
+<div class="desc">
+The Users Create screen provides a form to add a new user to the system. Fields include <code>university_id</code> (unique, max 255 chars), <code>name</code> (max 255 chars), <code>email</code> (unique, valid email), <code>password</code> (min 8 chars, confirmed with a confirmation field), an optional <code>specialization</code> select dropdown, and a <code>roles</code> checkbox list displayed in 2 columns. All validation is handled server-side by Filament with real-time feedback.
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-USR-006</td>
+<td>Create user with all valid fields</td>
+<td>1. Navigate to <code>/admin/users/create</code><br>2. Fill in university_id, name, email, password, confirm password<br>3. Select a specialization<br>4. Check one or more roles<br>5. Click "Create"</td>
+<td>User is created in <code>users</code> table. Roles are linked in <code>model_has_roles</code>. Redirect to users list with success notification.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-USR-007</td>
+<td>Duplicate university_id validation</td>
+<td>1. Try to create a user with an existing university_id<br>2. Submit form</td>
+<td>Validation error: "The university id has already been taken." User is not created.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-USR-008</td>
+<td>Duplicate email validation</td>
+<td>1. Try to create a user with an existing email<br>2. Submit form</td>
+<td>Validation error: "The email has already been taken." User is not created.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-USR-009</td>
+<td>Password confirmation mismatch</td>
+<td>1. Enter password in password field<br>2. Enter a different value in confirm password<br>3. Submit form</td>
+<td>Validation error: "The password confirmation does not match."</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-USR-010</td>
+<td>Password minimum length validation</td>
+<td>1. Enter a password shorter than 8 characters<br>2. Submit form</td>
+<td>Validation error: "The password must be at least 8 characters."</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>users</td>
+<td>university_id</td>
+<td>varchar(255)</td>
+<td>UNIQUE, NOT NULL</td>
+<td>University ID text input</td>
+</tr>
+<tr>
+<td>users</td>
+<td>name</td>
+<td>varchar(255)</td>
+<td>NOT NULL</td>
+<td>Name text input</td>
+</tr>
+<tr>
+<td>users</td>
+<td>email</td>
+<td>varchar(255)</td>
+<td>UNIQUE, NOT NULL, email format</td>
+<td>Email text input</td>
+</tr>
+<tr>
+<td>users</td>
+<td>password</td>
+<td>varchar</td>
+<td>NOT NULL, min 8 chars (hashed)</td>
+<td>Password + confirmation inputs</td>
+</tr>
+<tr>
+<td>users</td>
+<td>specialization_id</td>
+<td>bigint</td>
+<td>FK (specializations.id), NULL</td>
+<td>Specialization select dropdown</td>
+</tr>
+<tr>
+<td>model_has_roles</td>
+<td>role_id</td>
+<td>bigint</td>
+<td>FK (roles.id), Composite PK</td>
+<td>Roles checkbox list</td>
+</tr>
+<tr>
+<td>model_has_roles</td>
+<td>model_type</td>
+<td>string</td>
+<td>Composite PK</td>
+<td>Set to App\Models\User</td>
+</tr>
+<tr>
+<td>model_has_roles</td>
+<td>model_id</td>
+<td>bigint</td>
+<td>Composite PK</td>
+<td>Newly created user's ID</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 7 - USERS EDIT                                          -->
+<!-- ============================================================ -->
+<div id="screen-7" class="screen-section">
+<h2>Screen 7 - Users Edit</h2>
+<p>Route: <span class="route">/admin/users/{id}/edit</span></p>
+
+<img src="photos/06-users-edit.png" alt="Users Edit Screen">
+
+<div class="desc">
+The Users Edit screen is identical to the Create form but pre-populated with the existing user's data. The key difference is that the <code>password</code> field is optional -- leaving it blank preserves the current password. A delete action is available in the page header for removing the user (soft delete). All the same validation rules apply, with uniqueness checks excluding the current record.
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-USR-011</td>
+<td>Edit user successfully without changing password</td>
+<td>1. Navigate to <code>/admin/users/{id}/edit</code><br>2. Change user name<br>3. Leave password fields blank<br>4. Click "Save changes"</td>
+<td>User name is updated. Password remains unchanged in database. Success notification shown.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-USR-012</td>
+<td>Edit user with new password</td>
+<td>1. Navigate to edit page<br>2. Enter new password and confirmation<br>3. Save</td>
+<td>Password is updated (re-hashed) in the <code>users</code> table. Other fields remain unchanged.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-USR-013</td>
+<td>Unique validation excludes current record</td>
+<td>1. Edit a user<br>2. Keep the same university_id and email<br>3. Save</td>
+<td>No uniqueness validation error. The user's own values are excluded from the unique check.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-USR-014</td>
+<td>Delete user from edit page</td>
+<td>1. Navigate to user edit page<br>2. Click the delete action in the header<br>3. Confirm deletion</td>
+<td>User is soft-deleted (<code>deleted_at</code> set). Redirect to users list with success notification.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-USR-015</td>
+<td>Change user roles</td>
+<td>1. Navigate to edit page<br>2. Uncheck existing roles and check new ones<br>3. Save</td>
+<td>Old role entries removed from <code>model_has_roles</code>. New role entries added. User's effective permissions change.</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>users</td>
+<td>university_id</td>
+<td>varchar(255)</td>
+<td>UNIQUE (ignore self)</td>
+<td>University ID text input (pre-filled)</td>
+</tr>
+<tr>
+<td>users</td>
+<td>name</td>
+<td>varchar(255)</td>
+<td>NOT NULL</td>
+<td>Name text input (pre-filled)</td>
+</tr>
+<tr>
+<td>users</td>
+<td>email</td>
+<td>varchar(255)</td>
+<td>UNIQUE (ignore self)</td>
+<td>Email text input (pre-filled)</td>
+</tr>
+<tr>
+<td>users</td>
+<td>password</td>
+<td>varchar</td>
+<td>NULL on edit (optional)</td>
+<td>Password field (blank = no change)</td>
+</tr>
+<tr>
+<td>users</td>
+<td>specialization_id</td>
+<td>bigint</td>
+<td>FK (specializations.id), NULL</td>
+<td>Specialization select (pre-selected)</td>
+</tr>
+<tr>
+<td>users</td>
+<td>deleted_at</td>
+<td>timestamp</td>
+<td>NULL (soft delete)</td>
+<td>Delete header action</td>
+</tr>
+<tr>
+<td>model_has_roles</td>
+<td>role_id, model_type, model_id</td>
+<td>bigint, string, bigint</td>
+<td>Composite PK</td>
+<td>Roles checkbox list (synced on save)</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 8 - DEPARTMENTS LIST                                    -->
+<!-- ============================================================ -->
+<div id="screen-8" class="screen-section">
+<h2>Screen 8 - Departments List</h2>
+<p>Route: <span class="route">/admin/departments</span></p>
+
+<img src="photos/07-departments-list.png" alt="Departments List Screen">
+
+<div class="desc">
+The Departments List screen displays all academic departments in a data table. Columns include the department <code>name</code>, a count of associated <code>specializations</code> (computed relationship count), and the <code>created_at</code> timestamp. The table supports search, pagination, and row-level edit/delete actions.
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-DEP-001</td>
+<td>Departments table displays correctly</td>
+<td>1. Navigate to <code>/admin/departments</code><br>2. Verify columns: name, specializations count, created_at</td>
+<td>Table displays all non-deleted departments with correct specializations count and creation dates.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-DEP-002</td>
+<td>Specializations count is accurate</td>
+<td>1. Pick a department row<br>2. Count its specializations in the database<br>3. Compare with the displayed count</td>
+<td>The displayed count matches <code>SELECT COUNT(*) FROM specializations WHERE department_id = ? AND deleted_at IS NULL</code>.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-DEP-003</td>
+<td>Search departments by name</td>
+<td>1. Enter a department name in the search field<br>2. Observe filtered results</td>
+<td>Table filters to show only departments whose names match the search query.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-DEP-004</td>
+<td>Delete department</td>
+<td>1. Click delete action on a department<br>2. Confirm deletion</td>
+<td>Department is soft-deleted. Associated specializations are handled per cascade rules.</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>departments</td>
+<td>id</td>
+<td>bigint</td>
+<td>PRIMARY KEY, AUTO_INCREMENT</td>
+<td>Internal row identifier</td>
+</tr>
+<tr>
+<td>departments</td>
+<td>name</td>
+<td>varchar</td>
+<td>NOT NULL</td>
+<td>Name column</td>
+</tr>
+<tr>
+<td>departments</td>
+<td>created_at</td>
+<td>timestamp</td>
+<td>NOT NULL</td>
+<td>Created At column</td>
+</tr>
+<tr>
+<td>departments</td>
+<td>deleted_at</td>
+<td>timestamp</td>
+<td>NULL</td>
+<td>Soft delete - hidden when set</td>
+</tr>
+<tr>
+<td>specializations</td>
+<td>department_id</td>
+<td>bigint</td>
+<td>FK (departments.id), CASCADE</td>
+<td>Specializations Count (aggregated)</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 9 - DEPARTMENTS CREATE                                  -->
+<!-- ============================================================ -->
+<div id="screen-9" class="screen-section">
+<h2>Screen 9 - Departments Create</h2>
+<p>Route: <span class="route">/admin/departments/create</span></p>
+
+<img src="photos/08-departments-create.png" alt="Departments Create Screen">
+
+<div class="desc">
+The Departments Create screen provides a simple form with a single <code>name</code> field to add a new department. The name must be unique across all departments and cannot exceed 255 characters. On successful creation, the user is redirected to the departments list.
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-DEP-005</td>
+<td>Create department with valid name</td>
+<td>1. Navigate to <code>/admin/departments/create</code><br>2. Enter a unique department name<br>3. Click "Create"</td>
+<td>Department is created in <code>departments</code> table. Redirect to list with success notification.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-DEP-006</td>
+<td>Duplicate name validation</td>
+<td>1. Enter an existing department name<br>2. Submit form</td>
+<td>Validation error: "The name has already been taken." Department is not created.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-DEP-007</td>
+<td>Empty name validation</td>
+<td>1. Leave name field empty<br>2. Submit form</td>
+<td>Validation error: "The name field is required."</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-DEP-008</td>
+<td>Name exceeds max length</td>
+<td>1. Enter a name exceeding 255 characters<br>2. Submit form</td>
+<td>Validation error: "The name must not be greater than 255 characters."</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>departments</td>
+<td>name</td>
+<td>varchar(255)</td>
+<td>UNIQUE, NOT NULL</td>
+<td>Name text input</td>
+</tr>
+<tr>
+<td>departments</td>
+<td>created_at</td>
+<td>timestamp</td>
+<td>NOT NULL</td>
+<td>Auto-set on creation</td>
+</tr>
+<tr>
+<td>departments</td>
+<td>updated_at</td>
+<td>timestamp</td>
+<td>NOT NULL</td>
+<td>Auto-set on creation</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 10 - DEPARTMENTS EDIT                                   -->
+<!-- ============================================================ -->
+<div id="screen-10" class="screen-section">
+<h2>Screen 10 - Departments Edit</h2>
+<p>Route: <span class="route">/admin/departments/{id}/edit</span></p>
+
+<img src="photos/09-departments-edit.png" alt="Departments Edit Screen">
+
+<div class="desc">
+The Departments Edit screen allows modification of the department name and includes a Relation Manager (RM) for <code>Specializations</code>. This inline relation manager enables administrators to create, edit, and delete specializations directly within the department edit page, providing a convenient way to manage the department's child specializations without navigating away.
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-DEP-009</td>
+<td>Edit department name</td>
+<td>1. Navigate to <code>/admin/departments/{id}/edit</code><br>2. Change the name<br>3. Click "Save changes"</td>
+<td>Department name is updated in database. Success notification displayed.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-DEP-010</td>
+<td>Create specialization via Relation Manager</td>
+<td>1. On department edit page<br>2. Click "Create" in the Specializations RM<br>3. Enter specialization name<br>4. Save</td>
+<td>New specialization created in <code>specializations</code> table with <code>department_id</code> set to current department. Appears in RM table.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-DEP-011</td>
+<td>Edit specialization via Relation Manager</td>
+<td>1. Click edit on a specialization row in the RM<br>2. Change the name<br>3. Save</td>
+<td>Specialization name is updated in database. RM table refreshes to show new name.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-DEP-012</td>
+<td>Delete specialization via Relation Manager</td>
+<td>1. Click delete on a specialization row in the RM<br>2. Confirm deletion</td>
+<td>Specialization is soft-deleted. Removed from RM table display.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-DEP-013</td>
+<td>Unique name validation on edit (exclude self)</td>
+<td>1. Change name to an existing department's name<br>2. Save</td>
+<td>Validation error: "The name has already been taken."</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>departments</td>
+<td>name</td>
+<td>varchar(255)</td>
+<td>UNIQUE (ignore self), NOT NULL</td>
+<td>Name text input (pre-filled)</td>
+</tr>
+<tr>
+<td>departments</td>
+<td>updated_at</td>
+<td>timestamp</td>
+<td>NOT NULL</td>
+<td>Auto-updated on save</td>
+</tr>
+<tr>
+<td>specializations</td>
+<td>id</td>
+<td>bigint</td>
+<td>PRIMARY KEY</td>
+<td>RM table rows</td>
+</tr>
+<tr>
+<td>specializations</td>
+<td>department_id</td>
+<td>bigint</td>
+<td>FK (departments.id), CASCADE</td>
+<td>Auto-set to current department</td>
+</tr>
+<tr>
+<td>specializations</td>
+<td>name</td>
+<td>varchar</td>
+<td>NOT NULL</td>
+<td>RM create/edit name field</td>
+</tr>
+<tr>
+<td>specializations</td>
+<td>deleted_at</td>
+<td>timestamp</td>
+<td>NULL</td>
+<td>RM delete action (soft delete)</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 11 - SPECIALIZATIONS LIST                               -->
+<!-- ============================================================ -->
+<div id="screen-11" class="screen-section">
+<h2>Screen 11 - Specializations List</h2>
+<p>Route: <span class="route">/admin/specializations</span></p>
+
+<img src="photos/10-specializations-list.png" alt="Specializations List Screen">
+
+<div class="desc">
+The Specializations List screen presents all specializations in a data table with columns for <code>name</code>, parent <code>department name</code> (via relationship), and <code>users_count</code> (the number of users assigned to each specialization). The table supports filtering by department and global search.
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-SPC-001</td>
+<td>Specializations table displays correctly</td>
+<td>1. Navigate to <code>/admin/specializations</code><br>2. Verify columns: name, department name, users count</td>
+<td>Table shows all non-deleted specializations with correct department relationship and user count.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-SPC-002</td>
+<td>Filter by department</td>
+<td>1. Click the department filter<br>2. Select a specific department<br>3. Observe filtered results</td>
+<td>Table shows only specializations belonging to the selected department.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-SPC-003</td>
+<td>Users count is accurate</td>
+<td>1. Pick a specialization row<br>2. Count users with that specialization_id in database<br>3. Compare displayed count</td>
+<td>Displayed count matches <code>SELECT COUNT(*) FROM users WHERE specialization_id = ? AND deleted_at IS NULL</code>.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-SPC-004</td>
+<td>Search specializations</td>
+<td>1. Enter a specialization name in the search field<br>2. Observe results</td>
+<td>Table filters to show matching specialization names.</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>specializations</td>
+<td>id</td>
+<td>bigint</td>
+<td>PRIMARY KEY, AUTO_INCREMENT</td>
+<td>Internal row identifier</td>
+</tr>
+<tr>
+<td>specializations</td>
+<td>name</td>
+<td>varchar</td>
+<td>NOT NULL</td>
+<td>Name column</td>
+</tr>
+<tr>
+<td>specializations</td>
+<td>department_id</td>
+<td>bigint</td>
+<td>FK (departments.id), CASCADE</td>
+<td>Department Name column (joined)</td>
+</tr>
+<tr>
+<td>specializations</td>
+<td>deleted_at</td>
+<td>timestamp</td>
+<td>NULL</td>
+<td>Soft delete - hidden when set</td>
+</tr>
+<tr>
+<td>users</td>
+<td>specialization_id</td>
+<td>bigint</td>
+<td>FK (specializations.id), NULL</td>
+<td>Users Count (aggregated)</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 12 - SPECIALIZATIONS CREATE                             -->
+<!-- ============================================================ -->
+<div id="screen-12" class="screen-section">
+<h2>Screen 12 - Specializations Create</h2>
+<p>Route: <span class="route">/admin/specializations/create</span></p>
+
+<img src="photos/11-specializations-create.png" alt="Specializations Create Screen">
+
+<div class="desc">
+The Specializations Create screen provides a form to add a new specialization. It includes a <code>department</code> select dropdown (required, selecting from existing departments) and a <code>name</code> text field (max 255 characters). The specialization is linked to the selected department via the <code>department_id</code> foreign key.
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-SPC-005</td>
+<td>Create specialization with valid data</td>
+<td>1. Navigate to <code>/admin/specializations/create</code><br>2. Select a department<br>3. Enter specialization name<br>4. Click "Create"</td>
+<td>Specialization created in <code>specializations</code> table with correct <code>department_id</code>. Redirect to list with success notification.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-SPC-006</td>
+<td>Department field is required</td>
+<td>1. Leave department unselected<br>2. Enter a name<br>3. Submit</td>
+<td>Validation error: "The department field is required."</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-SPC-007</td>
+<td>Name field is required</td>
+<td>1. Select a department<br>2. Leave name empty<br>3. Submit</td>
+<td>Validation error: "The name field is required."</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-SPC-008</td>
+<td>Name max length validation</td>
+<td>1. Select a department<br>2. Enter a name exceeding 255 characters<br>3. Submit</td>
+<td>Validation error: "The name must not be greater than 255 characters."</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>specializations</td>
+<td>department_id</td>
+<td>bigint</td>
+<td>FK (departments.id), CASCADE, NOT NULL</td>
+<td>Department select dropdown</td>
+</tr>
+<tr>
+<td>specializations</td>
+<td>name</td>
+<td>varchar(255)</td>
+<td>NOT NULL</td>
+<td>Name text input</td>
+</tr>
+<tr>
+<td>specializations</td>
+<td>created_at</td>
+<td>timestamp</td>
+<td>NOT NULL</td>
+<td>Auto-set on creation</td>
+</tr>
+<tr>
+<td>specializations</td>
+<td>updated_at</td>
+<td>timestamp</td>
+<td>NOT NULL</td>
+<td>Auto-set on creation</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 13 - SPECIALIZATIONS EDIT                               -->
+<!-- ============================================================ -->
+<div id="screen-13" class="screen-section">
+<h2>Screen 13 - Specializations Edit</h2>
+<p>Route: <span class="route">/admin/specializations/{id}/edit</span></p>
+
+<img src="photos/12-specializations-edit.png" alt="Specializations Edit Screen">
+
+<div class="desc">
+The Specializations Edit screen allows modification of a specialization's <code>department</code> and <code>name</code>. The form is pre-populated with the current values. Changing the department reassigns the specialization to a different parent department.
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-SPC-009</td>
+<td>Edit specialization name</td>
+<td>1. Navigate to <code>/admin/specializations/{id}/edit</code><br>2. Change the name<br>3. Click "Save changes"</td>
+<td>Specialization name updated in database. Success notification displayed.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-SPC-010</td>
+<td>Change specialization department</td>
+<td>1. Select a different department from the dropdown<br>2. Save</td>
+<td><code>department_id</code> updated in <code>specializations</code> table. Specialization now appears under the new department.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-SPC-011</td>
+<td>Delete specialization from edit page</td>
+<td>1. Click delete action in header<br>2. Confirm deletion</td>
+<td>Specialization is soft-deleted. Users previously linked retain their <code>specialization_id</code> but the specialization is hidden from lists.</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>specializations</td>
+<td>department_id</td>
+<td>bigint</td>
+<td>FK (departments.id), CASCADE</td>
+<td>Department select dropdown (pre-selected)</td>
+</tr>
+<tr>
+<td>specializations</td>
+<td>name</td>
+<td>varchar(255)</td>
+<td>NOT NULL</td>
+<td>Name text input (pre-filled)</td>
+</tr>
+<tr>
+<td>specializations</td>
+<td>updated_at</td>
+<td>timestamp</td>
+<td>NOT NULL</td>
+<td>Auto-updated on save</td>
+</tr>
+<tr>
+<td>specializations</td>
+<td>deleted_at</td>
+<td>timestamp</td>
+<td>NULL</td>
+<td>Delete header action (soft delete)</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 14 - COURSES LIST                                       -->
+<!-- ============================================================ -->
+<div id="screen-14" class="screen-section">
+<h2>Screen 14 - Courses List</h2>
+<p>Route: <span class="route">/admin/courses</span></p>
+
+<img src="photos/13-courses-list.png" alt="Courses List Screen">
+
+<div class="desc">
+The Courses List screen displays all courses in the system with columns for <code>code</code>, <code>title</code>, and <code>projects_count</code> (the number of projects associated with each course). The table supports search, pagination, and row-level edit/delete actions.
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-CRS-001</td>
+<td>Courses table displays correctly</td>
+<td>1. Navigate to <code>/admin/courses</code><br>2. Verify columns: code, title, projects count</td>
+<td>Table shows all non-deleted courses with correct project counts.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-CRS-002</td>
+<td>Projects count is accurate</td>
+<td>1. Pick a course row<br>2. Count its projects in the database<br>3. Compare with displayed count</td>
+<td>Displayed count matches <code>SELECT COUNT(*) FROM projects WHERE course_id = ? AND deleted_at IS NULL</code>.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-CRS-003</td>
+<td>Search courses by code or title</td>
+<td>1. Enter a course code or title in the search field<br>2. Observe results</td>
+<td>Table filters to show matching courses.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-CRS-004</td>
+<td>Delete course</td>
+<td>1. Click delete action on a course row<br>2. Confirm deletion</td>
+<td>Course is soft-deleted. Removed from list view.</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>courses</td>
+<td>id</td>
+<td>bigint</td>
+<td>PRIMARY KEY, AUTO_INCREMENT</td>
+<td>Internal row identifier</td>
+</tr>
+<tr>
+<td>courses</td>
+<td>code</td>
+<td>varchar</td>
+<td>NOT NULL</td>
+<td>Code column</td>
+</tr>
+<tr>
+<td>courses</td>
+<td>title</td>
+<td>varchar</td>
+<td>NOT NULL</td>
+<td>Title column</td>
+</tr>
+<tr>
+<td>courses</td>
+<td>deleted_at</td>
+<td>timestamp</td>
+<td>NULL</td>
+<td>Soft delete - hidden when set</td>
+</tr>
+<tr>
+<td>projects</td>
+<td>course_id</td>
+<td>bigint</td>
+<td>FK (courses.id)</td>
+<td>Projects Count (aggregated)</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 15 - COURSES CREATE                                     -->
+<!-- ============================================================ -->
+<div id="screen-15" class="screen-section">
+<h2>Screen 15 - Courses Create</h2>
+<p>Route: <span class="route">/admin/courses/create</span></p>
+
+<img src="photos/14-courses-create.png" alt="Courses Create Screen">
+
+<div class="desc">
+The Courses Create screen provides a form to add a new course. Fields include <code>code</code> (unique, max 20 characters) and <code>title</code> (unique, max 255 characters). The code serves as a short identifier (e.g., "CS101") while the title is the full course name.
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-CRS-005</td>
+<td>Create course with valid data</td>
+<td>1. Navigate to <code>/admin/courses/create</code><br>2. Enter unique code and title<br>3. Click "Create"</td>
+<td>Course created in <code>courses</code> table. Redirect to list with success notification.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-CRS-006</td>
+<td>Duplicate code validation</td>
+<td>1. Enter an existing course code<br>2. Submit</td>
+<td>Validation error: "The code has already been taken."</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-CRS-007</td>
+<td>Duplicate title validation</td>
+<td>1. Enter an existing course title<br>2. Submit</td>
+<td>Validation error: "The title has already been taken."</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-CRS-008</td>
+<td>Code max length validation</td>
+<td>1. Enter a code exceeding 20 characters<br>2. Submit</td>
+<td>Validation error: "The code must not be greater than 20 characters."</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-CRS-009</td>
+<td>Title max length validation</td>
+<td>1. Enter a title exceeding 255 characters<br>2. Submit</td>
+<td>Validation error: "The title must not be greater than 255 characters."</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>courses</td>
+<td>code</td>
+<td>varchar(20)</td>
+<td>UNIQUE, NOT NULL</td>
+<td>Code text input</td>
+</tr>
+<tr>
+<td>courses</td>
+<td>title</td>
+<td>varchar(255)</td>
+<td>UNIQUE, NOT NULL</td>
+<td>Title text input</td>
+</tr>
+<tr>
+<td>courses</td>
+<td>created_at</td>
+<td>timestamp</td>
+<td>NOT NULL</td>
+<td>Auto-set on creation</td>
+</tr>
+<tr>
+<td>courses</td>
+<td>updated_at</td>
+<td>timestamp</td>
+<td>NOT NULL</td>
+<td>Auto-set on creation</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 16 - COURSES EDIT                                       -->
+<!-- ============================================================ -->
+<div id="screen-16" class="screen-section">
+<h2>Screen 16 - Courses Edit</h2>
+<p>Route: <span class="route">/admin/courses/{id}/edit</span></p>
+
+<img src="photos/15-courses-edit.png" alt="Courses Edit Screen">
+
+<div class="desc">
+The Courses Edit screen allows modification of a course's <code>code</code> and <code>title</code>. The form is pre-populated with the current values. Uniqueness validation excludes the current record to allow saving without changes. A delete action is available in the page header.
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-CRS-010</td>
+<td>Edit course code and title</td>
+<td>1. Navigate to <code>/admin/courses/{id}/edit</code><br>2. Change code and title<br>3. Click "Save changes"</td>
+<td>Course updated in database. Success notification displayed.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-CRS-011</td>
+<td>Save without changes</td>
+<td>1. Open edit form<br>2. Click save without modifications</td>
+<td>No validation errors. Record saved with updated <code>updated_at</code> timestamp.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-CRS-012</td>
+<td>Unique validation excludes current record</td>
+<td>1. Keep the same code and title<br>2. Save</td>
+<td>No uniqueness violation. Current record's values are excluded from unique checks.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-CRS-013</td>
+<td>Delete course from edit page</td>
+<td>1. Click delete action in header<br>2. Confirm deletion</td>
+<td>Course is soft-deleted. Redirect to courses list.</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>courses</td>
+<td>code</td>
+<td>varchar(20)</td>
+<td>UNIQUE (ignore self), NOT NULL</td>
+<td>Code text input (pre-filled)</td>
+</tr>
+<tr>
+<td>courses</td>
+<td>title</td>
+<td>varchar(255)</td>
+<td>UNIQUE (ignore self), NOT NULL</td>
+<td>Title text input (pre-filled)</td>
+</tr>
+<tr>
+<td>courses</td>
+<td>updated_at</td>
+<td>timestamp</td>
+<td>NOT NULL</td>
+<td>Auto-updated on save</td>
+</tr>
+<tr>
+<td>courses</td>
+<td>deleted_at</td>
+<td>timestamp</td>
+<td>NULL</td>
+<td>Delete header action (soft delete)</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 17 - GRADING SCALES LIST                                -->
+<!-- ============================================================ -->
+<div id="screen-17" class="screen-section">
+<h2>Screen 17 - Grading Scales List</h2>
+<p>Route: <span class="route">/admin/grading-scales</span></p>
+
+<img src="photos/16-grading-scales-list.png" alt="Grading Scales List Screen">
+
+<div class="desc">
+The Grading Scales List screen displays all defined grading scales in a data table, sorted in descending order by default. Columns include <code>letter_grade</code> (e.g., A+, A, B+), <code>min_score</code>, <code>max_score</code>, and <code>gpa_equivalent</code>. These scales define the mapping between numeric scores and letter grades used throughout the evaluation system.
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-GRD-001</td>
+<td>Grading scales table displays correctly</td>
+<td>1. Navigate to <code>/admin/grading-scales</code><br>2. Verify columns: letter_grade, min_score, max_score, gpa_equivalent</td>
+<td>Table shows all non-deleted grading scales with correct values, sorted descending.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-GRD-002</td>
+<td>Default sort order is descending</td>
+<td>1. Load grading scales list<br>2. Check row order</td>
+<td>Rows are sorted in descending order (highest grade first, e.g., A+ at top).</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-GRD-003</td>
+<td>Score ranges have no gaps or overlaps</td>
+<td>1. Inspect all grading scale rows<br>2. Verify min/max ranges are contiguous</td>
+<td>Each grade's <code>min_score</code> is one increment above the previous grade's <code>max_score</code>. Full range 0-100 is covered.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-GRD-004</td>
+<td>Delete grading scale</td>
+<td>1. Click delete on a grading scale row<br>2. Confirm deletion</td>
+<td>Grading scale is soft-deleted. Removed from list view.</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>grading_scales</td>
+<td>id</td>
+<td>bigint</td>
+<td>PRIMARY KEY, AUTO_INCREMENT</td>
+<td>Internal row identifier</td>
+</tr>
+<tr>
+<td>grading_scales</td>
+<td>letter_grade</td>
+<td>varchar(10)</td>
+<td>NOT NULL</td>
+<td>Letter Grade column</td>
+</tr>
+<tr>
+<td>grading_scales</td>
+<td>min_score</td>
+<td>decimal(5,2)</td>
+<td>NOT NULL</td>
+<td>Min Score column</td>
+</tr>
+<tr>
+<td>grading_scales</td>
+<td>max_score</td>
+<td>decimal(5,2)</td>
+<td>NOT NULL</td>
+<td>Max Score column</td>
+</tr>
+<tr>
+<td>grading_scales</td>
+<td>gpa_equivalent</td>
+<td>decimal(3,2)</td>
+<td>NOT NULL</td>
+<td>GPA Equivalent column</td>
+</tr>
+<tr>
+<td>grading_scales</td>
+<td>deleted_at</td>
+<td>timestamp</td>
+<td>NULL</td>
+<td>Soft delete - hidden when set</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 18 - GRADING SCALES CREATE                              -->
+<!-- ============================================================ -->
+<div id="screen-18" class="screen-section">
+<h2>Screen 18 - Grading Scales Create</h2>
+<p>Route: <span class="route">/admin/grading-scales/create</span></p>
+
+<img src="photos/17-grading-scales-create.png" alt="Grading Scales Create Screen">
+
+<div class="desc">
+The Grading Scales Create screen provides a form to define a new grading scale entry. Fields include <code>letter_grade</code> (max 10 characters, e.g., "A+"), <code>min_score</code> (0-100 range with overlap validation against existing scales), <code>max_score</code> (must be greater than min_score), and <code>gpa_equivalent</code> (0-4 range, e.g., 4.00 for an A+). The overlap validation ensures no two grading scales have conflicting score ranges.
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-GRD-005</td>
+<td>Create grading scale with valid data</td>
+<td>1. Navigate to <code>/admin/grading-scales/create</code><br>2. Enter letter_grade, min_score, max_score, gpa_equivalent<br>3. Click "Create"</td>
+<td>Grading scale created in <code>grading_scales</code> table. Redirect to list with success notification.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-GRD-006</td>
+<td>Min score must be between 0 and 100</td>
+<td>1. Enter min_score as -1 or 101<br>2. Submit</td>
+<td>Validation error for out-of-range value.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-GRD-007</td>
+<td>Max score must be greater than min score</td>
+<td>1. Enter max_score less than or equal to min_score<br>2. Submit</td>
+<td>Validation error: max_score must be greater than min_score.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-GRD-008</td>
+<td>Score range overlap validation</td>
+<td>1. Enter a min/max range that overlaps with an existing grading scale<br>2. Submit</td>
+<td>Validation error indicating score range overlaps with existing grade. Scale is not created.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-GRD-009</td>
+<td>GPA equivalent range validation (0-4)</td>
+<td>1. Enter gpa_equivalent as 4.5<br>2. Submit</td>
+<td>Validation error: GPA equivalent must be between 0 and 4.</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>grading_scales</td>
+<td>letter_grade</td>
+<td>varchar(10)</td>
+<td>NOT NULL, max 10 chars</td>
+<td>Letter Grade text input</td>
+</tr>
+<tr>
+<td>grading_scales</td>
+<td>min_score</td>
+<td>decimal(5,2)</td>
+<td>NOT NULL, range 0-100, no overlap</td>
+<td>Min Score numeric input</td>
+</tr>
+<tr>
+<td>grading_scales</td>
+<td>max_score</td>
+<td>decimal(5,2)</td>
+<td>NOT NULL, > min_score</td>
+<td>Max Score numeric input</td>
+</tr>
+<tr>
+<td>grading_scales</td>
+<td>gpa_equivalent</td>
+<td>decimal(3,2)</td>
+<td>NOT NULL, range 0-4</td>
+<td>GPA Equivalent numeric input</td>
+</tr>
+<tr>
+<td>grading_scales</td>
+<td>created_at</td>
+<td>timestamp</td>
+<td>NOT NULL</td>
+<td>Auto-set on creation</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 19 - GRADING SCALES EDIT                                -->
+<!-- ============================================================ -->
+<div id="screen-19" class="screen-section">
+<h2>Screen 19 - Grading Scales Edit</h2>
+<p>Route: <span class="route">/admin/grading-scales/{id}/edit</span></p>
+
+<img src="photos/18-grading-scales-edit.png" alt="Grading Scales Edit Screen">
+
+<div class="desc">
+The Grading Scales Edit screen allows modification of an existing grading scale entry. All fields from the create form are pre-populated: <code>letter_grade</code>, <code>min_score</code>, <code>max_score</code>, and <code>gpa_equivalent</code>. The same validation rules apply, including score range overlap checking (which excludes the current record from the overlap check). A delete action is available in the page header.
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-GRD-010</td>
+<td>Edit grading scale successfully</td>
+<td>1. Navigate to <code>/admin/grading-scales/{id}/edit</code><br>2. Modify letter_grade and score range<br>3. Click "Save changes"</td>
+<td>Grading scale updated in database. Success notification displayed.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-GRD-011</td>
+<td>Overlap validation excludes current record</td>
+<td>1. Open edit form<br>2. Keep the same min/max scores<br>3. Save</td>
+<td>No overlap validation error. Current record is excluded from overlap checks.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-GRD-012</td>
+<td>Change score range with overlap conflict</td>
+<td>1. Modify min/max to overlap another existing grade<br>2. Save</td>
+<td>Validation error indicating overlap with existing grade scale.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-GRD-013</td>
+<td>Delete grading scale from edit page</td>
+<td>1. Click delete action in header<br>2. Confirm deletion</td>
+<td>Grading scale is soft-deleted. Redirect to grading scales list.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-GRD-014</td>
+<td>Update GPA equivalent only</td>
+<td>1. Change only the gpa_equivalent value<br>2. Save</td>
+<td>Only <code>gpa_equivalent</code> and <code>updated_at</code> columns change in database.</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>grading_scales</td>
+<td>letter_grade</td>
+<td>varchar(10)</td>
+<td>NOT NULL</td>
+<td>Letter Grade text input (pre-filled)</td>
+</tr>
+<tr>
+<td>grading_scales</td>
+<td>min_score</td>
+<td>decimal(5,2)</td>
+<td>NOT NULL, range 0-100, no overlap (ignore self)</td>
+<td>Min Score numeric input (pre-filled)</td>
+</tr>
+<tr>
+<td>grading_scales</td>
+<td>max_score</td>
+<td>decimal(5,2)</td>
+<td>NOT NULL, > min_score</td>
+<td>Max Score numeric input (pre-filled)</td>
+</tr>
+<tr>
+<td>grading_scales</td>
+<td>gpa_equivalent</td>
+<td>decimal(3,2)</td>
+<td>NOT NULL, range 0-4</td>
+<td>GPA Equivalent numeric input (pre-filled)</td>
+</tr>
+<tr>
+<td>grading_scales</td>
+<td>updated_at</td>
+<td>timestamp</td>
+<td>NOT NULL</td>
+<td>Auto-updated on save</td>
+</tr>
+<tr>
+<td>grading_scales</td>
+<td>deleted_at</td>
+<td>timestamp</td>
+<td>NULL</td>
+<td>Delete header action (soft delete)</td>
+</tr>
+</table>
+</div>
+<!-- ============================================================ -->
+<!-- SCREEN 20 - SEMESTERS LIST                                    -->
+<!-- ============================================================ -->
+<div id="screen-20" class="screen-section">
+<h2>Screen 20 - Semesters List</h2>
+<p>Route: <span class="route">/admin/semesters</span></p>
+
+<img src="photos/19-semesters-list.png" alt="Semesters List Screen">
+
+<div class="desc">
+The Semesters List screen displays all semesters in a data table. Columns include <code>name</code>, <code>academic_year</code>, <code>start_date</code>, <code>end_date</code>, <code>is_active</code> (rendered as a toggle column), <code>is_closed</code> (rendered with a lock icon), and <code>projects_count</code> (number of associated projects). Filters include a <code>TernaryFilter</code> for active/closed status and a <code>SelectFilter</code> for academic year. Row actions include <strong>closeSemester</strong> (with confirmation modal, hidden when the semester is already closed), <strong>edit</strong> (hidden when closed), and <strong>delete</strong> (hidden when closed). Coordinator-role users are scoped to see only semesters they are assigned to via the <code>coordinator_semester</code> pivot table.
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-SEM-001</td>
+<td>Semesters table displays all columns correctly</td>
+<td>1. Navigate to <code>/admin/semesters</code><br>2. Verify all columns are visible: name, academic_year, start_date, end_date, is_active toggle, is_closed lock icon, projects_count</td>
+<td>Table renders all columns with correct data. The <code>is_active</code> column shows a toggle switch. The <code>is_closed</code> column displays a lock icon when true.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-SEM-002</td>
+<td>Filter semesters by active/closed status</td>
+<td>1. Click the active TernaryFilter<br>2. Select "Yes" to show only active semesters<br>3. Then select "No" to show inactive<br>4. Repeat with closed TernaryFilter</td>
+<td>Table filters correctly based on <code>is_active</code> and <code>is_closed</code> boolean values. Count updates to reflect filtered results.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-SEM-003</td>
+<td>Filter semesters by academic year</td>
+<td>1. Click the academic_year SelectFilter<br>2. Choose a specific academic year (e.g., "2025-2026")<br>3. Observe filtered results</td>
+<td>Table shows only semesters matching the selected academic year.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-SEM-004</td>
+<td>Close semester action with confirmation</td>
+<td>1. Find an open semester (is_closed = false)<br>2. Click the "closeSemester" action<br>3. Confirm in the modal dialog</td>
+<td>Semester's <code>is_closed</code> is set to <code>true</code> in the database. Lock icon appears. Edit, delete, and closeSemester actions become hidden for this row.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-SEM-005</td>
+<td>Coordinator scoping - coordinators see only assigned semesters</td>
+<td>1. Login as a user with only the Coordinator role<br>2. Navigate to <code>/admin/semesters</code><br>3. Verify only assigned semesters are visible</td>
+<td>Table shows only semesters where a row exists in <code>coordinator_semester</code> for the logged-in user. Admin users see all semesters.</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>semesters</td>
+<td>id</td>
+<td>bigint</td>
+<td>PRIMARY KEY, AUTO_INCREMENT</td>
+<td>Internal row identifier</td>
+</tr>
+<tr>
+<td>semesters</td>
+<td>name</td>
+<td>varchar</td>
+<td>NOT NULL</td>
+<td>Name column</td>
+</tr>
+<tr>
+<td>semesters</td>
+<td>academic_year</td>
+<td>varchar</td>
+<td>NOT NULL</td>
+<td>Academic Year column &amp; SelectFilter</td>
+</tr>
+<tr>
+<td>semesters</td>
+<td>start_date</td>
+<td>date</td>
+<td>NULL</td>
+<td>Start Date column</td>
+</tr>
+<tr>
+<td>semesters</td>
+<td>end_date</td>
+<td>date</td>
+<td>NULL</td>
+<td>End Date column</td>
+</tr>
+<tr>
+<td>semesters</td>
+<td>is_active</td>
+<td>boolean</td>
+<td>NOT NULL, DEFAULT true</td>
+<td>Active toggle column &amp; TernaryFilter</td>
+</tr>
+<tr>
+<td>semesters</td>
+<td>is_closed</td>
+<td>boolean</td>
+<td>NOT NULL, DEFAULT false</td>
+<td>Closed lock icon column &amp; TernaryFilter, controls action visibility</td>
+</tr>
+<tr>
+<td>semesters</td>
+<td>deleted_at</td>
+<td>timestamp</td>
+<td>NULL</td>
+<td>Soft delete - hidden when set</td>
+</tr>
+<tr>
+<td>projects</td>
+<td>semester_id</td>
+<td>bigint</td>
+<td>FK (semesters.id)</td>
+<td>Projects Count (aggregated)</td>
+</tr>
+<tr>
+<td>coordinator_semester</td>
+<td>user_id</td>
+<td>bigint</td>
+<td>FK (users.id), CASCADE</td>
+<td>Coordinator scoping pivot</td>
+</tr>
+<tr>
+<td>coordinator_semester</td>
+<td>semester_id</td>
+<td>bigint</td>
+<td>FK (semesters.id), CASCADE</td>
+<td>Coordinator scoping pivot</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 21 - SEMESTERS CREATE                                   -->
+<!-- ============================================================ -->
+<div id="screen-21" class="screen-section">
+<h2>Screen 21 - Semesters Create</h2>
+<p>Route: <span class="route">/admin/semesters/create</span></p>
+
+<img src="photos/20-semesters-create.png" alt="Semesters Create Screen">
+
+<div class="desc">
+The Semesters Create screen provides a form to define a new semester. Fields include <code>name</code> (required, max 255 characters, placeholder "Fall 2026"), <code>academic_year</code> (required, max 9 characters, placeholder "2025-2026"), <code>start_date</code> (optional DatePicker), and <code>end_date</code> (optional DatePicker, validated as <code>afterOrEqual</code> the start_date when both are provided). The semester is created with <code>is_active</code> defaulting to <code>true</code> and <code>is_closed</code> defaulting to <code>false</code>.
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-SEM-006</td>
+<td>Create semester with all valid fields</td>
+<td>1. Navigate to <code>/admin/semesters/create</code><br>2. Enter name (e.g., "Fall 2026")<br>3. Enter academic_year (e.g., "2025-2026")<br>4. Pick start_date and end_date via DatePicker<br>5. Click "Create"</td>
+<td>Semester is created in <code>semesters</code> table with <code>is_active=true</code> and <code>is_closed=false</code> defaults. Redirect to semesters list with success notification.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-SEM-007</td>
+<td>Create semester without optional dates</td>
+<td>1. Enter name and academic_year only<br>2. Leave start_date and end_date blank<br>3. Click "Create"</td>
+<td>Semester is created with <code>start_date</code> and <code>end_date</code> as NULL in the database. No validation errors.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-SEM-008</td>
+<td>End date must be after or equal to start date</td>
+<td>1. Select a start_date of 2026-09-01<br>2. Select an end_date of 2026-08-01 (before start)<br>3. Submit</td>
+<td>Validation error: "The end date must be a date after or equal to start date." Semester is not created.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-SEM-009</td>
+<td>Required field validation for name and academic_year</td>
+<td>1. Leave name and academic_year fields empty<br>2. Submit form</td>
+<td>Validation errors: "The name field is required." and "The academic year field is required."</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>semesters</td>
+<td>name</td>
+<td>varchar(255)</td>
+<td>NOT NULL</td>
+<td>Name text input (placeholder "Fall 2026")</td>
+</tr>
+<tr>
+<td>semesters</td>
+<td>academic_year</td>
+<td>varchar(9)</td>
+<td>NOT NULL, max 9 chars</td>
+<td>Academic Year text input (placeholder "2025-2026")</td>
+</tr>
+<tr>
+<td>semesters</td>
+<td>start_date</td>
+<td>date</td>
+<td>NULL</td>
+<td>Start Date DatePicker</td>
+</tr>
+<tr>
+<td>semesters</td>
+<td>end_date</td>
+<td>date</td>
+<td>NULL, afterOrEqual start_date</td>
+<td>End Date DatePicker</td>
+</tr>
+<tr>
+<td>semesters</td>
+<td>is_active</td>
+<td>boolean</td>
+<td>NOT NULL, DEFAULT true</td>
+<td>Auto-set on creation</td>
+</tr>
+<tr>
+<td>semesters</td>
+<td>is_closed</td>
+<td>boolean</td>
+<td>NOT NULL, DEFAULT false</td>
+<td>Auto-set on creation</td>
+</tr>
+<tr>
+<td>semesters</td>
+<td>created_at</td>
+<td>timestamp</td>
+<td>NOT NULL</td>
+<td>Auto-set on creation</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 22 - SEMESTERS EDIT                                     -->
+<!-- ============================================================ -->
+<div id="screen-22" class="screen-section">
+<h2>Screen 22 - Semesters Edit</h2>
+<p>Route: <span class="route">/admin/semesters/{id}/edit</span></p>
+
+<img src="photos/21-semesters-edit.png" alt="Semesters Edit Screen">
+
+<div class="desc">
+The Semesters Edit screen pre-populates the semester form fields and includes two Relation Managers.<br>
+<strong>1. Coordinators RM</strong> - Allows attaching and detaching users who hold the <strong>Coordinator</strong> role to/from the semester. The table displays <code>university_id</code>, <code>name</code>, and <code>email</code> columns. This creates entries in the <code>coordinator_semester</code> pivot table.<br>
+<strong>2. Projects RM</strong> - Displays projects linked to this semester with columns for <code>title</code>, <code>course.code</code>, <code>supervisor.name</code>, <code>status</code> (as a color-coded badge), and <code>students_count</code>. Each row links to the ProjectResource for editing. Projects are read-only within this RM (managed from the Projects resource).
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-SEM-010</td>
+<td>Edit semester fields</td>
+<td>1. Navigate to <code>/admin/semesters/{id}/edit</code><br>2. Change name and academic_year<br>3. Modify start_date and end_date<br>4. Click "Save changes"</td>
+<td>Semester record updated in database. Success notification displayed. Updated values reflected on page.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-SEM-011</td>
+<td>Attach coordinator to semester</td>
+<td>1. On semester edit page, scroll to Coordinators RM<br>2. Click "Attach" button<br>3. Search and select a user with Coordinator role<br>4. Confirm attachment</td>
+<td>Row inserted into <code>coordinator_semester</code> pivot table with correct <code>user_id</code> and <code>semester_id</code>. Coordinator appears in RM table showing university_id, name, email.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-SEM-012</td>
+<td>Detach coordinator from semester</td>
+<td>1. In Coordinators RM, click "Detach" on an attached coordinator<br>2. Confirm detachment</td>
+<td>Row removed from <code>coordinator_semester</code> pivot table. Coordinator no longer appears in the RM table.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-SEM-013</td>
+<td>Projects RM displays linked projects correctly</td>
+<td>1. Scroll to the Projects RM section<br>2. Verify columns: title, course.code, supervisor.name, status badge, students_count</td>
+<td>Projects table shows all projects where <code>semester_id</code> matches the current semester. Status badges display with correct colors: gray (setup), warning/yellow (evaluating), green (completed).</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-SEM-014</td>
+<td>Projects RM row links to ProjectResource</td>
+<td>1. Click on a project row in the Projects RM<br>2. Observe navigation</td>
+<td>User is navigated to the project's edit page in the ProjectResource (<code>/admin/projects/{id}/edit</code>).</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-SEM-015</td>
+<td>Only Coordinator-role users appear in attach modal</td>
+<td>1. Click "Attach" in Coordinators RM<br>2. Search for a user without Coordinator role</td>
+<td>Non-coordinator users do not appear in the search results. Only users with the Coordinator role are available for attachment.</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>semesters</td>
+<td>name</td>
+<td>varchar(255)</td>
+<td>NOT NULL</td>
+<td>Name text input (pre-filled)</td>
+</tr>
+<tr>
+<td>semesters</td>
+<td>academic_year</td>
+<td>varchar(9)</td>
+<td>NOT NULL</td>
+<td>Academic Year text input (pre-filled)</td>
+</tr>
+<tr>
+<td>semesters</td>
+<td>start_date</td>
+<td>date</td>
+<td>NULL</td>
+<td>Start Date DatePicker (pre-filled)</td>
+</tr>
+<tr>
+<td>semesters</td>
+<td>end_date</td>
+<td>date</td>
+<td>NULL, afterOrEqual start_date</td>
+<td>End Date DatePicker (pre-filled)</td>
+</tr>
+<tr>
+<td>semesters</td>
+<td>updated_at</td>
+<td>timestamp</td>
+<td>NOT NULL</td>
+<td>Auto-updated on save</td>
+</tr>
+<tr>
+<td>coordinator_semester</td>
+<td>user_id</td>
+<td>bigint</td>
+<td>FK (users.id), CASCADE</td>
+<td>Coordinators RM attach/detach</td>
+</tr>
+<tr>
+<td>coordinator_semester</td>
+<td>semester_id</td>
+<td>bigint</td>
+<td>FK (semesters.id), CASCADE</td>
+<td>Coordinators RM attach/detach</td>
+</tr>
+<tr>
+<td>projects</td>
+<td>semester_id</td>
+<td>bigint</td>
+<td>FK (semesters.id)</td>
+<td>Projects RM table rows</td>
+</tr>
+<tr>
+<td>projects</td>
+<td>title</td>
+<td>varchar</td>
+<td>NOT NULL</td>
+<td>Projects RM title column</td>
+</tr>
+<tr>
+<td>projects</td>
+<td>status</td>
+<td>enum('setup','evaluating','completed')</td>
+<td>NOT NULL</td>
+<td>Projects RM status badge</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 23 - PROJECTS LIST                                      -->
+<!-- ============================================================ -->
+<div id="screen-23" class="screen-section">
+<h2>Screen 23 - Projects List</h2>
+<p>Route: <span class="route">/admin/projects</span></p>
+
+<img src="photos/22-projects-list.png" alt="Projects List Screen">
+
+<div class="desc">
+The Projects List screen displays all projects in a searchable, filterable data table. Columns include <code>title</code>, <code>semester.name</code>, <code>course.code</code>, <code>specialization.name</code> (toggleable/hidden by default), <code>supervisor.name</code>, <code>status</code> (color-coded badge: gray for setup, warning/yellow for evaluating, green/success for completed), <code>students_count</code>, and <code>reviewers_count</code>. Filters include semester, status, course, and supervisor. A CSV import action is available in the table header for bulk project creation. Coordinator-scoped users see only projects belonging to their assigned semesters. The delete action is hidden unless the project status is <code>setup</code>.
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-PRJ-001</td>
+<td>Projects table displays all columns correctly</td>
+<td>1. Navigate to <code>/admin/projects</code><br>2. Verify columns: title, semester.name, course.code, supervisor.name, status badge, students_count, reviewers_count</td>
+<td>Table renders all columns with correct data. Status badges display with appropriate colors: gray (setup), yellow (evaluating), green (completed).</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-PRJ-002</td>
+<td>Filter projects by semester, status, course, and supervisor</td>
+<td>1. Apply each filter individually and verify results<br>2. Apply multiple filters simultaneously<br>3. Clear all filters</td>
+<td>Each filter correctly narrows the result set. Combined filters produce the intersection of all criteria. Clearing filters restores the full list.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-PRJ-003</td>
+<td>Delete action hidden unless status is setup</td>
+<td>1. Find a project with status "evaluating" or "completed"<br>2. Verify delete action is not visible<br>3. Find a project with status "setup"<br>4. Verify delete action is visible</td>
+<td>Delete action only appears on rows where <code>status = 'setup'</code>. Projects in "evaluating" or "completed" status cannot be deleted from the list.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-PRJ-004</td>
+<td>CSV import action for bulk project creation</td>
+<td>1. Click the CSV import action in the table header<br>2. Upload a valid CSV file with project data<br>3. Map columns and confirm import</td>
+<td>Projects are created in the <code>projects</code> table from each CSV row. Success notification with import count. Invalid rows are reported as errors.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-PRJ-005</td>
+<td>Coordinator scoping - coordinators see only their semester's projects</td>
+<td>1. Login as a Coordinator user<br>2. Navigate to <code>/admin/projects</code><br>3. Verify only projects from assigned semesters are visible</td>
+<td>Table shows only projects where <code>semester_id</code> belongs to a semester the coordinator is assigned to via <code>coordinator_semester</code>. Admin users see all projects.</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>projects</td>
+<td>id</td>
+<td>bigint</td>
+<td>PRIMARY KEY, AUTO_INCREMENT</td>
+<td>Internal row identifier</td>
+</tr>
+<tr>
+<td>projects</td>
+<td>title</td>
+<td>varchar</td>
+<td>NOT NULL</td>
+<td>Title column</td>
+</tr>
+<tr>
+<td>projects</td>
+<td>semester_id</td>
+<td>bigint</td>
+<td>FK (semesters.id)</td>
+<td>Semester Name column (joined) &amp; semester filter</td>
+</tr>
+<tr>
+<td>projects</td>
+<td>course_id</td>
+<td>bigint</td>
+<td>FK (courses.id)</td>
+<td>Course Code column (joined) &amp; course filter</td>
+</tr>
+<tr>
+<td>projects</td>
+<td>specialization_id</td>
+<td>bigint</td>
+<td>FK (specializations.id)</td>
+<td>Specialization Name column (hidden toggle, joined)</td>
+</tr>
+<tr>
+<td>projects</td>
+<td>supervisor_id</td>
+<td>bigint</td>
+<td>FK (users.id)</td>
+<td>Supervisor Name column (joined) &amp; supervisor filter</td>
+</tr>
+<tr>
+<td>projects</td>
+<td>phase_template_id</td>
+<td>bigint</td>
+<td>FK (phase_templates.id)</td>
+<td>Not displayed in list (used internally)</td>
+</tr>
+<tr>
+<td>projects</td>
+<td>previous_phase_project_id</td>
+<td>bigint</td>
+<td>FK (projects.id), NULL</td>
+<td>Not displayed in list (used internally)</td>
+</tr>
+<tr>
+<td>projects</td>
+<td>status</td>
+<td>enum('setup','evaluating','completed')</td>
+<td>NOT NULL</td>
+<td>Status badge column &amp; status filter, controls delete visibility</td>
+</tr>
+<tr>
+<td>projects</td>
+<td>deleted_at</td>
+<td>timestamp</td>
+<td>NULL</td>
+<td>Soft delete - hidden when set</td>
+</tr>
+<tr>
+<td>project_student</td>
+<td>user_id</td>
+<td>bigint</td>
+<td>FK (users.id), CASCADE</td>
+<td>Students Count (aggregated from pivot)</td>
+</tr>
+<tr>
+<td>project_reviewer</td>
+<td>user_id</td>
+<td>bigint</td>
+<td>FK (users.id), CASCADE</td>
+<td>Reviewers Count (aggregated from pivot)</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 24 - PROJECTS CREATE                                    -->
+<!-- ============================================================ -->
+<div id="screen-24" class="screen-section">
+<h2>Screen 24 - Projects Create</h2>
+<p>Route: <span class="route">/admin/projects/create</span></p>
+
+<img src="photos/23-projects-create.png" alt="Projects Create Screen">
+
+<div class="desc">
+The Projects Create screen provides a form to define a new project. Fields include <code>title</code> (required, max 255 characters), <code>semester</code> (required, searchable select from existing semesters), <code>course</code> (required, select displaying "code - title" format), <code>phase_template</code> (required, select from existing phase templates), <code>specialization</code> (required, select from existing specializations), <code>supervisor</code> (required, searchable select filtered to users with the Supervisor role, displaying "name (university_id)"), <code>previous_phase_project</code> (optional, select for linking to a prior phase project), and <code>status</code> (select with options setup/evaluating/completed, defaulting to "setup").
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-PRJ-006</td>
+<td>Create project with all required fields</td>
+<td>1. Navigate to <code>/admin/projects/create</code><br>2. Enter title<br>3. Select semester, course, phase_template, specialization, supervisor<br>4. Leave status as default "setup"<br>5. Click "Create"</td>
+<td>Project is created in <code>projects</code> table with all foreign keys set correctly and <code>status='setup'</code>. Redirect to projects list with success notification.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-PRJ-007</td>
+<td>Supervisor select shows only Supervisor-role users</td>
+<td>1. Click the supervisor select dropdown<br>2. Observe the available options<br>3. Verify format shows "name (university_id)"</td>
+<td>Only users with the Supervisor role appear in the dropdown. Each option displays as "Name (UniversityID)" format.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-PRJ-008</td>
+<td>Course select shows "code - title" format</td>
+<td>1. Click the course select dropdown<br>2. Observe option labels</td>
+<td>Each course option is displayed in "code - title" format (e.g., "CS101 - Introduction to Computing").</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-PRJ-009</td>
+<td>Required field validation</td>
+<td>1. Leave all required fields empty<br>2. Click "Create"</td>
+<td>Validation errors displayed for title, semester, course, phase_template, specialization, and supervisor. Project is not created.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-PRJ-010</td>
+<td>Create project with previous phase project link</td>
+<td>1. Fill in all required fields<br>2. Select a previous_phase_project<br>3. Click "Create"</td>
+<td>Project is created with <code>previous_phase_project_id</code> set to the selected project's ID. The link is stored correctly in the database.</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>projects</td>
+<td>title</td>
+<td>varchar(255)</td>
+<td>NOT NULL</td>
+<td>Title text input</td>
+</tr>
+<tr>
+<td>projects</td>
+<td>semester_id</td>
+<td>bigint</td>
+<td>FK (semesters.id), NOT NULL</td>
+<td>Semester searchable select</td>
+</tr>
+<tr>
+<td>projects</td>
+<td>course_id</td>
+<td>bigint</td>
+<td>FK (courses.id), NOT NULL</td>
+<td>Course select ("code - title")</td>
+</tr>
+<tr>
+<td>projects</td>
+<td>phase_template_id</td>
+<td>bigint</td>
+<td>FK (phase_templates.id), NOT NULL</td>
+<td>Phase Template select</td>
+</tr>
+<tr>
+<td>projects</td>
+<td>specialization_id</td>
+<td>bigint</td>
+<td>FK (specializations.id), NOT NULL</td>
+<td>Specialization select</td>
+</tr>
+<tr>
+<td>projects</td>
+<td>supervisor_id</td>
+<td>bigint</td>
+<td>FK (users.id), NOT NULL</td>
+<td>Supervisor select (Supervisor role, "name (university_id)")</td>
+</tr>
+<tr>
+<td>projects</td>
+<td>previous_phase_project_id</td>
+<td>bigint</td>
+<td>FK (projects.id), NULL</td>
+<td>Previous Phase Project select (optional)</td>
+</tr>
+<tr>
+<td>projects</td>
+<td>status</td>
+<td>enum('setup','evaluating','completed')</td>
+<td>NOT NULL, DEFAULT 'setup'</td>
+<td>Status select dropdown</td>
+</tr>
+<tr>
+<td>projects</td>
+<td>created_at</td>
+<td>timestamp</td>
+<td>NOT NULL</td>
+<td>Auto-set on creation</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 25 - PROJECTS EDIT                                      -->
+<!-- ============================================================ -->
+<div id="screen-25" class="screen-section">
+<h2>Screen 25 - Projects Edit</h2>
+<p>Route: <span class="route">/admin/projects/{id}/edit</span></p>
+
+<img src="photos/24-projects-edit.png" alt="Projects Edit Screen">
+
+<div class="desc">
+The Projects Edit screen pre-populates the project form fields and includes two Relation Managers for managing participants.<br>
+<strong>1. Students RM</strong> - Allows attaching and detaching users who hold the <strong>Student</strong> role. A maximum of <strong>4 students</strong> per project is enforced. An additional constraint prevents a student from being attached to more than one project within the same semester. The table displays <code>university_id</code>, <code>name</code>, and <code>email</code> columns.<br>
+<strong>2. Reviewers RM</strong> - Allows attaching and detaching users who hold the <strong>Reviewer</strong> role. The project's <strong>supervisor cannot be attached as a reviewer</strong> on the same project (conflict prevention). The table displays <code>university_id</code>, <code>name</code>, and <code>email</code> columns.<br>
+Both Relation Managers create entries in their respective pivot tables (<code>project_student</code> and <code>project_reviewer</code>).
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-PRJ-011</td>
+<td>Edit project fields</td>
+<td>1. Navigate to <code>/admin/projects/{id}/edit</code><br>2. Change title, supervisor, and status<br>3. Click "Save changes"</td>
+<td>Project record updated in database. Success notification displayed. Updated values reflected on page.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-PRJ-012</td>
+<td>Attach student to project (max 4 enforced)</td>
+<td>1. In Students RM, click "Attach"<br>2. Search and select a Student-role user<br>3. Confirm attachment<br>4. Repeat until 4 students are attached<br>5. Attempt to attach a 5th student</td>
+<td>First 4 attachments succeed, creating rows in <code>project_student</code>. The 5th attachment is blocked with an error indicating the maximum of 4 students has been reached.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-PRJ-013</td>
+<td>Student cannot be in another project in same semester</td>
+<td>1. Attach a student who is already assigned to another project in the same semester<br>2. Confirm attachment</td>
+<td>Attachment is blocked with a validation error indicating the student is already assigned to a project in this semester. No row is created in <code>project_student</code>.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-PRJ-014</td>
+<td>Supervisor cannot be attached as reviewer</td>
+<td>1. In Reviewers RM, click "Attach"<br>2. Search for the project's supervisor<br>3. Attempt to attach</td>
+<td>The supervisor does not appear in the available reviewers list, or attachment is blocked with a validation error. The supervisor-reviewer conflict is prevented.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-PRJ-015</td>
+<td>Detach student from project</td>
+<td>1. In Students RM, click "Detach" on an attached student<br>2. Confirm detachment</td>
+<td>Row removed from <code>project_student</code> pivot table. Student no longer appears in the RM table. Student is now free to be attached to another project in the same semester.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-PRJ-016</td>
+<td>Detach reviewer from project</td>
+<td>1. In Reviewers RM, click "Detach" on an attached reviewer<br>2. Confirm detachment</td>
+<td>Row removed from <code>project_reviewer</code> pivot table. Reviewer no longer appears in the RM table.</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>projects</td>
+<td>title</td>
+<td>varchar(255)</td>
+<td>NOT NULL</td>
+<td>Title text input (pre-filled)</td>
+</tr>
+<tr>
+<td>projects</td>
+<td>semester_id</td>
+<td>bigint</td>
+<td>FK (semesters.id), NOT NULL</td>
+<td>Semester select (pre-selected)</td>
+</tr>
+<tr>
+<td>projects</td>
+<td>supervisor_id</td>
+<td>bigint</td>
+<td>FK (users.id), NOT NULL</td>
+<td>Supervisor select (pre-selected), used for reviewer conflict check</td>
+</tr>
+<tr>
+<td>projects</td>
+<td>status</td>
+<td>enum('setup','evaluating','completed')</td>
+<td>NOT NULL</td>
+<td>Status select (pre-selected)</td>
+</tr>
+<tr>
+<td>projects</td>
+<td>updated_at</td>
+<td>timestamp</td>
+<td>NOT NULL</td>
+<td>Auto-updated on save</td>
+</tr>
+<tr>
+<td>project_student</td>
+<td>project_id</td>
+<td>bigint</td>
+<td>FK (projects.id), CASCADE</td>
+<td>Students RM attach/detach</td>
+</tr>
+<tr>
+<td>project_student</td>
+<td>user_id</td>
+<td>bigint</td>
+<td>FK (users.id), CASCADE</td>
+<td>Students RM attach/detach (max 4, unique per semester)</td>
+</tr>
+<tr>
+<td>project_reviewer</td>
+<td>project_id</td>
+<td>bigint</td>
+<td>FK (projects.id), CASCADE</td>
+<td>Reviewers RM attach/detach</td>
+</tr>
+<tr>
+<td>project_reviewer</td>
+<td>user_id</td>
+<td>bigint</td>
+<td>FK (users.id), CASCADE</td>
+<td>Reviewers RM attach/detach (supervisor excluded)</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 26 - RUBRIC TEMPLATES LIST                              -->
+<!-- ============================================================ -->
+<div id="screen-26" class="screen-section">
+<h2>Screen 26 - Rubric Templates List</h2>
+<p>Route: <span class="route">/admin/rubric-templates</span></p>
+
+<img src="photos/25-rubric-templates-list.png" alt="Rubric Templates List Screen">
+
+<div class="desc">
+The Rubric Templates List screen displays all rubric templates in a data table. Columns include <code>name</code>, <code>version</code>, <code>total_marks</code> (formatted to 2 decimal places), <code>is_locked</code> (rendered with a lock icon), <code>creator.name</code> (the user who created the template), and <code>parentTemplate.name</code> (the name of the original template if this is a clone). Filters include a <code>TernaryFilter</code> for locked status and a <code>SelectFilter</code> for creator. Row actions include <strong>edit</strong> (hidden when locked), <strong>clone</strong> (duplicates the template with version incremented by 1), <strong>lock</strong> (with confirmation modal, makes the template read-only), and <strong>delete</strong> (hidden when locked). A CSV import action is available in the table header.
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-RBR-001</td>
+<td>Rubric templates table displays all columns correctly</td>
+<td>1. Navigate to <code>/admin/rubric-templates</code><br>2. Verify columns: name, version, total_marks, is_locked (lock icon), creator.name, parentTemplate.name</td>
+<td>Table renders all columns with correct data. Total marks displayed with 2 decimal places. Lock icon visible for locked templates. Parent template name shows for cloned templates.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-RBR-002</td>
+<td>Clone rubric template action</td>
+<td>1. Click the "clone" action on a rubric template row<br>2. Observe the result</td>
+<td>A new rubric template is created with the same name, all criteria and score levels duplicated, version incremented by 1, <code>parent_template_id</code> set to the original, <code>is_locked=false</code>, and <code>created_by</code> set to current user.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-RBR-003</td>
+<td>Lock rubric template action with confirmation</td>
+<td>1. Find an unlocked rubric template<br>2. Click the "lock" action<br>3. Confirm in the modal dialog</td>
+<td>Template's <code>is_locked</code> is set to <code>true</code> in the database. Lock icon appears. Edit and delete actions become hidden for this row.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-RBR-004</td>
+<td>Edit and delete actions hidden when template is locked</td>
+<td>1. Find a locked rubric template (is_locked = true)<br>2. Verify that edit and delete actions are not visible<br>3. Verify clone action is still available</td>
+<td>Edit and delete actions are hidden. Clone action remains available, allowing duplication of locked templates for new versions.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-RBR-005</td>
+<td>Filter by locked status and creator</td>
+<td>1. Use TernaryFilter to show only locked templates<br>2. Use SelectFilter to filter by a specific creator<br>3. Apply both filters simultaneously</td>
+<td>Filters correctly narrow the result set. Combined filters show only templates matching both criteria.</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>rubric_templates</td>
+<td>id</td>
+<td>bigint</td>
+<td>PRIMARY KEY, AUTO_INCREMENT</td>
+<td>Internal row identifier</td>
+</tr>
+<tr>
+<td>rubric_templates</td>
+<td>name</td>
+<td>varchar</td>
+<td>NOT NULL</td>
+<td>Name column</td>
+</tr>
+<tr>
+<td>rubric_templates</td>
+<td>version</td>
+<td>int</td>
+<td>NOT NULL, DEFAULT 1</td>
+<td>Version column (incremented on clone)</td>
+</tr>
+<tr>
+<td>rubric_templates</td>
+<td>parent_template_id</td>
+<td>bigint</td>
+<td>FK (rubric_templates.id), NULL</td>
+<td>Parent Template Name column (self-referential join)</td>
+</tr>
+<tr>
+<td>rubric_templates</td>
+<td>total_marks</td>
+<td>decimal(8,2)</td>
+<td>NOT NULL, DEFAULT 0</td>
+<td>Total Marks column (2 decimal places)</td>
+</tr>
+<tr>
+<td>rubric_templates</td>
+<td>is_locked</td>
+<td>boolean</td>
+<td>NOT NULL, DEFAULT false</td>
+<td>Lock icon column &amp; TernaryFilter, controls action visibility</td>
+</tr>
+<tr>
+<td>rubric_templates</td>
+<td>created_by</td>
+<td>bigint</td>
+<td>FK (users.id)</td>
+<td>Creator Name column (joined) &amp; SelectFilter</td>
+</tr>
+<tr>
+<td>rubric_templates</td>
+<td>deleted_at</td>
+<td>timestamp</td>
+<td>NULL</td>
+<td>Soft delete - hidden when set</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 27 - RUBRIC TEMPLATES CREATE                            -->
+<!-- ============================================================ -->
+<div id="screen-27" class="screen-section">
+<h2>Screen 27 - Rubric Templates Create</h2>
+<p>Route: <span class="route">/admin/rubric-templates/create</span></p>
+
+<img src="photos/26-rubric-templates-create.png" alt="Rubric Templates Create Screen">
+
+<div class="desc">
+The Rubric Templates Create screen is a simple form with a single <code>name</code> field (required, max 255 characters). Upon creation, the system automatically sets <code>version=1</code> and <code>created_by</code> to the authenticated user's ID. The <code>total_marks</code> defaults to 0 and <code>is_locked</code> defaults to false. After creation, the user is redirected to the edit page where criteria and score levels can be added via the Relation Manager.
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-RBR-006</td>
+<td>Create rubric template with valid name</td>
+<td>1. Navigate to <code>/admin/rubric-templates/create</code><br>2. Enter a template name<br>3. Click "Create"</td>
+<td>Rubric template created in <code>rubric_templates</code> table with <code>version=1</code>, <code>created_by</code> set to current user, <code>total_marks=0</code>, <code>is_locked=false</code>. Redirect to edit page with success notification.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-RBR-007</td>
+<td>Required name validation</td>
+<td>1. Leave name field empty<br>2. Submit form</td>
+<td>Validation error: "The name field is required." Template is not created.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-RBR-008</td>
+<td>Name max length validation</td>
+<td>1. Enter a name exceeding 255 characters<br>2. Submit form</td>
+<td>Validation error: "The name must not be greater than 255 characters." Template is not created.</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>rubric_templates</td>
+<td>name</td>
+<td>varchar(255)</td>
+<td>NOT NULL</td>
+<td>Name text input</td>
+</tr>
+<tr>
+<td>rubric_templates</td>
+<td>version</td>
+<td>int</td>
+<td>NOT NULL, DEFAULT 1</td>
+<td>Auto-set to 1 on creation</td>
+</tr>
+<tr>
+<td>rubric_templates</td>
+<td>created_by</td>
+<td>bigint</td>
+<td>FK (users.id), NOT NULL</td>
+<td>Auto-set to authenticated user's ID</td>
+</tr>
+<tr>
+<td>rubric_templates</td>
+<td>total_marks</td>
+<td>decimal(8,2)</td>
+<td>NOT NULL, DEFAULT 0</td>
+<td>Auto-set to 0 on creation</td>
+</tr>
+<tr>
+<td>rubric_templates</td>
+<td>is_locked</td>
+<td>boolean</td>
+<td>NOT NULL, DEFAULT false</td>
+<td>Auto-set to false on creation</td>
+</tr>
+<tr>
+<td>rubric_templates</td>
+<td>created_at</td>
+<td>timestamp</td>
+<td>NOT NULL</td>
+<td>Auto-set on creation</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 28 - RUBRIC TEMPLATES EDIT                              -->
+<!-- ============================================================ -->
+<div id="screen-28" class="screen-section">
+<h2>Screen 28 - Rubric Templates Edit</h2>
+<p>Route: <span class="route">/admin/rubric-templates/{id}/edit</span></p>
+
+<img src="photos/27-rubric-templates-edit.png" alt="Rubric Templates Edit Screen">
+
+<div class="desc">
+The Rubric Templates Edit screen is the primary workspace for building rubric structures. The form section includes the editable <code>name</code> field plus read-only placeholders for <code>total_marks</code> (sum of all criteria max_score values) and <code>version</code>. Header actions include <strong>Clone</strong> (duplicate with version++), <strong>Lock</strong> (make read-only with confirmation), and <strong>Delete</strong>.<br><br>
+The <strong>Criteria Relation Manager</strong> is the core of this screen. Each criterion row includes: <code>title</code> (required, max 255 characters), <code>description</code> (optional textarea), <code>max_score</code> (numeric, minimum 0), and <code>is_individual</code> (toggle for individual vs. group assessment). Within each criterion, an embedded <strong>ScoreLevels repeater</strong> allows defining the scoring rubric levels with: <code>label</code> (max 255 characters, e.g., "Excellent", "Good"), <code>score_value</code> (numeric, minimum 0), and <code>description</code> (optional textarea describing the level). Criteria are orderable, reorderable, and collapsible within the RM. <strong>All editing capabilities are disabled when the template's <code>is_locked=true</code></strong>, making the entire page read-only except for the Clone action.
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-RBR-009</td>
+<td>Edit rubric template name</td>
+<td>1. Navigate to <code>/admin/rubric-templates/{id}/edit</code><br>2. Change the template name<br>3. Click "Save changes"</td>
+<td>Template name updated in database. Success notification displayed. Total marks and version fields remain read-only.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-RBR-010</td>
+<td>Create criterion with score levels</td>
+<td>1. In Criteria RM, click "Create"<br>2. Enter title, description, max_score, toggle is_individual<br>3. Add score levels using the repeater: label, score_value, description<br>4. Save the criterion</td>
+<td>Criterion created in <code>criteria</code> table with correct <code>rubric_template_id</code>. Score levels created in <code>score_levels</code> table with correct <code>criterion_id</code> and auto-assigned <code>sort_order</code>. Template's <code>total_marks</code> is recalculated.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-RBR-011</td>
+<td>Reorder criteria</td>
+<td>1. In Criteria RM with multiple criteria<br>2. Drag to reorder criteria or use reorder controls<br>3. Save new order</td>
+<td>Criteria display order is updated. Sort positions are persisted in the database.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-RBR-012</td>
+<td>All editing disabled when template is locked</td>
+<td>1. Navigate to a locked template's edit page (<code>is_locked=true</code>)<br>2. Attempt to edit the name field<br>3. Attempt to create/edit/delete criteria<br>4. Attempt to modify score levels</td>
+<td>All form fields are disabled/read-only. Create, edit, delete actions in Criteria RM are hidden or disabled. Score level repeater is non-editable. Only Clone header action remains functional.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-RBR-013</td>
+<td>Total marks recalculates on criteria changes</td>
+<td>1. Add a criterion with max_score of 25<br>2. Add another with max_score of 15<br>3. Verify total_marks shows 40.00<br>4. Delete the second criterion<br>5. Verify total_marks shows 25.00</td>
+<td>The <code>total_marks</code> placeholder updates to reflect the sum of all criteria <code>max_score</code> values after each save operation.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-RBR-014</td>
+<td>Clone action from edit page</td>
+<td>1. Click "Clone" header action on a rubric template<br>2. Observe the result</td>
+<td>A new rubric template is created with all criteria and score levels duplicated, version incremented, <code>parent_template_id</code> set, <code>is_locked=false</code>. User is redirected to the new clone's edit page.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-RBR-015</td>
+<td>Delete criterion and its score levels</td>
+<td>1. In Criteria RM, click delete on an existing criterion<br>2. Confirm deletion</td>
+<td>Criterion is soft-deleted from <code>criteria</code> table. Associated score levels are cascade soft-deleted from <code>score_levels</code> table. Template's <code>total_marks</code> is recalculated.</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>rubric_templates</td>
+<td>name</td>
+<td>varchar(255)</td>
+<td>NOT NULL</td>
+<td>Name text input (pre-filled)</td>
+</tr>
+<tr>
+<td>rubric_templates</td>
+<td>total_marks</td>
+<td>decimal(8,2)</td>
+<td>NOT NULL, DEFAULT 0</td>
+<td>Read-only total marks placeholder (sum of criteria max_score)</td>
+</tr>
+<tr>
+<td>rubric_templates</td>
+<td>version</td>
+<td>int</td>
+<td>NOT NULL, DEFAULT 1</td>
+<td>Read-only version placeholder</td>
+</tr>
+<tr>
+<td>rubric_templates</td>
+<td>is_locked</td>
+<td>boolean</td>
+<td>NOT NULL, DEFAULT false</td>
+<td>Controls editability of entire page</td>
+</tr>
+<tr>
+<td>rubric_templates</td>
+<td>updated_at</td>
+<td>timestamp</td>
+<td>NOT NULL</td>
+<td>Auto-updated on save</td>
+</tr>
+<tr>
+<td>criteria</td>
+<td>id</td>
+<td>bigint</td>
+<td>PRIMARY KEY, AUTO_INCREMENT</td>
+<td>Criteria RM row identifier</td>
+</tr>
+<tr>
+<td>criteria</td>
+<td>rubric_template_id</td>
+<td>bigint</td>
+<td>FK (rubric_templates.id), CASCADE</td>
+<td>Auto-set to current template</td>
+</tr>
+<tr>
+<td>criteria</td>
+<td>title</td>
+<td>varchar(255)</td>
+<td>NOT NULL</td>
+<td>Criteria RM title field</td>
+</tr>
+<tr>
+<td>criteria</td>
+<td>description</td>
+<td>text</td>
+<td>NULL</td>
+<td>Criteria RM description textarea</td>
+</tr>
+<tr>
+<td>criteria</td>
+<td>max_score</td>
+<td>decimal(8,2)</td>
+<td>NOT NULL, min 0</td>
+<td>Criteria RM max_score numeric input</td>
+</tr>
+<tr>
+<td>criteria</td>
+<td>is_individual</td>
+<td>boolean</td>
+<td>NOT NULL</td>
+<td>Criteria RM is_individual toggle</td>
+</tr>
+<tr>
+<td>criteria</td>
+<td>deleted_at</td>
+<td>timestamp</td>
+<td>NULL</td>
+<td>Criteria RM delete action (soft delete)</td>
+</tr>
+<tr>
+<td>score_levels</td>
+<td>id</td>
+<td>bigint</td>
+<td>PRIMARY KEY, AUTO_INCREMENT</td>
+<td>Score level repeater row identifier</td>
+</tr>
+<tr>
+<td>score_levels</td>
+<td>criterion_id</td>
+<td>bigint</td>
+<td>FK (criteria.id), CASCADE</td>
+<td>Auto-set to parent criterion</td>
+</tr>
+<tr>
+<td>score_levels</td>
+<td>label</td>
+<td>varchar(255)</td>
+<td>NOT NULL</td>
+<td>Score level label field (e.g., "Excellent")</td>
+</tr>
+<tr>
+<td>score_levels</td>
+<td>score_value</td>
+<td>decimal(8,2)</td>
+<td>NOT NULL, min 0</td>
+<td>Score level score_value numeric input</td>
+</tr>
+<tr>
+<td>score_levels</td>
+<td>description</td>
+<td>text</td>
+<td>NULL</td>
+<td>Score level description textarea</td>
+</tr>
+<tr>
+<td>score_levels</td>
+<td>sort_order</td>
+<td>int</td>
+<td>NOT NULL</td>
+<td>Score level ordering within criterion</td>
+</tr>
+<tr>
+<td>score_levels</td>
+<td>deleted_at</td>
+<td>timestamp</td>
+<td>NULL</td>
+<td>Cascade soft delete with parent criterion</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 29 - PHASE TEMPLATES LIST                               -->
+<!-- ============================================================ -->
+<div id="screen-29" class="screen-section">
+<h2>Screen 29 - Phase Templates List</h2>
+<p>Route: <span class="route">/admin/phase-templates</span></p>
+
+<img src="photos/28-phase-templates-list.png" alt="Phase Templates List Screen">
+
+<div class="desc">
+The Phase Templates List screen displays all phase templates in a data table. Phase templates define the evaluation structure for project phases, linking rubric templates to specific evaluation rules. Columns include <code>name</code>, <code>total_phase_marks</code> (formatted to 2 decimal places, representing the sum of all linked rubric rule marks), <code>creator.name</code> (the user who created the template), <code>phase_rubric_rules_count</code> (the number of rubric rules associated with this phase), and <code>created_at</code>. The table supports search, pagination, and row-level edit/delete actions.
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-PHS-001</td>
+<td>Phase templates table displays all columns correctly</td>
+<td>1. Navigate to <code>/admin/phase-templates</code><br>2. Verify columns: name, total_phase_marks, creator.name, phase_rubric_rules_count, created_at</td>
+<td>Table renders all columns with correct data. Total phase marks displayed with 2 decimal places. Rubric rules count matches the number of linked rules in the database.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-PHS-002</td>
+<td>Phase rubric rules count is accurate</td>
+<td>1. Pick a phase template row<br>2. Count its phase_rubric_rules in the database<br>3. Compare with the displayed count</td>
+<td>Displayed count matches <code>SELECT COUNT(*) FROM phase_rubric_rules WHERE phase_template_id = ?</code>.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-PHS-003</td>
+<td>Delete phase template</td>
+<td>1. Click delete action on a phase template row<br>2. Confirm deletion</td>
+<td>Phase template is soft-deleted (<code>deleted_at</code> set). Removed from list view. Associated phase_rubric_rules are handled per cascade rules.</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>phase_templates</td>
+<td>id</td>
+<td>bigint</td>
+<td>PRIMARY KEY, AUTO_INCREMENT</td>
+<td>Internal row identifier</td>
+</tr>
+<tr>
+<td>phase_templates</td>
+<td>name</td>
+<td>varchar</td>
+<td>NOT NULL</td>
+<td>Name column</td>
+</tr>
+<tr>
+<td>phase_templates</td>
+<td>total_phase_marks</td>
+<td>decimal(8,2)</td>
+<td>NOT NULL</td>
+<td>Total Phase Marks column (2 decimal places)</td>
+</tr>
+<tr>
+<td>phase_templates</td>
+<td>created_by</td>
+<td>bigint</td>
+<td>FK (users.id)</td>
+<td>Creator Name column (joined)</td>
+</tr>
+<tr>
+<td>phase_templates</td>
+<td>created_at</td>
+<td>timestamp</td>
+<td>NOT NULL</td>
+<td>Created At column</td>
+</tr>
+<tr>
+<td>phase_templates</td>
+<td>deleted_at</td>
+<td>timestamp</td>
+<td>NULL</td>
+<td>Soft delete - hidden when set</td>
+</tr>
+<tr>
+<td>phase_rubric_rules</td>
+<td>phase_template_id</td>
+<td>bigint</td>
+<td>FK (phase_templates.id)</td>
+<td>Phase Rubric Rules Count (aggregated)</td>
+</tr>
+</table>
+</div>
+<!-- ============================================================ -->
+<!-- SCREEN 30 - PHASE TEMPLATES CREATE                            -->
+<!-- ============================================================ -->
+<div id="screen-30" class="screen-section">
+<h2>Screen 30 - Phase Templates Create</h2>
+<p>Route: <span class="route">/admin/phase-templates/create</span></p>
+
+<img src="photos/29-phase-templates-create.png" alt="Phase Templates Create Screen">
+
+<div class="desc">
+The Phase Templates Create screen provides a form to define a new phase template. Fields include <code>name</code> (required, max 255 characters) and <code>total_phase_marks</code> (required, numeric, minimum 0). Upon creation, the system automatically sets the <code>created_by</code> field to the currently authenticated user's ID. This links the phase template to its creator for auditing and ownership tracking purposes.
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-PHS-004</td>
+<td>Create phase template with valid data</td>
+<td>1. Navigate to <code>/admin/phase-templates/create</code><br>2. Enter a unique name<br>3. Enter a valid total_phase_marks value (e.g., 100)<br>4. Click "Create"</td>
+<td>Phase template created in <code>phase_templates</code> table with <code>created_by</code> set to the authenticated user's ID. Redirect to list with success notification.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-PHS-005</td>
+<td>Name field is required</td>
+<td>1. Leave the name field empty<br>2. Enter a valid total_phase_marks<br>3. Submit form</td>
+<td>Validation error: "The name field is required." Phase template is not created.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-PHS-006</td>
+<td>Name max length validation</td>
+<td>1. Enter a name exceeding 255 characters<br>2. Enter a valid total_phase_marks<br>3. Submit form</td>
+<td>Validation error: "The name must not be greater than 255 characters."</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-PHS-007</td>
+<td>Total phase marks must be numeric and non-negative</td>
+<td>1. Enter a valid name<br>2. Enter a negative value (e.g., -10) or non-numeric text in total_phase_marks<br>3. Submit form</td>
+<td>Validation error: "The total phase marks must be at least 0" or "The total phase marks must be a number." Phase template is not created.</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>phase_templates</td>
+<td>id</td>
+<td>bigint</td>
+<td>PRIMARY KEY, AUTO_INCREMENT</td>
+<td>Internal row identifier</td>
+</tr>
+<tr>
+<td>phase_templates</td>
+<td>name</td>
+<td>varchar(255)</td>
+<td>NOT NULL</td>
+<td>Name text input</td>
+</tr>
+<tr>
+<td>phase_templates</td>
+<td>total_phase_marks</td>
+<td>decimal</td>
+<td>NOT NULL, min 0</td>
+<td>Total Phase Marks numeric input</td>
+</tr>
+<tr>
+<td>phase_templates</td>
+<td>created_by</td>
+<td>bigint</td>
+<td>FK (users.id), NOT NULL</td>
+<td>Auto-set to authenticated user ID</td>
+</tr>
+<tr>
+<td>phase_templates</td>
+<td>created_at</td>
+<td>timestamp</td>
+<td>NOT NULL</td>
+<td>Auto-set on creation</td>
+</tr>
+<tr>
+<td>phase_templates</td>
+<td>updated_at</td>
+<td>timestamp</td>
+<td>NOT NULL</td>
+<td>Auto-set on creation</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 31 - PHASE TEMPLATES EDIT                               -->
+<!-- ============================================================ -->
+<div id="screen-31" class="screen-section">
+<h2>Screen 31 - Phase Templates Edit</h2>
+<p>Route: <span class="route">/admin/phase-templates/{id}/edit</span></p>
+
+<img src="photos/30-phase-templates-edit.png" alt="Phase Templates Edit Screen">
+
+<div class="desc">
+The Phase Templates Edit screen allows modification of a phase template's <code>name</code> and <code>total_phase_marks</code> fields. Pre-populated with the current values, the form also includes a <strong>PhaseRubricRules</strong> Relation Manager (RM) for managing the rubric rules associated with this phase template. Each rule in the RM defines how a specific rubric template contributes to the phase evaluation. RM fields include: <code>rubric_template</code> (select, restricted to locked templates only, searchable), <code>evaluator_role</code> (select: Supervisor or Reviewer), <code>fill_order</code> (integer, minimum 1 -- determines the sequence of evaluation), <code>max_marks</code> (numeric, minimum 0), and <code>aggregation_method</code> (select: AVERAGE, WEIGHTED_AVERAGE, SUM, or MAX; defaults to AVERAGE). The RM table is sorted by <code>fill_order</code> by default to reflect the evaluation sequence.
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-PHS-008</td>
+<td>Edit phase template name and total marks</td>
+<td>1. Navigate to <code>/admin/phase-templates/{id}/edit</code><br>2. Change the name and total_phase_marks<br>3. Click "Save changes"</td>
+<td>Phase template updated in database. <code>updated_at</code> timestamp refreshed. Success notification displayed.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-PHS-009</td>
+<td>Create phase rubric rule via Relation Manager</td>
+<td>1. On phase template edit page, scroll to PhaseRubricRules RM<br>2. Click "Create"<br>3. Select a locked rubric template<br>4. Set evaluator_role to "Supervisor"<br>5. Enter fill_order (e.g., 1) and max_marks (e.g., 40)<br>6. Select aggregation_method (e.g., AVERAGE)<br>7. Save</td>
+<td>New row created in <code>phase_rubric_rules</code> table with correct <code>phase_template_id</code> FK. Rule appears in RM table sorted by fill_order.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-PHS-010</td>
+<td>Rubric template select only shows locked templates</td>
+<td>1. Click "Create" in PhaseRubricRules RM<br>2. Open the rubric_template select dropdown<br>3. Verify listed options</td>
+<td>Only rubric templates with <code>is_locked = true</code> appear in the dropdown. Unlocked (draft) templates are excluded.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-PHS-011</td>
+<td>Fill order validation (minimum 1)</td>
+<td>1. Create a new phase rubric rule<br>2. Enter fill_order as 0 or a negative number<br>3. Submit</td>
+<td>Validation error: "The fill order must be at least 1." Rule is not created.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-PHS-012</td>
+<td>Edit existing phase rubric rule</td>
+<td>1. Click edit on an existing rule row in the RM<br>2. Change evaluator_role from Supervisor to Reviewer<br>3. Update max_marks<br>4. Save</td>
+<td>Rule updated in <code>phase_rubric_rules</code> table. RM table refreshes to show updated values.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-PHS-013</td>
+<td>Delete phase rubric rule via Relation Manager</td>
+<td>1. Click delete on a rule row in the RM<br>2. Confirm deletion</td>
+<td>Rule is soft-deleted (<code>deleted_at</code> set) in <code>phase_rubric_rules</code> table. Removed from RM table display.</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>phase_templates</td>
+<td>name</td>
+<td>varchar(255)</td>
+<td>NOT NULL</td>
+<td>Name text input (pre-filled)</td>
+</tr>
+<tr>
+<td>phase_templates</td>
+<td>total_phase_marks</td>
+<td>decimal</td>
+<td>NOT NULL, min 0</td>
+<td>Total Phase Marks numeric input (pre-filled)</td>
+</tr>
+<tr>
+<td>phase_templates</td>
+<td>updated_at</td>
+<td>timestamp</td>
+<td>NOT NULL</td>
+<td>Auto-updated on save</td>
+</tr>
+<tr>
+<td>phase_rubric_rules</td>
+<td>id</td>
+<td>bigint</td>
+<td>PRIMARY KEY, AUTO_INCREMENT</td>
+<td>RM table rows</td>
+</tr>
+<tr>
+<td>phase_rubric_rules</td>
+<td>phase_template_id</td>
+<td>bigint</td>
+<td>FK (phase_templates.id), CASCADE</td>
+<td>Auto-set to current phase template</td>
+</tr>
+<tr>
+<td>phase_rubric_rules</td>
+<td>rubric_template_id</td>
+<td>bigint</td>
+<td>FK (rubric_templates.id), CASCADE</td>
+<td>Rubric Template select (locked only, searchable)</td>
+</tr>
+<tr>
+<td>phase_rubric_rules</td>
+<td>evaluator_role</td>
+<td>varchar</td>
+<td>NOT NULL</td>
+<td>Evaluator Role select (Supervisor/Reviewer)</td>
+</tr>
+<tr>
+<td>phase_rubric_rules</td>
+<td>fill_order</td>
+<td>int</td>
+<td>NOT NULL, min 1</td>
+<td>Fill Order integer input (default sort column)</td>
+</tr>
+<tr>
+<td>phase_rubric_rules</td>
+<td>max_marks</td>
+<td>decimal(8,2)</td>
+<td>NOT NULL, min 0</td>
+<td>Max Marks numeric input</td>
+</tr>
+<tr>
+<td>phase_rubric_rules</td>
+<td>aggregation_method</td>
+<td>enum('AVERAGE','WEIGHTED_AVERAGE','SUM','MAX')</td>
+<td>NOT NULL, default AVERAGE</td>
+<td>Aggregation Method select</td>
+</tr>
+<tr>
+<td>phase_rubric_rules</td>
+<td>created_at</td>
+<td>timestamp</td>
+<td>NOT NULL</td>
+<td>Auto-set on creation</td>
+</tr>
+<tr>
+<td>phase_rubric_rules</td>
+<td>updated_at</td>
+<td>timestamp</td>
+<td>NOT NULL</td>
+<td>Auto-updated on save</td>
+</tr>
+<tr>
+<td>phase_rubric_rules</td>
+<td>deleted_at</td>
+<td>timestamp</td>
+<td>NULL</td>
+<td>RM delete action (soft delete)</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 32 - EVALUATIONS LIST                                   -->
+<!-- ============================================================ -->
+<div id="screen-32" class="screen-section">
+<h2>Screen 32 - Evaluations List</h2>
+<p>Route: <span class="route">/admin/evaluations</span></p>
+
+<img src="photos/31-evaluations-list.png" alt="Evaluations List Screen">
+
+<div class="desc">
+The Evaluations List screen is a <strong>read-only</strong> resource that displays all evaluations in a data table. It is not possible to create or edit evaluations from the admin panel -- evaluations are generated by the system and filled by evaluators. Columns include: <code>project.title</code> (searchable, limited to 30 characters), <code>rubricTemplate.name</code> (limited to 25 characters), <code>evaluator.name</code> (searchable), <code>evaluator_role</code> as a color-coded badge (Supervisor=info/blue, Reviewer=warning/yellow), <code>status</code> as a badge (pending=gray, draft=warning/yellow, submitted=success/green), <code>onBehalfOfUser.name</code> (toggleable, hidden by default), and <code>unlockedByUser.name</code> (toggleable, hidden by default).<br><br>
+<strong>Filters:</strong> semester (via the project's semester relationship), status, and evaluator_role.<br>
+<strong>Actions:</strong> View (always available), Unlock (visible only when status is "submitted" -- resets status to pending, clears associated consolidated marks, and sends a notification to the evaluator), and Proxy Mark Entry (visible when status is "pending" or "draft" -- links the coordinator to the proxy evaluation form to fill marks on behalf of an evaluator).<br>
+The list is scoped by coordinator assignment: coordinators only see evaluations for projects in semesters they are assigned to.
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-EVL-001</td>
+<td>Evaluations table displays all columns with correct badges</td>
+<td>1. Navigate to <code>/admin/evaluations</code><br>2. Verify columns: project title, rubric template name, evaluator name, evaluator_role badge, status badge<br>3. Check badge colors match specifications</td>
+<td>Table renders with all specified columns. Supervisor badges are blue (info), Reviewer badges are yellow (warning). Status badges: pending=gray, draft=yellow, submitted=green.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-EVL-002</td>
+<td>Coordinator scoping restricts visible evaluations</td>
+<td>1. Login as a coordinator assigned to Semester A only<br>2. Navigate to <code>/admin/evaluations</code><br>3. Verify no evaluations from Semester B appear</td>
+<td>Only evaluations belonging to projects in the coordinator's assigned semesters are visible. Evaluations from other semesters are hidden.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-EVL-003</td>
+<td>Unlock action resets submitted evaluation</td>
+<td>1. Find an evaluation with status "submitted"<br>2. Click the "Unlock" action<br>3. Confirm the action</td>
+<td>Evaluation status is reset to "pending". Associated consolidated marks are cleared. Notification is sent to the evaluator. <code>unlocked_by</code> field is set to the current admin user's ID.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-EVL-004</td>
+<td>Unlock action is hidden for non-submitted evaluations</td>
+<td>1. Find evaluations with status "pending" or "draft"<br>2. Check available actions on those rows</td>
+<td>The "Unlock" action button is not visible for pending or draft evaluations. Only "View" and "Proxy Mark Entry" are shown.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-EVL-005</td>
+<td>Proxy mark entry action links to proxy form</td>
+<td>1. Find an evaluation with status "pending" or "draft"<br>2. Click the "Proxy Mark Entry" action</td>
+<td>User is redirected to the proxy evaluation form. The form is pre-populated with the evaluation context (project, rubric template, evaluator). <code>on_behalf_of_user_id</code> will be set when form is submitted.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-EVL-006</td>
+<td>Filter evaluations by semester, status, and evaluator role</td>
+<td>1. Apply the semester filter and select a specific semester<br>2. Apply the status filter and select "submitted"<br>3. Apply the evaluator_role filter and select "Supervisor"<br>4. Observe filtered results</td>
+<td>Table shows only evaluations matching all three filter criteria simultaneously. Counts update accordingly.</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>evaluations</td>
+<td>id</td>
+<td>bigint</td>
+<td>PRIMARY KEY, AUTO_INCREMENT</td>
+<td>Internal row identifier</td>
+</tr>
+<tr>
+<td>evaluations</td>
+<td>project_id</td>
+<td>bigint</td>
+<td>FK (projects.id), NOT NULL</td>
+<td>Project Title column (joined via project.title)</td>
+</tr>
+<tr>
+<td>evaluations</td>
+<td>rubric_template_id</td>
+<td>bigint</td>
+<td>FK (rubric_templates.id), NOT NULL</td>
+<td>Rubric Template Name column (joined)</td>
+</tr>
+<tr>
+<td>evaluations</td>
+<td>evaluator_id</td>
+<td>bigint</td>
+<td>FK (users.id), NOT NULL</td>
+<td>Evaluator Name column (joined via evaluator.name)</td>
+</tr>
+<tr>
+<td>evaluations</td>
+<td>evaluator_role</td>
+<td>varchar</td>
+<td>NOT NULL</td>
+<td>Evaluator Role badge column</td>
+</tr>
+<tr>
+<td>evaluations</td>
+<td>fill_order</td>
+<td>int</td>
+<td>NULL</td>
+<td>Evaluation sequence order</td>
+</tr>
+<tr>
+<td>evaluations</td>
+<td>on_behalf_of_user_id</td>
+<td>bigint</td>
+<td>FK (users.id), NULL</td>
+<td>On Behalf Of column (toggleable, hidden by default)</td>
+</tr>
+<tr>
+<td>evaluations</td>
+<td>evidence_attachment_path</td>
+<td>varchar</td>
+<td>NULL</td>
+<td>Evidence file path (internal)</td>
+</tr>
+<tr>
+<td>evaluations</td>
+<td>status</td>
+<td>enum('pending','draft','submitted')</td>
+<td>NOT NULL</td>
+<td>Status badge column</td>
+</tr>
+<tr>
+<td>evaluations</td>
+<td>general_feedback</td>
+<td>text</td>
+<td>NULL</td>
+<td>General feedback (visible in view)</td>
+</tr>
+<tr>
+<td>evaluations</td>
+<td>unlocked_by</td>
+<td>bigint</td>
+<td>FK (users.id), NULL</td>
+<td>Unlocked By column (toggleable, hidden by default)</td>
+</tr>
+<tr>
+<td>evaluations</td>
+<td>created_at</td>
+<td>timestamp</td>
+<td>NOT NULL</td>
+<td>Auto-set on creation</td>
+</tr>
+<tr>
+<td>evaluations</td>
+<td>deleted_at</td>
+<td>timestamp</td>
+<td>NULL</td>
+<td>Soft delete - hidden when set</td>
+</tr>
+<tr>
+<td>evaluations</td>
+<td>(project_id, rubric_template_id, evaluator_id)</td>
+<td>--</td>
+<td>UNIQUE composite index</td>
+<td>Prevents duplicate evaluations per project/rubric/evaluator</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 33 - EVALUATIONS VIEW                                   -->
+<!-- ============================================================ -->
+<div id="screen-33" class="screen-section">
+<h2>Screen 33 - Evaluations View</h2>
+<p>Route: <span class="route">/admin/evaluations/{id}</span></p>
+
+<img src="photos/32-evaluations-view.png" alt="Evaluations View Screen">
+
+<div class="desc">
+The Evaluations View screen is a read-only infolist page that displays the complete details of an evaluation record. The top section shows: <code>project.title</code>, <code>rubricTemplate.name</code>, <code>evaluator.name</code>, <code>evaluator_role</code> (displayed as a color-coded badge), <code>status</code> (displayed as a color-coded badge), <code>onBehalfOfUser.name</code> (if proxy entry was used), <code>unlockedByUser.name</code> (if the evaluation was previously unlocked), and <code>general_feedback</code>.<br><br>
+Below the evaluation details, a custom view template renders the <strong>evaluation scores</strong> in a structured format. For each student evaluated, the scores table shows: the <code>criterion</code> name (from the rubric), the selected <code>score level</code> description, the <code>score_awarded</code> value, and any per-criterion <code>feedback</code> provided by the evaluator.
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-EVL-007</td>
+<td>View evaluation details render correctly</td>
+<td>1. Navigate to <code>/admin/evaluations/{id}</code> for a submitted evaluation<br>2. Verify all infolist fields are displayed</td>
+<td>All evaluation fields render: project title, rubric template name, evaluator name, evaluator_role badge, status badge, on_behalf_of user (if set), unlocked_by user (if set), and general_feedback.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-EVL-008</td>
+<td>Evaluation scores table displays per-student scores</td>
+<td>1. View a submitted evaluation that has scores recorded<br>2. Scroll to the evaluation scores section<br>3. Verify score data for each student</td>
+<td>Scores table shows each criterion with its score level, score_awarded, and feedback. Each student's scores are displayed in separate sections or rows. Values match the <code>evaluation_scores</code> table.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-EVL-009</td>
+<td>View evaluation with no scores (pending status)</td>
+<td>1. Navigate to the view page of a pending evaluation<br>2. Check the scores section</td>
+<td>Evaluation details are shown but the scores section displays an empty state or "No scores recorded" message since the evaluator has not yet submitted scores.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-EVL-010</td>
+<td>View evaluation with proxy entry details</td>
+<td>1. View an evaluation where <code>on_behalf_of_user_id</code> is set<br>2. Verify the on-behalf-of information</td>
+<td>The "On Behalf Of" field displays the name of the user who performed the proxy entry. This confirms the evaluation was filled by a coordinator on behalf of the original evaluator.</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>evaluations</td>
+<td>id</td>
+<td>bigint</td>
+<td>PRIMARY KEY</td>
+<td>Record identifier for view route</td>
+</tr>
+<tr>
+<td>evaluations</td>
+<td>project_id</td>
+<td>bigint</td>
+<td>FK (projects.id)</td>
+<td>Project Title infolist entry</td>
+</tr>
+<tr>
+<td>evaluations</td>
+<td>rubric_template_id</td>
+<td>bigint</td>
+<td>FK (rubric_templates.id)</td>
+<td>Rubric Template Name infolist entry</td>
+</tr>
+<tr>
+<td>evaluations</td>
+<td>evaluator_id</td>
+<td>bigint</td>
+<td>FK (users.id)</td>
+<td>Evaluator Name infolist entry</td>
+</tr>
+<tr>
+<td>evaluations</td>
+<td>evaluator_role</td>
+<td>varchar</td>
+<td>NOT NULL</td>
+<td>Evaluator Role badge</td>
+</tr>
+<tr>
+<td>evaluations</td>
+<td>status</td>
+<td>enum('pending','draft','submitted')</td>
+<td>NOT NULL</td>
+<td>Status badge</td>
+</tr>
+<tr>
+<td>evaluations</td>
+<td>on_behalf_of_user_id</td>
+<td>bigint</td>
+<td>FK (users.id), NULL</td>
+<td>On Behalf Of infolist entry</td>
+</tr>
+<tr>
+<td>evaluations</td>
+<td>unlocked_by</td>
+<td>bigint</td>
+<td>FK (users.id), NULL</td>
+<td>Unlocked By infolist entry</td>
+</tr>
+<tr>
+<td>evaluations</td>
+<td>general_feedback</td>
+<td>text</td>
+<td>NULL</td>
+<td>General Feedback infolist entry</td>
+</tr>
+<tr>
+<td>evaluation_scores</td>
+<td>evaluation_id</td>
+<td>bigint</td>
+<td>FK (evaluations.id), CASCADE</td>
+<td>Links scores to this evaluation</td>
+</tr>
+<tr>
+<td>evaluation_scores</td>
+<td>criterion_id</td>
+<td>bigint</td>
+<td>FK (criteria.id), CASCADE</td>
+<td>Criterion name in scores table</td>
+</tr>
+<tr>
+<td>evaluation_scores</td>
+<td>score_level_id</td>
+<td>bigint</td>
+<td>FK (score_levels.id), NULL</td>
+<td>Score Level description in scores table</td>
+</tr>
+<tr>
+<td>evaluation_scores</td>
+<td>student_id</td>
+<td>bigint</td>
+<td>FK (users.id), NULL</td>
+<td>Student grouping in scores view</td>
+</tr>
+<tr>
+<td>evaluation_scores</td>
+<td>score_awarded</td>
+<td>decimal(8,2)</td>
+<td>NOT NULL</td>
+<td>Score Awarded column in scores table</td>
+</tr>
+<tr>
+<td>evaluation_scores</td>
+<td>feedback</td>
+<td>text</td>
+<td>NULL</td>
+<td>Feedback column in scores table</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 34 - CONSOLIDATED MARKS LIST                            -->
+<!-- ============================================================ -->
+<div id="screen-34" class="screen-section">
+<h2>Screen 34 - Consolidated Marks List</h2>
+<p>Route: <span class="route">/admin/consolidated-marks</span></p>
+
+<img src="photos/33-consolidated-marks-list.png" alt="Consolidated Marks List Screen">
+
+<div class="desc">
+The Consolidated Marks List screen displays the aggregated marks for each student per project. Columns include: <code>project.title</code> (searchable, limited to 30 characters), <code>student.name</code> (searchable), <code>student.university_id</code> (searchable), <code>total_calculated_score</code>, <code>override_score</code> (displays "--" placeholder when null), <code>final_mark</code> (custom computed column showing <code>override_score</code> when set, otherwise <code>total_calculated_score</code>, using COALESCE for database-level sorting), and <code>letter_grade</code> (custom computed from the <code>grading_scales</code> table by matching the final mark against the min/max score ranges).<br><br>
+<strong>Filters:</strong> semester (via the project's semester relationship) and project.<br>
+<strong>Actions:</strong> View (always available) and Override Mark (visible only when the semester is not closed -- provides a form with an <code>override_score</code> numeric field and an <code>override_reason</code> textarea to justify the override).<br>
+The list is scoped by coordinator assignment.
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-CON-001</td>
+<td>Consolidated marks table displays all columns correctly</td>
+<td>1. Navigate to <code>/admin/consolidated-marks</code><br>2. Verify columns: project title, student name, university_id, total_calculated_score, override_score, final_mark, letter_grade</td>
+<td>Table renders all columns with correct data. Override score shows "--" for rows without overrides. Final mark shows override when set, otherwise calculated score. Letter grade is derived from grading scales.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-CON-002</td>
+<td>Final mark uses COALESCE logic for sorting</td>
+<td>1. Click the final_mark column header to sort<br>2. Verify sort order considers override_score first</td>
+<td>Sorting uses <code>COALESCE(override_score, total_calculated_score)</code>. Records with overrides sort by their override value, and records without overrides sort by their calculated score, all in a single consistent ordering.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-CON-003</td>
+<td>Override mark action with valid data</td>
+<td>1. Find a consolidated mark in an active (non-closed) semester<br>2. Click "Override Mark" action<br>3. Enter an override_score (e.g., 85.50)<br>4. Enter an override_reason (e.g., "Adjusted for extenuating circumstances")<br>5. Submit</td>
+<td><code>override_score</code> and <code>override_reason</code> are saved to the <code>consolidated_marks</code> record. The final_mark and letter_grade columns update to reflect the override.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-CON-004</td>
+<td>Override mark action is hidden when semester is closed</td>
+<td>1. Ensure a semester has status "closed"<br>2. Navigate to consolidated marks for that semester<br>3. Check available actions</td>
+<td>The "Override Mark" action is not visible for any consolidated marks in the closed semester. Only the "View" action is available.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-CON-005</td>
+<td>Letter grade computation from grading scales</td>
+<td>1. Verify a student's final_mark value (e.g., 87.5)<br>2. Check the <code>grading_scales</code> table for the matching range<br>3. Compare the displayed letter_grade</td>
+<td>The displayed letter_grade matches the grade from <code>grading_scales</code> where <code>min_score &lt;= final_mark AND max_score &gt;= final_mark</code>. For example, 87.5 might map to "B+" per the scale configuration.</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>consolidated_marks</td>
+<td>id</td>
+<td>bigint</td>
+<td>PRIMARY KEY, AUTO_INCREMENT</td>
+<td>Internal row identifier</td>
+</tr>
+<tr>
+<td>consolidated_marks</td>
+<td>project_id</td>
+<td>bigint</td>
+<td>FK (projects.id), CASCADE</td>
+<td>Project Title column (joined via project.title)</td>
+</tr>
+<tr>
+<td>consolidated_marks</td>
+<td>phase_template_id</td>
+<td>bigint</td>
+<td>FK (phase_templates.id), CASCADE</td>
+<td>Phase context for consolidation</td>
+</tr>
+<tr>
+<td>consolidated_marks</td>
+<td>student_id</td>
+<td>bigint</td>
+<td>FK (users.id), CASCADE</td>
+<td>Student Name and University ID columns (joined)</td>
+</tr>
+<tr>
+<td>consolidated_marks</td>
+<td>total_calculated_score</td>
+<td>decimal(8,2)</td>
+<td>NOT NULL</td>
+<td>Total Calculated Score column</td>
+</tr>
+<tr>
+<td>consolidated_marks</td>
+<td>override_score</td>
+<td>decimal(8,2)</td>
+<td>NULL</td>
+<td>Override Score column (shows "--" when NULL)</td>
+</tr>
+<tr>
+<td>consolidated_marks</td>
+<td>override_reason</td>
+<td>text</td>
+<td>NULL</td>
+<td>Override Mark action textarea</td>
+</tr>
+<tr>
+<td>consolidated_marks</td>
+<td>created_at</td>
+<td>timestamp</td>
+<td>NOT NULL</td>
+<td>Auto-set on creation</td>
+</tr>
+<tr>
+<td>consolidated_marks</td>
+<td>deleted_at</td>
+<td>timestamp</td>
+<td>NULL</td>
+<td>Soft delete - hidden when set</td>
+</tr>
+<tr>
+<td>grading_scales</td>
+<td>letter_grade</td>
+<td>varchar(10)</td>
+<td>NOT NULL</td>
+<td>Letter Grade computed column</td>
+</tr>
+<tr>
+<td>grading_scales</td>
+<td>min_score</td>
+<td>decimal(5,2)</td>
+<td>NOT NULL</td>
+<td>Lower bound for grade matching</td>
+</tr>
+<tr>
+<td>grading_scales</td>
+<td>max_score</td>
+<td>decimal(5,2)</td>
+<td>NOT NULL</td>
+<td>Upper bound for grade matching</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 35 - CONSOLIDATED MARKS VIEW                            -->
+<!-- ============================================================ -->
+<div id="screen-35" class="screen-section">
+<h2>Screen 35 - Consolidated Marks View</h2>
+<p>Route: <span class="route">/admin/consolidated-marks/{id}</span></p>
+
+<img src="photos/34-consolidated-marks-view.png" alt="Consolidated Marks View Screen">
+
+<div class="desc">
+The Consolidated Marks View screen presents a comprehensive read-only breakdown of a student's consolidated mark across four distinct sections:<br><br>
+<strong>1. Student Info:</strong> Displays <code>student.name</code>, <code>student.university_id</code>, <code>project.title</code>, and <code>project.semester.name</code>.<br>
+<strong>2. Score Breakdown:</strong> A RepeatableEntry listing each component that contributed to the total score. Each component row shows <code>source_label</code> (describing the evaluation source, e.g., "Supervisor - Proposal Rubric") and <code>score</code>. Below the components, the <code>total_calculated_score</code> is displayed as a summary.<br>
+<strong>3. Override (conditionally visible):</strong> This section only appears when an <code>override_score</code> is set. It shows the <code>override_score</code> value and the <code>override_reason</code> text explaining the justification for the override.<br>
+<strong>4. Final Result:</strong> Shows the <code>final_score_display</code> (override_score if set, otherwise total_calculated_score), the <code>letter_grade_display</code> (looked up from <code>grading_scales</code> based on the final score), and the <code>gpa_display</code> (the corresponding <code>gpa_equivalent</code> from the matched grading scale entry).
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-CON-006</td>
+<td>Student info section displays correct data</td>
+<td>1. Navigate to <code>/admin/consolidated-marks/{id}</code><br>2. Verify the Student Info section</td>
+<td>Displays the correct student name, university ID, project title, and semester name matching the database records via the joined relationships.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-CON-007</td>
+<td>Score breakdown lists all contributing components</td>
+<td>1. View a consolidated mark record<br>2. Check the Score Breakdown section<br>3. Compare with <code>consolidated_mark_components</code> table</td>
+<td>RepeatableEntry shows all component rows matching <code>SELECT source_label, score FROM consolidated_mark_components WHERE consolidated_mark_id = ?</code>. The <code>total_calculated_score</code> is shown as a summary below the components.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-CON-008</td>
+<td>Override section is hidden when no override is set</td>
+<td>1. View a consolidated mark where <code>override_score</code> is NULL<br>2. Check for the Override section</td>
+<td>The Override section is not rendered. Only Student Info, Score Breakdown, and Final Result sections are visible.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-CON-009</td>
+<td>Override section displays when override is set</td>
+<td>1. View a consolidated mark where <code>override_score</code> is set<br>2. Check the Override section</td>
+<td>The Override section is visible, showing the override_score value and the override_reason text. The Final Result section uses the override_score instead of the calculated score.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-CON-010</td>
+<td>Final result section shows correct grade and GPA</td>
+<td>1. View a consolidated mark<br>2. Note the final_score_display value<br>3. Look up the corresponding grading_scale entry<br>4. Compare letter_grade_display and gpa_display</td>
+<td>The letter_grade_display and gpa_display match the <code>grading_scales</code> record where the final score falls within the <code>min_score</code> and <code>max_score</code> range. The <code>gpa_equivalent</code> from that record is shown as gpa_display.</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>consolidated_marks</td>
+<td>id</td>
+<td>bigint</td>
+<td>PRIMARY KEY</td>
+<td>Record identifier for view route</td>
+</tr>
+<tr>
+<td>consolidated_marks</td>
+<td>project_id</td>
+<td>bigint</td>
+<td>FK (projects.id), CASCADE</td>
+<td>Student Info: project.title</td>
+</tr>
+<tr>
+<td>consolidated_marks</td>
+<td>student_id</td>
+<td>bigint</td>
+<td>FK (users.id), CASCADE</td>
+<td>Student Info: student.name, student.university_id</td>
+</tr>
+<tr>
+<td>consolidated_marks</td>
+<td>total_calculated_score</td>
+<td>decimal(8,2)</td>
+<td>NOT NULL</td>
+<td>Score Breakdown: total summary</td>
+</tr>
+<tr>
+<td>consolidated_marks</td>
+<td>override_score</td>
+<td>decimal(8,2)</td>
+<td>NULL</td>
+<td>Override section: override_score (visibility toggle)</td>
+</tr>
+<tr>
+<td>consolidated_marks</td>
+<td>override_reason</td>
+<td>text</td>
+<td>NULL</td>
+<td>Override section: override_reason</td>
+</tr>
+<tr>
+<td>consolidated_mark_components</td>
+<td>consolidated_mark_id</td>
+<td>bigint</td>
+<td>FK (consolidated_marks.id), CASCADE</td>
+<td>Links components to this consolidated mark</td>
+</tr>
+<tr>
+<td>consolidated_mark_components</td>
+<td>source_label</td>
+<td>varchar</td>
+<td>NOT NULL</td>
+<td>Score Breakdown: source_label in RepeatableEntry</td>
+</tr>
+<tr>
+<td>consolidated_mark_components</td>
+<td>score</td>
+<td>decimal(8,2)</td>
+<td>NOT NULL</td>
+<td>Score Breakdown: score in RepeatableEntry</td>
+</tr>
+<tr>
+<td>grading_scales</td>
+<td>letter_grade</td>
+<td>varchar(10)</td>
+<td>NOT NULL</td>
+<td>Final Result: letter_grade_display</td>
+</tr>
+<tr>
+<td>grading_scales</td>
+<td>gpa_equivalent</td>
+<td>decimal(3,2)</td>
+<td>NOT NULL</td>
+<td>Final Result: gpa_display</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 36 - SEMESTER SETUP WIZARD                              -->
+<!-- ============================================================ -->
+<div id="screen-36" class="screen-section">
+<h2>Screen 36 - Semester Setup Wizard</h2>
+<p>Route: <span class="route">/admin/semester-setup-wizard</span></p>
+
+<img src="photos/35-wizard-step1.png" alt="Semester Setup Wizard Screen">
+
+<div class="desc">
+The Semester Setup Wizard is a multi-step guided workflow for creating and configuring a new semester with all its associated data in a single streamlined process. The wizard consists of four sequential steps:<br><br>
+<strong>Step 1 - Create Semester:</strong> Fields for <code>name</code>, <code>academic_year</code>, <code>start_date</code>, and <code>end_date</code>. The currently authenticated coordinator is automatically assigned to the new semester via the <code>coordinator_semester</code> pivot table.<br>
+<strong>Step 2 - Select Phase Templates:</strong> A checkbox list displaying all available <code>PhaseTemplates</code>, each showing the template name and its <code>total_phase_marks</code>. The coordinator selects which phases will be used in this semester.<br>
+<strong>Step 3 - Import/Create Projects:</strong> A radio choice offering three options: Manual entry (using a repeater with fields for <code>title</code>, <code>course</code>, <code>phase_template</code>, <code>specialization</code>, <code>supervisor</code>, <code>student_ids</code>, and <code>reviewer_ids</code>), CSV import (file upload with row-level validation), or Skip (defer project creation). A CSV template can be downloaded for the import format.<br>
+<strong>Step 4 - Review Summary:</strong> A read-only summary view of all data entered in the previous steps, allowing the coordinator to confirm before finalizing. On completion, the semester, its phase assignments, and all projects are persisted in a single transaction.
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-WIZ-001</td>
+<td>Complete wizard with manual project entry</td>
+<td>1. Navigate to <code>/admin/semester-setup-wizard</code><br>2. Step 1: Enter semester name, academic_year, start_date, end_date<br>3. Step 2: Select one or more phase templates<br>4. Step 3: Choose "Manual", add a project with all fields<br>5. Step 4: Review and confirm</td>
+<td>Semester created in <code>semesters</code> table. Coordinator linked in <code>coordinator_semester</code>. Phase templates associated. Project created in <code>projects</code> table with pivot entries in <code>project_student</code> and <code>project_reviewer</code>.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-WIZ-002</td>
+<td>Wizard Step 1 validation</td>
+<td>1. Leave all fields empty in Step 1<br>2. Attempt to proceed to Step 2</td>
+<td>Validation errors shown for all required fields: name, academic_year, start_date, and end_date. User cannot proceed to the next step until errors are resolved.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-WIZ-003</td>
+<td>Step 2 displays all phase templates with total marks</td>
+<td>1. Complete Step 1 with valid data<br>2. Proceed to Step 2<br>3. Verify the checkbox list</td>
+<td>All phase templates from the <code>phase_templates</code> table are listed with their names and <code>total_phase_marks</code> values. Checkboxes are unchecked by default.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-WIZ-004</td>
+<td>CSV import with valid file</td>
+<td>1. Download the CSV template from the wizard<br>2. Fill in valid project data<br>3. In Step 3, choose "CSV Import" and upload the file<br>4. Proceed to Step 4 and confirm</td>
+<td>CSV rows are validated. Valid projects are created with correct relationships. All student and reviewer assignments are established via pivot tables. Success notification shown.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-WIZ-005</td>
+<td>CSV import with validation errors</td>
+<td>1. Upload a CSV with invalid data (e.g., non-existent supervisor ID, missing title)<br>2. Attempt to proceed</td>
+<td>Row-level validation errors are displayed indicating which rows and columns have issues. The wizard does not proceed until errors are fixed or invalid rows are removed.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-WIZ-006</td>
+<td>Skip project creation in Step 3</td>
+<td>1. Complete Steps 1 and 2<br>2. In Step 3, choose "Skip"<br>3. Proceed to Step 4 and confirm</td>
+<td>Semester and phase template associations are created but no projects are created. The semester is ready for manual project addition later via the Projects resource.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-WIZ-007</td>
+<td>Coordinator is automatically assigned to new semester</td>
+<td>1. Complete the wizard as a coordinator<br>2. Check the <code>coordinator_semester</code> table</td>
+<td>A row exists in <code>coordinator_semester</code> linking the authenticated coordinator's user ID to the newly created semester's ID.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-WIZ-008</td>
+<td>Download CSV template for project import</td>
+<td>1. In Step 3, click the "Download CSV Template" button<br>2. Open the downloaded file</td>
+<td>A CSV file is downloaded containing the expected column headers (title, course_id, phase_template_id, specialization_id, supervisor_id, student_ids, reviewer_ids) with no data rows. File format matches import expectations.</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>semesters</td>
+<td>id</td>
+<td>bigint</td>
+<td>PRIMARY KEY, AUTO_INCREMENT</td>
+<td>Created in Step 1</td>
+</tr>
+<tr>
+<td>semesters</td>
+<td>name</td>
+<td>varchar</td>
+<td>NOT NULL</td>
+<td>Step 1: Name text input</td>
+</tr>
+<tr>
+<td>semesters</td>
+<td>academic_year</td>
+<td>varchar</td>
+<td>NOT NULL</td>
+<td>Step 1: Academic Year text input</td>
+</tr>
+<tr>
+<td>semesters</td>
+<td>start_date</td>
+<td>date</td>
+<td>NOT NULL</td>
+<td>Step 1: Start Date picker</td>
+</tr>
+<tr>
+<td>semesters</td>
+<td>end_date</td>
+<td>date</td>
+<td>NOT NULL</td>
+<td>Step 1: End Date picker</td>
+</tr>
+<tr>
+<td>coordinator_semester</td>
+<td>user_id</td>
+<td>bigint</td>
+<td>FK (users.id), Composite PK</td>
+<td>Auto-assigned: authenticated coordinator</td>
+</tr>
+<tr>
+<td>coordinator_semester</td>
+<td>semester_id</td>
+<td>bigint</td>
+<td>FK (semesters.id), Composite PK</td>
+<td>Auto-assigned: newly created semester</td>
+</tr>
+<tr>
+<td>phase_templates</td>
+<td>id</td>
+<td>bigint</td>
+<td>PRIMARY KEY</td>
+<td>Step 2: Checkbox list options</td>
+</tr>
+<tr>
+<td>phase_templates</td>
+<td>name</td>
+<td>varchar</td>
+<td>NOT NULL</td>
+<td>Step 2: Checkbox label text</td>
+</tr>
+<tr>
+<td>phase_templates</td>
+<td>total_phase_marks</td>
+<td>decimal</td>
+<td>NOT NULL</td>
+<td>Step 2: Displayed alongside checkbox label</td>
+</tr>
+<tr>
+<td>projects</td>
+<td>id</td>
+<td>bigint</td>
+<td>PRIMARY KEY, AUTO_INCREMENT</td>
+<td>Created in Step 3 (manual or CSV)</td>
+</tr>
+<tr>
+<td>projects</td>
+<td>title</td>
+<td>varchar</td>
+<td>NOT NULL</td>
+<td>Step 3: Project title field / CSV column</td>
+</tr>
+<tr>
+<td>projects</td>
+<td>semester_id</td>
+<td>bigint</td>
+<td>FK (semesters.id)</td>
+<td>Auto-set to newly created semester</td>
+</tr>
+<tr>
+<td>project_student</td>
+<td>project_id, user_id</td>
+<td>bigint, bigint</td>
+<td>Composite PK</td>
+<td>Step 3: Student IDs assignment</td>
+</tr>
+<tr>
+<td>project_reviewer</td>
+<td>project_id, user_id</td>
+<td>bigint, bigint</td>
+<td>Composite PK</td>
+<td>Step 3: Reviewer IDs assignment</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 37 - BULK IMPORT USERS                                  -->
+<!-- ============================================================ -->
+<div id="screen-37" class="screen-section">
+<h2>Screen 37 - Bulk Import Users</h2>
+<p>Route: <span class="route">/admin/bulk-import-users</span></p>
+
+<img src="photos/39-bulk-import.png" alt="Bulk Import Users Screen">
+
+<div class="desc">
+The Bulk Import Users screen provides CSV-based bulk user creation. Administrators upload a CSV file with the required columns: <code>university_id</code>, <code>name</code>, <code>email</code>, and <code>role</code>. The system performs comprehensive validation including: <code>university_id</code> uniqueness (checked against both the database and within the CSV itself to catch intra-file duplicates), <code>email</code> uniqueness (same dual check), email format validation, and valid role name verification.<br><br>
+<strong>Role restrictions:</strong> Super Admin users can assign any role. Non-Super Admin users (e.g., Coordinators) cannot assign the Super Admin or Coordinator roles to imported users -- only student, supervisor, and reviewer roles are available.<br><br>
+For each valid user, the system auto-generates a secure 12-character random password. After validation, a preview table is displayed showing each row's validation status (pass/fail with specific error messages). Upon confirmation, users are created and assigned their roles. A results CSV can be downloaded containing the created users' details including their generated passwords for distribution.
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-IMP-001</td>
+<td>Bulk import with valid CSV file</td>
+<td>1. Navigate to <code>/admin/bulk-import-users</code><br>2. Download the CSV template<br>3. Fill in valid data (university_id, name, email, role)<br>4. Upload the CSV file<br>5. Review the preview table<br>6. Confirm import</td>
+<td>All rows pass validation. Users are created in the <code>users</code> table with hashed auto-generated passwords. Roles are assigned via <code>model_has_roles</code>. Results CSV is available for download containing usernames and passwords.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-IMP-002</td>
+<td>Duplicate university_id validation (database and intra-CSV)</td>
+<td>1. Create a CSV with two rows having the same university_id<br>2. Also include a university_id that already exists in the database<br>3. Upload and review preview</td>
+<td>Preview shows validation errors for both: the intra-CSV duplicate (second occurrence flagged) and the database duplicate. Affected rows are marked as failed. Valid rows can still be imported.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-IMP-003</td>
+<td>Duplicate email validation (database and intra-CSV)</td>
+<td>1. Create a CSV with duplicate emails within the file<br>2. Include an email already registered in the database<br>3. Upload and review preview</td>
+<td>Validation errors shown for both intra-CSV email duplicates and database email conflicts. Error messages clearly indicate which validation failed.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-IMP-004</td>
+<td>Non-Super Admin cannot assign elevated roles</td>
+<td>1. Login as a Coordinator (non-Super Admin)<br>2. Upload a CSV with a row where role = "Super Admin"<br>3. Upload another row where role = "Coordinator"<br>4. Review preview</td>
+<td>Rows with "Super Admin" and "Coordinator" roles are flagged with validation errors. Only roles like Student, Supervisor, and Reviewer are permitted for non-Super Admin importers.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-IMP-005</td>
+<td>Invalid email format validation</td>
+<td>1. Create a CSV with an invalid email format (e.g., "not-an-email")<br>2. Upload and review preview</td>
+<td>The row with the invalid email is flagged with a validation error: "The email must be a valid email address." The row cannot be imported.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-IMP-006</td>
+<td>Download results CSV with generated passwords</td>
+<td>1. Complete a successful bulk import<br>2. Click "Download Results CSV"<br>3. Open the downloaded file</td>
+<td>CSV file contains all successfully created users with columns: university_id, name, email, role, and the generated plain-text password. Passwords are 12 characters long. This file is the only way to retrieve the generated passwords.</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>users</td>
+<td>university_id</td>
+<td>varchar</td>
+<td>UNIQUE, NOT NULL</td>
+<td>CSV column: university_id (validated for uniqueness)</td>
+</tr>
+<tr>
+<td>users</td>
+<td>name</td>
+<td>varchar</td>
+<td>NOT NULL</td>
+<td>CSV column: name</td>
+</tr>
+<tr>
+<td>users</td>
+<td>email</td>
+<td>varchar</td>
+<td>UNIQUE, NOT NULL, email format</td>
+<td>CSV column: email (validated for format and uniqueness)</td>
+</tr>
+<tr>
+<td>users</td>
+<td>password</td>
+<td>varchar</td>
+<td>NOT NULL (hashed)</td>
+<td>Auto-generated 12-character password (hashed on insert)</td>
+</tr>
+<tr>
+<td>users</td>
+<td>created_at</td>
+<td>timestamp</td>
+<td>NOT NULL</td>
+<td>Auto-set during bulk creation</td>
+</tr>
+<tr>
+<td>model_has_roles</td>
+<td>model_id</td>
+<td>bigint</td>
+<td>Composite PK</td>
+<td>Newly created user's ID</td>
+</tr>
+<tr>
+<td>model_has_roles</td>
+<td>role_id</td>
+<td>bigint</td>
+<td>FK (roles.id), Composite PK</td>
+<td>Role from CSV column, validated against roles table</td>
+</tr>
+<tr>
+<td>model_has_roles</td>
+<td>model_type</td>
+<td>string</td>
+<td>Composite PK</td>
+<td>Set to App\Models\User</td>
+</tr>
+<tr>
+<td>roles</td>
+<td>name</td>
+<td>string</td>
+<td>UNIQUE(name, guard_name)</td>
+<td>Validated against CSV role column values</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 38 - GRADE EXPORT                                       -->
+<!-- ============================================================ -->
+<div id="screen-38" class="screen-section">
+<h2>Screen 38 - Grade Export</h2>
+<p>Route: <span class="route">/admin/grade-export</span></p>
+
+<img src="photos/40-grade-export.png" alt="Grade Export Screen">
+
+<div class="desc">
+The Grade Export screen enables coordinators to export student grades in CSV or PDF format. The page provides two dropdown filters: a <code>Semester</code> dropdown (scoped to the coordinator's assigned semesters, defaulting to the most recent active semester) and a <code>Course</code> dropdown (dynamically populated with courses that have projects in the selected semester).<br><br>
+After selecting filters, a preview table is rendered showing: <code>university_id</code>, <code>student name</code>, <code>project title</code>, <code>calculated score</code>, <code>override score</code>, <code>final score</code> (displayed with 2 decimal places), and <code>letter grade</code> (looked up from the grading scales table).<br><br>
+<strong>Export CSV:</strong> Streams a CSV download containing all rows visible in the preview table with the same columns.<br>
+<strong>Export PDF:</strong> Generates a PDF document using the Barryvdh DomPDF package, rendering the <code>grade-report</code> Blade view with formatted tables, headers, and institution branding.
+</div>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-EXP-001</td>
+<td>Semester dropdown defaults to most recent active semester</td>
+<td>1. Navigate to <code>/admin/grade-export</code><br>2. Check the semester dropdown's default selection</td>
+<td>The semester dropdown is pre-selected with the most recent active semester assigned to the current coordinator. If no active semester exists, the dropdown is empty or displays a prompt.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-EXP-002</td>
+<td>Course dropdown filters by selected semester</td>
+<td>1. Select a specific semester from the dropdown<br>2. Open the course dropdown<br>3. Verify listed courses</td>
+<td>Only courses that have at least one project in the selected semester are listed. Courses with no projects in that semester are excluded from the dropdown.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-EXP-003</td>
+<td>Preview table displays correct grade data</td>
+<td>1. Select a semester and course<br>2. Verify the preview table data against the database</td>
+<td>Preview table shows all students with consolidated marks for projects in the selected semester and course. Final scores are displayed to 2 decimal places. Letter grades match the <code>grading_scales</code> lookup. Override scores are shown where applicable.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-EXP-004</td>
+<td>Export CSV downloads correct file</td>
+<td>1. Select semester and course filters<br>2. Click "Export CSV"<br>3. Open the downloaded file</td>
+<td>CSV file is streamed as a download. Contains columns: university_id, student name, project title, calculated score, override score, final score, letter grade. Data matches the preview table exactly. File encoding is UTF-8.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-EXP-005</td>
+<td>Export PDF generates formatted report</td>
+<td>1. Select semester and course filters<br>2. Click "Export PDF"<br>3. Open the downloaded PDF</td>
+<td>PDF is generated using Barryvdh DomPDF with the <code>grade-report</code> Blade template. Document contains formatted tables with student grades, institution headers, and proper layout. Data matches the preview table.</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr>
+<th>Table</th>
+<th>Column</th>
+<th>Type</th>
+<th>Constraints</th>
+<th>Screen Mapping</th>
+</tr>
+<tr>
+<td>semesters</td>
+<td>id</td>
+<td>bigint</td>
+<td>PRIMARY KEY</td>
+<td>Semester dropdown options</td>
+</tr>
+<tr>
+<td>semesters</td>
+<td>name</td>
+<td>varchar</td>
+<td>NOT NULL</td>
+<td>Semester dropdown label text</td>
+</tr>
+<tr>
+<td>coordinator_semester</td>
+<td>user_id, semester_id</td>
+<td>bigint, bigint</td>
+<td>Composite PK</td>
+<td>Coordinator scoping for semester dropdown</td>
+</tr>
+<tr>
+<td>courses</td>
+<td>id</td>
+<td>bigint</td>
+<td>PRIMARY KEY</td>
+<td>Course dropdown options (filtered by semester)</td>
+</tr>
+<tr>
+<td>courses</td>
+<td>title</td>
+<td>varchar</td>
+<td>NOT NULL</td>
+<td>Course dropdown label text</td>
+</tr>
+<tr>
+<td>projects</td>
+<td>semester_id</td>
+<td>bigint</td>
+<td>FK (semesters.id)</td>
+<td>Links projects to selected semester</td>
+</tr>
+<tr>
+<td>projects</td>
+<td>course_id</td>
+<td>bigint</td>
+<td>FK (courses.id)</td>
+<td>Links projects to selected course</td>
+</tr>
+<tr>
+<td>projects</td>
+<td>title</td>
+<td>varchar</td>
+<td>NOT NULL</td>
+<td>Preview table: project title column</td>
+</tr>
+<tr>
+<td>consolidated_marks</td>
+<td>student_id</td>
+<td>bigint</td>
+<td>FK (users.id), CASCADE</td>
+<td>Preview table: student name and university_id</td>
+</tr>
+<tr>
+<td>consolidated_marks</td>
+<td>total_calculated_score</td>
+<td>decimal(8,2)</td>
+<td>NOT NULL</td>
+<td>Preview table: calculated score column</td>
+</tr>
+<tr>
+<td>consolidated_marks</td>
+<td>override_score</td>
+<td>decimal(8,2)</td>
+<td>NULL</td>
+<td>Preview table: override score column</td>
+</tr>
+<tr>
+<td>users</td>
+<td>university_id</td>
+<td>varchar</td>
+<td>UNIQUE, NOT NULL</td>
+<td>Preview table: university_id column</td>
+</tr>
+<tr>
+<td>users</td>
+<td>name</td>
+<td>varchar</td>
+<td>NOT NULL</td>
+<td>Preview table: student name column</td>
+</tr>
+<tr>
+<td>grading_scales</td>
+<td>letter_grade</td>
+<td>varchar(10)</td>
+<td>NOT NULL</td>
+<td>Preview table: letter grade column</td>
+</tr>
+<tr>
+<td>grading_scales</td>
+<td>min_score</td>
+<td>decimal(5,2)</td>
+<td>NOT NULL</td>
+<td>Grade lookup: lower bound</td>
+</tr>
+<tr>
+<td>grading_scales</td>
+<td>max_score</td>
+<td>decimal(5,2)</td>
+<td>NOT NULL</td>
+<td>Grade lookup: upper bound</td>
+</tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- FOOTER                                                         -->
+<!-- ============================================================ -->
+<div style="margin-top:60px;padding:20px;text-align:center;border-top:2px solid #e5e7eb;color:#6b7280;font-size:.9em">
+<p>Academic Management System (AMS) &mdash; Admin Panel Documentation</p>
+<p>Generated: March 2026 &nbsp;|&nbsp; Confidential &mdash; For Internal Use Only</p>
+</div>
+</body>
+</html>

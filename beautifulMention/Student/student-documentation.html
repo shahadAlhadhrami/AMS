@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AMS - Student Panel Documentation</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 1100px; margin: 0 auto; padding: 20px; color: #333; line-height: 1.6; }
+        h1 { color: #b45309; border-bottom: 3px solid #b45309; padding-bottom: 10px; }
+        h2 { color: #92400e; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-top: 40px; }
+        h3 { color: #78350f; }
+        table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 0.9em; }
+        th { background-color: #b45309; color: white; padding: 10px 12px; text-align: left; }
+        td { padding: 8px 12px; border: 1px solid #e5e7eb; }
+        tr:nth-child(even) { background-color: #fffbeb; }
+        img { max-width: 100%; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin: 15px 0; }
+        .screen-section { page-break-before: always; margin-top: 60px; }
+        .screen-section:first-of-type { page-break-before: auto; }
+        .route-badge { background: #fef3c7; color: #b45309; padding: 2px 8px; border-radius: 4px; font-family: monospace; font-size: 0.85em; }
+        .toc { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 20px 30px; }
+        .toc a { color: #b45309; text-decoration: none; }
+        .toc a:hover { text-decoration: underline; }
+        .header { text-align: center; margin-bottom: 40px; padding: 30px; background: linear-gradient(135deg, #b45309, #f59e0b); color: white; border-radius: 12px; }
+        .header h1 { color: white; border: none; }
+        .header p { color: #fef3c7; margin: 5px 0; }
+        @media print {
+            .screen-section { page-break-before: always; }
+            .header { background: #b45309 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            th { background-color: #b45309 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            body { max-width: 100%; }
+            .no-print { display: none; }
+        }
+        .test-case-table td:first-child { font-family: monospace; font-weight: 600; white-space: nowrap; color: #92400e; }
+        .description-box { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 15px 20px; margin: 15px 0; border-radius: 0 8px 8px 0; }
+        .db-section-title { color: #92400e; font-size: 1em; margin-top: 25px; margin-bottom: 5px; font-weight: 600; }
+        code { background: #fef3c7; color: #92400e; padding: 1px 6px; border-radius: 3px; font-size: 0.9em; }
+        .widget-card { display: inline-block; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 10px 18px; margin: 5px 8px 5px 0; font-size: 0.92em; }
+        .widget-card strong { color: #b45309; }
+    </style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- HEADER                                                        -->
+<!-- ============================================================ -->
+<div class="header">
+    <h1>Academic Management System (AMS)</h1>
+    <p style="font-size: 1.3em; color: white; font-weight: 600;">Student Panel &mdash; System Documentation</p>
+    <p>Date: March 2026</p>
+    <p>System URL: <a href="https://ams.test/student" style="color: #fef3c7;">https://ams.test/student</a></p>
+</div>
+
+<!-- ============================================================ -->
+<!-- TABLE OF CONTENTS                                             -->
+<!-- ============================================================ -->
+<div class="toc">
+    <h2 style="margin-top: 0; border: none;">Table of Contents</h2>
+    <ol style="font-size: 1.05em;">
+        <li><a href="#login">Login</a></li>
+        <li><a href="#password-reset">Password Reset</a></li>
+        <li><a href="#dashboard">Dashboard</a></li>
+        <li><a href="#my-marks">My Marks</a></li>
+    </ol>
+</div>
+
+<!-- ============================================================ -->
+<!-- 1. LOGIN                                                      -->
+<!-- ============================================================ -->
+<div class="screen-section" id="login">
+    <h2>1. Login</h2>
+    <p><span class="route-badge">/student/login</span></p>
+
+    <img src="photos/01-login.png" alt="Student Login Screen">
+
+    <h3>Description</h3>
+    <div class="description-box">
+        <p>
+            Authentication entry point for the student panel. Built on Filament 5 authentication,
+            the login form collects the student's <strong>email address</strong> and <strong>password</strong>,
+            accompanied by automatic CSRF token protection on every submission. The interface follows the
+            system-wide <strong>amber theme</strong>.
+        </p>
+        <p>
+            The student panel does <strong>NOT</strong> have Multi-Factor Authentication (MFA) enabled.
+            Upon successful credential verification, the student is redirected directly to the
+            <a href="#dashboard">Dashboard</a> without an intermediate OTP step.
+        </p>
+    </div>
+
+    <h3>Key UI Elements</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Element</th>
+                <th>Type</th>
+                <th>Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Email field</td>
+                <td>Text input</td>
+                <td>Required. Accepts the student's registered email address.</td>
+            </tr>
+            <tr>
+                <td>Password field</td>
+                <td>Password input</td>
+                <td>Required. Masked input for the student's password.</td>
+            </tr>
+            <tr>
+                <td>Sign in button</td>
+                <td>Submit button</td>
+                <td>Submits credentials for authentication.</td>
+            </tr>
+            <tr>
+                <td>CSRF token</td>
+                <td>Hidden field</td>
+                <td>Automatically injected by Filament/Laravel for request integrity.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Database Verification</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Table</th>
+                <th>Column</th>
+                <th>Type</th>
+                <th>Constraints</th>
+                <th>Screen Mapping</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>users</code></td>
+                <td>email</td>
+                <td>varchar(255)</td>
+                <td>UNIQUE, NOT NULL</td>
+                <td>Email input field &rarr; credential lookup</td>
+            </tr>
+            <tr>
+                <td><code>users</code></td>
+                <td>password</td>
+                <td>varchar(255)</td>
+                <td>NOT NULL</td>
+                <td>Password field &rarr; bcrypt hash comparison</td>
+            </tr>
+            <tr>
+                <td><code>sessions</code></td>
+                <td>user_id</td>
+                <td>bigint (unsigned, nullable)</td>
+                <td>FK &rarr; users.id</td>
+                <td>Populated after successful login</td>
+            </tr>
+            <tr>
+                <td><code>sessions</code></td>
+                <td>ip_address</td>
+                <td>varchar(45)</td>
+                <td>NULLABLE</td>
+                <td>Captured from client request on login</td>
+            </tr>
+            <tr>
+                <td><code>sessions</code></td>
+                <td>user_agent</td>
+                <td>text</td>
+                <td>NULLABLE</td>
+                <td>Browser user-agent string stored on login</td>
+            </tr>
+            <tr>
+                <td><code>sessions</code></td>
+                <td>last_activity</td>
+                <td>integer</td>
+                <td>NOT NULL</td>
+                <td>Unix timestamp updated on each request</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Test Cases</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Scenario</th>
+                <th>Steps</th>
+                <th>Expected Result</th>
+            </tr>
+        </thead>
+        <tbody class="test-case-table">
+            <tr>
+                <td>STU-AUTH-001</td>
+                <td>Valid login</td>
+                <td>Enter <code>alice@ams.test</code> / <code>Student123</code> and click Sign in.</td>
+                <td>Student is authenticated and redirected to the Dashboard at <code>/student</code>.</td>
+            </tr>
+            <tr>
+                <td>STU-AUTH-002</td>
+                <td>Invalid credentials rejected</td>
+                <td>Enter a valid email with an incorrect password and submit.</td>
+                <td>Login fails. An error notification is displayed indicating invalid credentials. User remains on the login page.</td>
+            </tr>
+            <tr>
+                <td>STU-AUTH-003</td>
+                <td>Empty fields show validation</td>
+                <td>Leave both email and password fields blank and click Sign in.</td>
+                <td>Validation messages appear beneath each required field. Form is not submitted.</td>
+            </tr>
+            <tr>
+                <td>STU-AUTH-004</td>
+                <td>Redirect to dashboard</td>
+                <td>After successful authentication, observe the browser URL.</td>
+                <td>URL changes to <code>/student</code> (the Dashboard) without any intermediate MFA step.</td>
+            </tr>
+            <tr>
+                <td>STU-AUTH-005</td>
+                <td>Only students can access this panel</td>
+                <td>Attempt to log in using a non-student user's credentials (e.g., admin or staff account).</td>
+                <td>Authentication is rejected. Only users with the student role can access the <code>/student</code> panel.</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ============================================================ -->
+<!-- 2. PASSWORD RESET                                             -->
+<!-- ============================================================ -->
+<div class="screen-section" id="password-reset">
+    <h2>2. Password Reset</h2>
+    <p><span class="route-badge">/student/password-reset</span></p>
+
+    <img src="photos/02-password-reset.png" alt="Student Password Reset Screen">
+
+    <h3>Description</h3>
+    <div class="description-box">
+        <p>
+            Password reset request form for student users. When a student has forgotten their password,
+            they can navigate to this screen and enter their registered email address. The system generates
+            a <strong>tokenized reset link</strong> and sends it to the provided email address.
+        </p>
+        <p>
+            The reset token is stored in the <code>password_reset_tokens</code> table and is
+            time-limited. Upon clicking the link in the email, the student is taken to a form
+            to set a new password, after which the token is invalidated.
+        </p>
+    </div>
+
+    <h3>Key UI Elements</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Element</th>
+                <th>Type</th>
+                <th>Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Email field</td>
+                <td>Text input</td>
+                <td>Required. The student's registered email address.</td>
+            </tr>
+            <tr>
+                <td>Send reset link button</td>
+                <td>Submit button</td>
+                <td>Triggers the password reset email dispatch.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Database Verification</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Table</th>
+                <th>Column</th>
+                <th>Type</th>
+                <th>Constraints</th>
+                <th>Screen Mapping</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>password_reset_tokens</code></td>
+                <td>email</td>
+                <td>varchar(255)</td>
+                <td>PRIMARY KEY</td>
+                <td>Email input field &rarr; identifies the user requesting reset</td>
+            </tr>
+            <tr>
+                <td><code>password_reset_tokens</code></td>
+                <td>token</td>
+                <td>varchar(255)</td>
+                <td>NOT NULL</td>
+                <td>Hashed token embedded in the emailed reset link</td>
+            </tr>
+            <tr>
+                <td><code>password_reset_tokens</code></td>
+                <td>created_at</td>
+                <td>timestamp</td>
+                <td>NULLABLE</td>
+                <td>Used to determine token expiry (default 60 minutes)</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Test Cases</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Scenario</th>
+                <th>Steps</th>
+                <th>Expected Result</th>
+            </tr>
+        </thead>
+        <tbody class="test-case-table">
+            <tr>
+                <td>STU-AUTH-006</td>
+                <td>Valid email sends reset link</td>
+                <td>Enter a registered student email (e.g., <code>alice@ams.test</code>) and submit.</td>
+                <td>A success notification is displayed. A password reset email is sent containing a tokenized link. A row is inserted into <code>password_reset_tokens</code>.</td>
+            </tr>
+            <tr>
+                <td>STU-AUTH-007</td>
+                <td>Non-existent email shows error</td>
+                <td>Enter an email address not associated with any account and submit.</td>
+                <td>An error message is shown indicating the email address was not found.</td>
+            </tr>
+            <tr>
+                <td>STU-AUTH-008</td>
+                <td>Token expires correctly</td>
+                <td>Request a password reset, wait beyond the expiry window (default 60 minutes), then attempt to use the link.</td>
+                <td>The reset link is rejected. The student is informed the token has expired and must request a new one.</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ============================================================ -->
+<!-- 3. DASHBOARD                                                  -->
+<!-- ============================================================ -->
+<div class="screen-section" id="dashboard">
+    <h2>3. Dashboard</h2>
+    <p><span class="route-badge">/student</span></p>
+
+    <img src="photos/03-dashboard.png" alt="Student Dashboard Screen">
+
+    <h3>Description</h3>
+    <div class="description-box">
+        <p>
+            The main hub for authenticated student users. The Dashboard presents essential information
+            at a glance through two header widgets, both implemented as Filament
+            <code>StatsOverviewWidget</code> components.
+        </p>
+    </div>
+
+    <h3>Widget 1: MyProjectWidget</h3>
+    <p>
+        Displays the student's current project assignment at a glance via three stat cards.
+        The widget retrieves the student's <strong>latest project</strong> (ordered by creation date)
+        and presents:
+    </p>
+    <div style="margin: 15px 0;">
+        <div class="widget-card"><strong>Project Title</strong> &mdash; The title of the assigned project, or "No project assigned" if none exists.</div>
+        <div class="widget-card"><strong>Supervisor</strong> &mdash; The name of the project supervisor, or "Not assigned" if unset.</div>
+        <div class="widget-card"><strong>Teammates</strong> &mdash; Comma-separated list of other team members (excluding the logged-in student), or "None" if solo.</div>
+    </div>
+
+    <h3>Widget 2: MarksAvailableWidget</h3>
+    <p>
+        Displays a single stat card indicating whether consolidated marks have been finalized for the student:
+    </p>
+    <div style="margin: 15px 0;">
+        <div class="widget-card"><strong>"Available"</strong> &mdash; Shown with a green check-circle icon when a <code>ConsolidatedMark</code> record exists for the student.</div>
+        <div class="widget-card"><strong>"Not yet finalized"</strong> &mdash; Shown with an orange clock icon when no consolidated mark record exists.</div>
+    </div>
+
+    <h3>Database Verification</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Table</th>
+                <th>Column</th>
+                <th>Type</th>
+                <th>Constraints</th>
+                <th>Screen Mapping</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>projects</code></td>
+                <td>title</td>
+                <td>varchar(255)</td>
+                <td>NOT NULL</td>
+                <td>MyProjectWidget &rarr; Project Title stat card</td>
+            </tr>
+            <tr>
+                <td><code>projects</code></td>
+                <td>supervisor_id</td>
+                <td>bigint (unsigned, nullable)</td>
+                <td>FK &rarr; users.id</td>
+                <td>MyProjectWidget &rarr; Supervisor stat card (via users.name)</td>
+            </tr>
+            <tr>
+                <td><code>users</code></td>
+                <td>name</td>
+                <td>varchar(255)</td>
+                <td>NOT NULL</td>
+                <td>Supervisor name display, Teammates list</td>
+            </tr>
+            <tr>
+                <td><code>project_student</code></td>
+                <td>project_id</td>
+                <td>bigint (unsigned)</td>
+                <td>FK &rarr; projects.id</td>
+                <td>Links student to project; used to resolve teammates</td>
+            </tr>
+            <tr>
+                <td><code>project_student</code></td>
+                <td>user_id</td>
+                <td>bigint (unsigned)</td>
+                <td>FK &rarr; users.id</td>
+                <td>Identifies each student member of the project</td>
+            </tr>
+            <tr>
+                <td><code>consolidated_marks</code></td>
+                <td>student_id</td>
+                <td>bigint (unsigned)</td>
+                <td>FK &rarr; users.id, NOT NULL</td>
+                <td>MarksAvailableWidget &rarr; existence check determines "Available" vs "Not yet finalized"</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Test Cases</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Scenario</th>
+                <th>Steps</th>
+                <th>Expected Result</th>
+            </tr>
+        </thead>
+        <tbody class="test-case-table">
+            <tr>
+                <td>STU-DASH-001</td>
+                <td>Dashboard loads</td>
+                <td>Log in as a student and navigate to <code>/student</code>.</td>
+                <td>The Dashboard page renders successfully with both widgets visible.</td>
+            </tr>
+            <tr>
+                <td>STU-DASH-002</td>
+                <td>Project info displayed correctly</td>
+                <td>Log in as a student assigned to a project. Observe the MyProjectWidget.</td>
+                <td>The Project Title stat card shows the correct project title from the <code>projects</code> table.</td>
+            </tr>
+            <tr>
+                <td>STU-DASH-003</td>
+                <td>Supervisor name shown</td>
+                <td>Observe the Supervisor stat card in MyProjectWidget.</td>
+                <td>The supervisor's full name (from <code>users.name</code> via <code>projects.supervisor_id</code>) is displayed.</td>
+            </tr>
+            <tr>
+                <td>STU-DASH-004</td>
+                <td>Teammates listed (excluding self)</td>
+                <td>Observe the Teammates stat card in MyProjectWidget.</td>
+                <td>All other students in the same project are listed, comma-separated. The logged-in student is excluded from the list.</td>
+            </tr>
+            <tr>
+                <td>STU-DASH-005</td>
+                <td>Marks status &mdash; Available</td>
+                <td>Log in as a student who has a <code>consolidated_marks</code> record. Observe MarksAvailableWidget.</td>
+                <td>The stat card displays "Available" with a green check-circle icon.</td>
+            </tr>
+            <tr>
+                <td>STU-DASH-006</td>
+                <td>Marks status &mdash; Not yet finalized</td>
+                <td>Log in as a student with no <code>consolidated_marks</code> record. Observe MarksAvailableWidget.</td>
+                <td>The stat card displays "Not yet finalized" with an orange clock icon.</td>
+            </tr>
+            <tr>
+                <td>STU-DASH-007</td>
+                <td>Handles student with no project gracefully</td>
+                <td>Log in as a student not assigned to any project.</td>
+                <td>MyProjectWidget shows "No project assigned" for the title, "Not assigned" for supervisor, and "None" for teammates. No errors are thrown.</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ============================================================ -->
+<!-- 4. MY MARKS                                                   -->
+<!-- ============================================================ -->
+<div class="screen-section" id="my-marks">
+    <h2>4. My Marks</h2>
+    <p><span class="route-badge">/student/my-marks</span></p>
+
+    <img src="photos/04-my-marks.png" alt="Student My Marks Screen">
+
+    <h3>Description</h3>
+    <div class="description-box">
+        <p>
+            Comprehensive marks view for the authenticated student. This page provides a complete
+            breakdown of the student's academic evaluation for each semester in which they have
+            been assigned a project. It combines internal evaluation scores with the final
+            consolidated mark, letter grade, and GPA equivalent.
+        </p>
+    </div>
+
+    <h3>Features</h3>
+
+    <h4>Semester Selector</h4>
+    <p>
+        A dropdown at the top of the page lists all semesters where the student has projects,
+        sorted <strong>newest first</strong>. The page defaults to the <strong>latest semester</strong>
+        on first load. Selecting a different semester dynamically updates all displayed data.
+    </p>
+
+    <h4>Project Information</h4>
+    <p>For the selected semester, the following project details are displayed:</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Field</th>
+                <th>Source</th>
+                <th>Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Project Title</td>
+                <td><code>projects.title</code></td>
+                <td>The name of the assigned project.</td>
+            </tr>
+            <tr>
+                <td>Course</td>
+                <td><code>courses.code</code> + <code>courses.title</code></td>
+                <td>The course under which the project falls (e.g., "CS490 &mdash; Senior Project").</td>
+            </tr>
+            <tr>
+                <td>Supervisor</td>
+                <td><code>users.name</code> via <code>projects.supervisor_id</code></td>
+                <td>The supervisor's full name.</td>
+            </tr>
+            <tr>
+                <td>Group Members</td>
+                <td><code>project_student</code> + <code>users.name</code></td>
+                <td>All students assigned to the project.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Internal Marks (Supervisor Evaluations)</h4>
+    <p>
+        Displays all <strong>submitted</strong> supervisor evaluations for the project
+        (<code>evaluations.evaluator_role = 'Supervisor'</code> and <code>evaluations.status = 'submitted'</code>).
+        Each evaluation shows:
+    </p>
+    <ul>
+        <li><strong>Rubric Name</strong> &mdash; from the linked <code>rubric_template</code>.</li>
+        <li><strong>Per-Criterion Scores</strong> &mdash; for each criterion in the rubric:
+            <ul>
+                <li><strong>Individual scores</strong> (<code>evaluation_scores.student_id = [this student]</code>) &mdash; criteria marked as <code>is_individual = true</code>.</li>
+                <li><strong>Group scores</strong> (<code>evaluation_scores.student_id = NULL</code>) &mdash; criteria marked as <code>is_individual = false</code>, applied uniformly to all group members.</li>
+            </ul>
+        </li>
+        <li><strong>Score breakdown</strong> by criterion, showing the score awarded against the maximum possible score.</li>
+    </ul>
+
+    <h4>Consolidated Mark</h4>
+    <p>The final academic result for the student, comprising:</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Field</th>
+                <th>Source</th>
+                <th>Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Calculated Total</td>
+                <td><code>consolidated_marks.total_calculated_score</code></td>
+                <td>The system-computed total from all evaluation components.</td>
+            </tr>
+            <tr>
+                <td>Override Score</td>
+                <td><code>consolidated_marks.override_score</code></td>
+                <td>An optional manually set score that takes precedence (if any).</td>
+            </tr>
+            <tr>
+                <td>Final Score</td>
+                <td>Derived: <code>override_score ?? total_calculated_score</code></td>
+                <td>Displayed to 2 decimal places. Uses override if set, otherwise calculated total.</td>
+            </tr>
+            <tr>
+                <td>Letter Grade</td>
+                <td><code>grading_scales</code> lookup</td>
+                <td>Determined by matching the final score against <code>min_score</code>&ndash;<code>max_score</code> ranges.</td>
+            </tr>
+            <tr>
+                <td>GPA Equivalent</td>
+                <td><code>grading_scales.gpa_equivalent</code></td>
+                <td>Numeric GPA value corresponding to the letter grade.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Database Verification</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Table</th>
+                <th>Column</th>
+                <th>Type</th>
+                <th>Constraints</th>
+                <th>Screen Mapping</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- projects -->
+            <tr>
+                <td><code>projects</code></td>
+                <td>title</td>
+                <td>varchar(255)</td>
+                <td>NOT NULL</td>
+                <td>Project Title display</td>
+            </tr>
+            <tr>
+                <td><code>projects</code></td>
+                <td>course_id</td>
+                <td>bigint (unsigned, nullable)</td>
+                <td>FK &rarr; courses.id</td>
+                <td>Links project to its course for Course display</td>
+            </tr>
+            <tr>
+                <td><code>projects</code></td>
+                <td>supervisor_id</td>
+                <td>bigint (unsigned, nullable)</td>
+                <td>FK &rarr; users.id</td>
+                <td>Resolves Supervisor name via users table</td>
+            </tr>
+            <tr>
+                <td><code>projects</code></td>
+                <td>semester_id</td>
+                <td>bigint (unsigned, nullable)</td>
+                <td>FK &rarr; semesters.id</td>
+                <td>Semester selector &rarr; filters projects by semester</td>
+            </tr>
+            <!-- project_student -->
+            <tr>
+                <td><code>project_student</code></td>
+                <td>project_id</td>
+                <td>bigint (unsigned)</td>
+                <td>FK &rarr; projects.id</td>
+                <td>Links students to projects for Group Members display</td>
+            </tr>
+            <tr>
+                <td><code>project_student</code></td>
+                <td>user_id</td>
+                <td>bigint (unsigned)</td>
+                <td>FK &rarr; users.id</td>
+                <td>Identifies each group member</td>
+            </tr>
+            <!-- evaluations -->
+            <tr>
+                <td><code>evaluations</code></td>
+                <td>project_id</td>
+                <td>bigint (unsigned)</td>
+                <td>FK &rarr; projects.id, NOT NULL</td>
+                <td>Links evaluation to the project</td>
+            </tr>
+            <tr>
+                <td><code>evaluations</code></td>
+                <td>evaluator_role</td>
+                <td>varchar(255)</td>
+                <td>NOT NULL</td>
+                <td>Filtered to <code>'Supervisor'</code> for internal marks display</td>
+            </tr>
+            <tr>
+                <td><code>evaluations</code></td>
+                <td>status</td>
+                <td>varchar(255)</td>
+                <td>NOT NULL</td>
+                <td>Only <code>'submitted'</code> evaluations are shown</td>
+            </tr>
+            <tr>
+                <td><code>evaluations</code></td>
+                <td>rubric_template_id</td>
+                <td>bigint (unsigned, nullable)</td>
+                <td>FK &rarr; rubric_templates.id</td>
+                <td>Links evaluation to rubric for rubric name and criteria</td>
+            </tr>
+            <!-- evaluation_scores -->
+            <tr>
+                <td><code>evaluation_scores</code></td>
+                <td>evaluation_id</td>
+                <td>bigint (unsigned)</td>
+                <td>FK &rarr; evaluations.id, NOT NULL</td>
+                <td>Links score to its parent evaluation</td>
+            </tr>
+            <tr>
+                <td><code>evaluation_scores</code></td>
+                <td>criterion_id</td>
+                <td>bigint (unsigned)</td>
+                <td>FK &rarr; criteria.id, NOT NULL</td>
+                <td>Identifies which criterion the score belongs to</td>
+            </tr>
+            <tr>
+                <td><code>evaluation_scores</code></td>
+                <td>student_id</td>
+                <td>bigint (unsigned, nullable)</td>
+                <td>FK &rarr; users.id</td>
+                <td>NULL = group score (all members); specific ID = individual student score</td>
+            </tr>
+            <tr>
+                <td><code>evaluation_scores</code></td>
+                <td>score_awarded</td>
+                <td>decimal(8,2)</td>
+                <td>NOT NULL</td>
+                <td>The numeric score displayed per criterion</td>
+            </tr>
+            <tr>
+                <td><code>evaluation_scores</code></td>
+                <td>score_level_id</td>
+                <td>bigint (unsigned, nullable)</td>
+                <td>FK &rarr; score_levels.id</td>
+                <td>References the rubric level selected for this score</td>
+            </tr>
+            <tr>
+                <td><code>evaluation_scores</code></td>
+                <td>feedback</td>
+                <td>text</td>
+                <td>NULLABLE</td>
+                <td>Optional evaluator comments per criterion</td>
+            </tr>
+            <!-- criteria -->
+            <tr>
+                <td><code>criteria</code></td>
+                <td>rubric_template_id</td>
+                <td>bigint (unsigned)</td>
+                <td>FK &rarr; rubric_templates.id, NOT NULL</td>
+                <td>Groups criteria under a rubric template</td>
+            </tr>
+            <tr>
+                <td><code>criteria</code></td>
+                <td>title</td>
+                <td>varchar(255)</td>
+                <td>NOT NULL</td>
+                <td>Criterion name shown in the score breakdown</td>
+            </tr>
+            <tr>
+                <td><code>criteria</code></td>
+                <td>max_score</td>
+                <td>decimal(8,2)</td>
+                <td>NOT NULL</td>
+                <td>Denominator in "X / max_score" display</td>
+            </tr>
+            <tr>
+                <td><code>criteria</code></td>
+                <td>is_individual</td>
+                <td>boolean</td>
+                <td>DEFAULT false</td>
+                <td>Determines whether scores are per-student or shared across the group</td>
+            </tr>
+            <!-- consolidated_marks -->
+            <tr>
+                <td><code>consolidated_marks</code></td>
+                <td>project_id</td>
+                <td>bigint (unsigned)</td>
+                <td>FK &rarr; projects.id, NOT NULL</td>
+                <td>Links consolidated mark to project</td>
+            </tr>
+            <tr>
+                <td><code>consolidated_marks</code></td>
+                <td>student_id</td>
+                <td>bigint (unsigned)</td>
+                <td>FK &rarr; users.id, NOT NULL</td>
+                <td>Identifies the student this mark belongs to</td>
+            </tr>
+            <tr>
+                <td><code>consolidated_marks</code></td>
+                <td>total_calculated_score</td>
+                <td>decimal(8,2)</td>
+                <td>NOT NULL</td>
+                <td>Calculated Score display</td>
+            </tr>
+            <tr>
+                <td><code>consolidated_marks</code></td>
+                <td>override_score</td>
+                <td>decimal(8,2)</td>
+                <td>NULLABLE</td>
+                <td>Override Score display (shown only if set)</td>
+            </tr>
+            <tr>
+                <td><code>consolidated_marks</code></td>
+                <td>override_reason</td>
+                <td>text</td>
+                <td>NULLABLE</td>
+                <td>Reason for score override, if applicable</td>
+            </tr>
+            <!-- consolidated_mark_components -->
+            <tr>
+                <td><code>consolidated_mark_components</code></td>
+                <td>consolidated_mark_id</td>
+                <td>bigint (unsigned)</td>
+                <td>FK &rarr; consolidated_marks.id, NOT NULL</td>
+                <td>Links component to parent consolidated mark</td>
+            </tr>
+            <tr>
+                <td><code>consolidated_mark_components</code></td>
+                <td>source_label</td>
+                <td>varchar(255)</td>
+                <td>NOT NULL</td>
+                <td>Label identifying the score source (e.g., "Supervisor Evaluation")</td>
+            </tr>
+            <tr>
+                <td><code>consolidated_mark_components</code></td>
+                <td>score</td>
+                <td>decimal(8,2)</td>
+                <td>NOT NULL</td>
+                <td>Component score contributing to the total</td>
+            </tr>
+            <!-- grading_scales -->
+            <tr>
+                <td><code>grading_scales</code></td>
+                <td>min_score</td>
+                <td>decimal(8,2)</td>
+                <td>NOT NULL</td>
+                <td>Lower bound for letter grade lookup</td>
+            </tr>
+            <tr>
+                <td><code>grading_scales</code></td>
+                <td>max_score</td>
+                <td>decimal(8,2)</td>
+                <td>NOT NULL</td>
+                <td>Upper bound for letter grade lookup</td>
+            </tr>
+            <tr>
+                <td><code>grading_scales</code></td>
+                <td>letter_grade</td>
+                <td>varchar(10)</td>
+                <td>NOT NULL</td>
+                <td>Letter Grade display (e.g., A+, A, B+)</td>
+            </tr>
+            <tr>
+                <td><code>grading_scales</code></td>
+                <td>gpa_equivalent</td>
+                <td>decimal(3,2)</td>
+                <td>NOT NULL</td>
+                <td>GPA Equivalent display (e.g., 4.00, 3.67)</td>
+            </tr>
+            <!-- semesters -->
+            <tr>
+                <td><code>semesters</code></td>
+                <td>id</td>
+                <td>bigint (unsigned)</td>
+                <td>PRIMARY KEY, AUTO_INCREMENT</td>
+                <td>Semester selector dropdown value</td>
+            </tr>
+            <tr>
+                <td><code>semesters</code></td>
+                <td>name</td>
+                <td>varchar(255)</td>
+                <td>NOT NULL</td>
+                <td>Semester selector dropdown label (e.g., "Fall")</td>
+            </tr>
+            <tr>
+                <td><code>semesters</code></td>
+                <td>academic_year</td>
+                <td>varchar(255)</td>
+                <td>NOT NULL</td>
+                <td>Academic year shown alongside semester name (e.g., "2025-2026")</td>
+            </tr>
+            <!-- courses -->
+            <tr>
+                <td><code>courses</code></td>
+                <td>code</td>
+                <td>varchar(255)</td>
+                <td>NOT NULL</td>
+                <td>Course code in project information section</td>
+            </tr>
+            <tr>
+                <td><code>courses</code></td>
+                <td>title</td>
+                <td>varchar(255)</td>
+                <td>NOT NULL</td>
+                <td>Course title in project information section</td>
+            </tr>
+            <!-- users (for group members / supervisor) -->
+            <tr>
+                <td><code>users</code></td>
+                <td>name</td>
+                <td>varchar(255)</td>
+                <td>NOT NULL</td>
+                <td>Supervisor name and student names in group list</td>
+            </tr>
+            <tr>
+                <td><code>users</code></td>
+                <td>university_id</td>
+                <td>varchar(255)</td>
+                <td>NULLABLE</td>
+                <td>Student university ID shown alongside name in group members</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Test Cases</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Scenario</th>
+                <th>Steps</th>
+                <th>Expected Result</th>
+            </tr>
+        </thead>
+        <tbody class="test-case-table">
+            <tr>
+                <td>STU-MRK-001</td>
+                <td>Page loads</td>
+                <td>Navigate to <code>/student/my-marks</code> as an authenticated student.</td>
+                <td>The page renders without error. The semester selector, project info, and marks sections are visible.</td>
+            </tr>
+            <tr>
+                <td>STU-MRK-002</td>
+                <td>Semester selector works</td>
+                <td>Click the semester dropdown. Select a different semester from the list.</td>
+                <td>The dropdown lists all semesters where the student has projects, sorted newest first. Selecting a different semester refreshes all data on the page.</td>
+            </tr>
+            <tr>
+                <td>STU-MRK-003</td>
+                <td>Project info correct</td>
+                <td>Observe the project information section for the selected semester.</td>
+                <td>Project title, course (code + title), supervisor name, and all group members are displayed accurately matching database records.</td>
+            </tr>
+            <tr>
+                <td>STU-MRK-004</td>
+                <td>Internal marks display scores</td>
+                <td>Observe the internal marks section listing supervisor evaluations.</td>
+                <td>All submitted supervisor evaluations are shown with rubric name and per-criterion score breakdowns (score awarded / max score).</td>
+            </tr>
+            <tr>
+                <td>STU-MRK-005</td>
+                <td>Individual vs group criteria handled</td>
+                <td>Verify a rubric containing both individual (<code>is_individual = true</code>) and group (<code>is_individual = false</code>) criteria.</td>
+                <td>Individual criteria show the score specific to the logged-in student (<code>student_id = auth user</code>). Group criteria show the shared score (<code>student_id = NULL</code>).</td>
+            </tr>
+            <tr>
+                <td>STU-MRK-006</td>
+                <td>Consolidated mark shown with final score</td>
+                <td>Observe the consolidated mark section.</td>
+                <td>Calculated total, override score (if any), and final score (to 2 decimal places) are displayed correctly. Final score = override_score if set, otherwise total_calculated_score.</td>
+            </tr>
+            <tr>
+                <td>STU-MRK-007</td>
+                <td>Letter grade lookup works</td>
+                <td>Cross-reference the displayed letter grade against the <code>grading_scales</code> table for the given final score.</td>
+                <td>The letter grade matches the <code>grading_scales</code> row where <code>min_score &lt;= final_score &lt;= max_score</code>.</td>
+            </tr>
+            <tr>
+                <td>STU-MRK-008</td>
+                <td>GPA displayed</td>
+                <td>Observe the GPA equivalent next to the letter grade.</td>
+                <td>The GPA value matches <code>grading_scales.gpa_equivalent</code> for the corresponding letter grade row.</td>
+            </tr>
+            <tr>
+                <td>STU-MRK-009</td>
+                <td>Student with no marks sees appropriate message</td>
+                <td>Log in as a student who has no evaluations or consolidated marks for the selected semester.</td>
+                <td>An informational message is displayed (e.g., "No marks available yet") instead of empty tables or errors.</td>
+            </tr>
+            <tr>
+                <td>STU-MRK-010</td>
+                <td>Semester switching updates data</td>
+                <td>Switch between two semesters that have different projects and marks.</td>
+                <td>All displayed data (project info, internal marks, consolidated mark, letter grade, GPA) updates to reflect the newly selected semester's records.</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ============================================================ -->
+<!-- FOOTER                                                        -->
+<!-- ============================================================ -->
+<div style="margin-top: 60px; padding: 20px; text-align: center; border-top: 2px solid #e5e7eb; color: #6b7280; font-size: 0.9em;">
+    <p>Academic Management System (AMS) &mdash; Student Panel Documentation</p>
+    <p>Generated: March 2026 &nbsp;|&nbsp; Confidential &mdash; For Internal Use Only</p>
+</div>
+
+</body>
+</html>
