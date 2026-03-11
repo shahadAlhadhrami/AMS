@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Http\Middleware\EnsurePanelAccess;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Illuminate\Support\HtmlString;
 use Filament\Http\Middleware\Authenticate;
@@ -52,6 +53,7 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                EnsurePanelAccess::class,
             ])
             ->authMiddleware([
                 Authenticate::class,

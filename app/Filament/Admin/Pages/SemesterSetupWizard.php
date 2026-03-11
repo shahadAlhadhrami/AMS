@@ -12,6 +12,7 @@ use App\Models\User;
 use Filament\Forms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Wizard;
 use Filament\Schemas\Schema;
@@ -206,7 +207,7 @@ class SemesterSetupWizard extends Page
                     ->columnSpanFull(),
 
                 // === MANUAL ENTRY SECTION ===
-                Forms\Components\Section::make('Manual Project Entry')
+                Section::make('Manual Project Entry')
                     ->visible(fn (Get $get) => $get('project_entry_method') === 'manual')
                     ->schema([
                         Forms\Components\Repeater::make('manual_projects')
@@ -309,7 +310,7 @@ class SemesterSetupWizard extends Page
                     ]),
 
                 // === CSV IMPORT SECTION ===
-                Forms\Components\Section::make('CSV Import')
+                Section::make('CSV Import')
                     ->visible(fn (Get $get) => $get('project_entry_method') === 'csv')
                     ->schema([
                         Forms\Components\Placeholder::make('csv_instructions')
