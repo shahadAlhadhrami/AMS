@@ -60,6 +60,8 @@
         <li><a href="#password-reset">Password Reset</a></li>
         <li><a href="#dashboard">Dashboard</a></li>
         <li><a href="#my-marks">My Marks</a></li>
+        <li><a href="#registration">Registration</a></li>
+        <li><a href="#email-verification">Email Verification</a></li>
     </ol>
 </div>
 
@@ -84,6 +86,11 @@
             The student panel does <strong>NOT</strong> have Multi-Factor Authentication (MFA) enabled.
             Upon successful credential verification, the student is redirected directly to the
             <a href="#dashboard">Dashboard</a> without an intermediate OTP step.
+        </p>
+        <p>
+            New students who do not yet have an account can follow the <strong>"sign up for an account"</strong>
+            link displayed below the page heading, which navigates to the
+            <a href="#registration">Registration</a> screen.
         </p>
     </div>
 
@@ -116,6 +123,11 @@
                 <td>CSRF token</td>
                 <td>Hidden field</td>
                 <td>Automatically injected by Filament/Laravel for request integrity.</td>
+            </tr>
+            <tr>
+                <td>"sign up for an account" link</td>
+                <td>Hyperlink</td>
+                <td>Displayed below the page heading. Navigates to <code>/student/register</code> for new student self-registration.</td>
             </tr>
         </tbody>
     </table>
@@ -983,7 +995,380 @@
 </div>
 
 <!-- ============================================================ -->
-<!-- FOOTER                                                        -->
+<!-- 5. REGISTRATION                                               -->
+<!-- ============================================================ -->
+<div class="screen-section" id="registration">
+    <h2>5. Registration</h2>
+    <p><span class="route-badge">/student/register</span></p>
+
+    <img src="photos/05-register-full.png" alt="Student Registration Screen">
+
+    <h3>Description</h3>
+    <div class="description-box">
+        <p>
+            Self-registration form for new students. Accessible from the <a href="#login">Login</a>
+            screen via the <strong>"sign up for an account"</strong> link. Students fill in their academic
+            and personal details to create an account. On successful submission the system:
+        </p>
+        <ol>
+            <li>Creates a new <code>users</code> record with the supplied details.</li>
+            <li>Automatically assigns the <strong>Student</strong> role via Spatie Permission.</li>
+            <li>Sends an <strong>email verification</strong> link to the supplied address.</li>
+        </ol>
+        <p>
+            The <strong>email address must belong to an allowed university domain</strong>. The list of
+            permitted domains is maintained by admins under
+            <em>Master Data &rarr; Allowed Email Domains</em>. If the domain is not whitelisted,
+            registration is rejected with a message listing the accepted domains.
+        </p>
+        <p>
+            The <strong>Department</strong> selector is a UI-only convenience field used to filter the
+            Specialization dropdown; it is <em>not</em> persisted to the database.
+        </p>
+    </div>
+
+    <h3>Key UI Elements</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Element</th>
+                <th>Type</th>
+                <th>Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>University ID</td>
+                <td>Text input</td>
+                <td>Required. Must be unique across all users. Maps to <code>users.university_id</code>.</td>
+            </tr>
+            <tr>
+                <td>Name</td>
+                <td>Text input</td>
+                <td>Required. Full display name. Maps to <code>users.name</code>.</td>
+            </tr>
+            <tr>
+                <td>Email address</td>
+                <td>Email input</td>
+                <td>Required. Must be unique and belong to an active domain in <code>allowed_email_domains</code>. Maps to <code>users.email</code>.</td>
+            </tr>
+            <tr>
+                <td>Password</td>
+                <td>Password input</td>
+                <td>Required. Standard Laravel password rules. Stored as bcrypt hash.</td>
+            </tr>
+            <tr>
+                <td>Confirm password</td>
+                <td>Password input</td>
+                <td>Required. Must match the Password field.</td>
+            </tr>
+            <tr>
+                <td>Department</td>
+                <td>Select (reactive)</td>
+                <td>Required at UI level. Filters the Specialization options. <em>Not saved to the database.</em></td>
+            </tr>
+            <tr>
+                <td>Specialization</td>
+                <td>Select (dependent)</td>
+                <td>Required. Options filtered by the chosen Department. Maps to <code>users.specialization_id</code>.</td>
+            </tr>
+            <tr>
+                <td>Sign up button</td>
+                <td>Submit button</td>
+                <td>Submits the registration form. Triggers user creation and sends the verification email.</td>
+            </tr>
+            <tr>
+                <td>"sign in to your account" link</td>
+                <td>Hyperlink</td>
+                <td>Returns the user to the Login screen at <code>/student/login</code>.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Database Verification</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Table</th>
+                <th>Column</th>
+                <th>Type</th>
+                <th>Constraints</th>
+                <th>Screen Mapping</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>users</code></td>
+                <td>university_id</td>
+                <td>varchar(255)</td>
+                <td>UNIQUE, NULLABLE</td>
+                <td>University ID field</td>
+            </tr>
+            <tr>
+                <td><code>users</code></td>
+                <td>name</td>
+                <td>varchar(255)</td>
+                <td>NOT NULL</td>
+                <td>Name field</td>
+            </tr>
+            <tr>
+                <td><code>users</code></td>
+                <td>email</td>
+                <td>varchar(255)</td>
+                <td>UNIQUE, NOT NULL</td>
+                <td>Email field; validated against <code>allowed_email_domains</code></td>
+            </tr>
+            <tr>
+                <td><code>users</code></td>
+                <td>password</td>
+                <td>varchar(255)</td>
+                <td>NOT NULL</td>
+                <td>Password field (stored as bcrypt hash)</td>
+            </tr>
+            <tr>
+                <td><code>users</code></td>
+                <td>specialization_id</td>
+                <td>bigint (unsigned)</td>
+                <td>NULLABLE, FK &rarr; specializations.id</td>
+                <td>Specialization select field</td>
+            </tr>
+            <tr>
+                <td><code>users</code></td>
+                <td>email_verified_at</td>
+                <td>timestamp</td>
+                <td>NULLABLE</td>
+                <td>Null until student clicks the verification link in their email</td>
+            </tr>
+            <tr>
+                <td><code>allowed_email_domains</code></td>
+                <td>domain</td>
+                <td>varchar(255)</td>
+                <td>UNIQUE, NOT NULL</td>
+                <td>Email domain validated against active records here</td>
+            </tr>
+            <tr>
+                <td><code>allowed_email_domains</code></td>
+                <td>is_active</td>
+                <td>boolean</td>
+                <td>DEFAULT true</td>
+                <td>Only <code>true</code> domains are accepted during registration</td>
+            </tr>
+            <tr>
+                <td><code>model_has_roles</code></td>
+                <td>role_id, model_id</td>
+                <td>bigint</td>
+                <td>FK &rarr; roles / users</td>
+                <td>Student role automatically assigned after successful registration</td>
+            </tr>
+            <tr>
+                <td><code>specializations</code></td>
+                <td>id, name, department_id</td>
+                <td>&mdash;</td>
+                <td>&mdash;</td>
+                <td>Populates the Specialization select; filtered by Department</td>
+            </tr>
+            <tr>
+                <td><code>departments</code></td>
+                <td>id, name</td>
+                <td>&mdash;</td>
+                <td>&mdash;</td>
+                <td>Populates the Department select (UI-only)</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Test Cases</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Steps</th>
+                <th>Expected Result</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>STU-REG-001</td>
+                <td>Successful registration with valid domain</td>
+                <td>Navigate to <code>/student/register</code>. Fill all fields with valid data using an email from an active allowed domain. Click Sign up.</td>
+                <td>User record created in <code>users</code>. Student role assigned. Verification email sent. User sees confirmation or is redirected to the student panel.</td>
+            </tr>
+            <tr>
+                <td>STU-REG-002</td>
+                <td>Rejected registration with disallowed email domain</td>
+                <td>Fill the form with an email whose domain is NOT in <code>allowed_email_domains</code>. Click Sign up.</td>
+                <td>Validation error displayed: "Email must be from an allowed university domain" with the list of allowed domains. No user record created.</td>
+            </tr>
+            <tr>
+                <td>STU-REG-003</td>
+                <td>Duplicate email rejected</td>
+                <td>Attempt to register with an email that already exists in the <code>users</code> table.</td>
+                <td>Validation error: email is already taken. Registration blocked.</td>
+            </tr>
+            <tr>
+                <td>STU-REG-004</td>
+                <td>Duplicate University ID rejected</td>
+                <td>Attempt to register with a university_id that already exists.</td>
+                <td>Validation error: university ID is already taken. Registration blocked.</td>
+            </tr>
+            <tr>
+                <td>STU-REG-005</td>
+                <td>Password confirmation mismatch</td>
+                <td>Enter differing values in Password and Confirm password fields. Click Sign up.</td>
+                <td>Validation error on the confirm password field. Registration blocked.</td>
+            </tr>
+            <tr>
+                <td>STU-REG-006</td>
+                <td>Required fields enforced</td>
+                <td>Submit the form with one or more required fields left blank.</td>
+                <td>Inline validation errors highlight each missing field. Registration blocked.</td>
+            </tr>
+            <tr>
+                <td>STU-REG-007</td>
+                <td>Department filters Specialization options</td>
+                <td>Select a Department from the dropdown. Observe the Specialization dropdown.</td>
+                <td>Only specializations belonging to the selected department are listed. Selecting a different department updates the specialization options reactively.</td>
+            </tr>
+            <tr>
+                <td>STU-REG-008</td>
+                <td>Department not persisted</td>
+                <td>Complete registration successfully. Query the created <code>users</code> record.</td>
+                <td>The <code>users</code> table has no <code>department_id</code> column. Specialization_id is saved; department was UI-only.</td>
+            </tr>
+            <tr>
+                <td>STU-REG-009</td>
+                <td>Student role automatically assigned</td>
+                <td>Complete a successful registration. Check <code>model_has_roles</code> for the new user.</td>
+                <td>A row exists in <code>model_has_roles</code> linking the user to the <em>Student</em> role.</td>
+            </tr>
+            <tr>
+                <td>STU-REG-010</td>
+                <td>Registration unavailable when all domains disabled</td>
+                <td>As admin, set all <code>allowed_email_domains.is_active</code> to false. Attempt any email domain in the registration form.</td>
+                <td>Every domain is rejected with the validation error. No registration possible until an active domain is re-enabled.</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ============================================================ -->
+<!-- 6. EMAIL VERIFICATION                                         -->
+<!-- ============================================================ -->
+<div class="screen-section" id="email-verification">
+    <h2>6. Email Verification</h2>
+    <p><span class="route-badge">/student/email-verification/prompt</span></p>
+
+    <h3>Description</h3>
+    <div class="description-box">
+        <p>
+            After a student successfully completes registration, Filament's built-in email verification
+            system sends a signed URL to the student's registered email address. The student must click
+            this link to verify their email before their account is considered fully active.
+        </p>
+        <p>
+            The verification is powered by Laravel's <code>MustVerifyEmail</code> contract implemented
+            on the <code>User</code> model, combined with Filament's <code>->emailVerification()</code>
+            panel option in <code>StudentPanelProvider</code>.
+        </p>
+        <p>
+            The verification prompt page (<code>/student/email-verification/prompt</code>) is the
+            standard Filament verification notice, offering a <strong>Resend verification email</strong>
+            button if the original email was not received.
+        </p>
+    </div>
+
+    <h3>Key UI Elements</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Element</th>
+                <th>Type</th>
+                <th>Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Verification notice</td>
+                <td>Info message</td>
+                <td>Informs the student that a verification email has been sent and they must click the link.</td>
+            </tr>
+            <tr>
+                <td>Resend verification email</td>
+                <td>Button</td>
+                <td>Triggers a new verification email to the registered address. Rate-limited by Filament.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Database Verification</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Table</th>
+                <th>Column</th>
+                <th>Type</th>
+                <th>Constraints</th>
+                <th>Screen Mapping</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>users</code></td>
+                <td>email_verified_at</td>
+                <td>timestamp</td>
+                <td>NULLABLE</td>
+                <td>Set to current timestamp when the student clicks the signed verification link. NULL until verified.</td>
+            </tr>
+            <tr>
+                <td><code>users</code></td>
+                <td>email</td>
+                <td>varchar(255)</td>
+                <td>UNIQUE, NOT NULL</td>
+                <td>Destination address for the verification email.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Test Cases</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Steps</th>
+                <th>Expected Result</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>STU-VRF-001</td>
+                <td>Verification email sent after registration</td>
+                <td>Complete a successful registration with a reachable email address.</td>
+                <td>A signed verification email is received. The link in the email is unique and time-limited.</td>
+            </tr>
+            <tr>
+                <td>STU-VRF-002</td>
+                <td>Email verified on link click</td>
+                <td>Click the verification link from the email.</td>
+                <td><code>users.email_verified_at</code> is set to the current timestamp. Student is redirected to the student dashboard.</td>
+            </tr>
+            <tr>
+                <td>STU-VRF-003</td>
+                <td>Resend verification email</td>
+                <td>Navigate to <code>/student/email-verification/prompt</code>. Click "Resend verification email".</td>
+                <td>A new verification email is dispatched to the registered address. A success notification is shown.</td>
+            </tr>
+            <tr>
+                <td>STU-VRF-004</td>
+                <td>Expired verification link rejected</td>
+                <td>Wait for the signed URL to expire (per <code>auth.verification.expire</code> config), then click the old link.</td>
+                <td>Laravel rejects the expired signature. The student is prompted to request a new link.</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
 <!-- ============================================================ -->
 <div style="margin-top: 60px; padding: 20px; text-align: center; border-top: 2px solid #e5e7eb; color: #6b7280; font-size: 0.9em;">
     <p>Academic Management System (AMS) &mdash; Student Panel Documentation</p>

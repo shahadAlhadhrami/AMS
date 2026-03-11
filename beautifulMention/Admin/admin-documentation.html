@@ -81,6 +81,13 @@ body{max-width:100%}.no-print{display:none}
 <li><a href="#screen-13">13. Specializations Edit</a></li>
 </ul>
 
+<p class="toc-group">Master Data - Allowed Email Domains</p>
+<ul>
+<li><a href="#screen-13a">13A. Allowed Email Domains List</a></li>
+<li><a href="#screen-13b">13B. Allowed Email Domains Create</a></li>
+<li><a href="#screen-13c">13C. Allowed Email Domains Edit</a></li>
+</ul>
+
 <p class="toc-group">Master Data - Courses</p>
 <ul>
 <li><a href="#screen-14">14. Courses List</a></li>
@@ -1522,6 +1529,236 @@ The Specializations Edit screen allows modification of a specialization's <code>
 <td>NULL</td>
 <td>Delete header action (soft delete)</td>
 </tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 13A - ALLOWED EMAIL DOMAINS LIST                        -->
+<!-- ============================================================ -->
+<div id="screen-13a" class="screen-section">
+<h2>Screen 13A - Allowed Email Domains List</h2>
+<p>Route: <span class="route">/admin/allowed-email-domains</span></p>
+
+<img src="photos/41-allowed-email-domains-list.png" alt="Allowed Email Domains List Screen">
+
+<div class="desc">
+The Allowed Email Domains List screen displays all configured university email domains that are permitted for student self-registration. It is part of the <strong>Master Data</strong> navigation group (icon: <code>heroicon-o-at-symbol</code>). Admins can add, activate/deactivate, or delete domains. Only domains with <code>is_active = true</code> are accepted by the student registration form. Domain values are displayed with the <code>@</code> prefix (e.g., <code>@utas.edu.om</code>).
+</div>
+
+<h3>Key UI Elements</h3>
+<table>
+<tr><th>Element</th><th>Type</th><th>Details</th></tr>
+<tr><td>Domain column</td><td>Text column (sortable, searchable)</td><td>Displays domain prefixed with <code>@</code>. Clicking navigates to the Edit screen.</td></tr>
+<tr><td>Active column</td><td>Icon column (boolean)</td><td>Green check for active, red cross for inactive.</td></tr>
+<tr><td>Created at column</td><td>DateTime column (sortable)</td><td>Timestamp when the domain was added.</td></tr>
+<tr><td>Edit action</td><td>Row action link</td><td>Navigates to the domain's Edit screen.</td></tr>
+<tr><td>Delete action</td><td>Row action button</td><td>Permanently deletes the domain after confirmation.</td></tr>
+<tr><td>New allowed email domain</td><td>Header button</td><td>Navigates to the Create screen.</td></tr>
+<tr><td>Search box</td><td>Text input</td><td>Filters the domain list by domain name.</td></tr>
+</table>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-AED-001</td>
+<td>List all configured domains</td>
+<td>1. Navigate to <code>/admin/allowed-email-domains</code></td>
+<td>All domains from <code>allowed_email_domains</code> table displayed. Active status shown as icon.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-AED-002</td>
+<td>Domain displayed with @ prefix</td>
+<td>1. Open the list. 2. Observe any domain entry.</td>
+<td>Domain shown as <code>@domain.tld</code> (e.g., <code>@utas.edu.om</code>).</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-AED-003</td>
+<td>Search by domain name</td>
+<td>1. Enter a partial domain string in the search box.</td>
+<td>List filters to show only matching domains.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-AED-004</td>
+<td>Delete a domain</td>
+<td>1. Click Delete on a domain row. 2. Confirm the action.</td>
+<td>Domain record removed from <code>allowed_email_domains</code>. That domain can no longer be used for registration.</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr><th>Table</th><th>Column</th><th>Type</th><th>Constraints</th><th>Screen Mapping</th></tr>
+<tr><td>allowed_email_domains</td><td>id</td><td>bigint</td><td>PK, auto-increment</td><td>Internal record identifier</td></tr>
+<tr><td>allowed_email_domains</td><td>domain</td><td>varchar(255)</td><td>UNIQUE, NOT NULL</td><td>Domain column (displayed with @ prefix)</td></tr>
+<tr><td>allowed_email_domains</td><td>is_active</td><td>boolean</td><td>DEFAULT true</td><td>Active column (boolean icon)</td></tr>
+<tr><td>allowed_email_domains</td><td>created_at</td><td>timestamp</td><td>NOT NULL</td><td>Created at column</td></tr>
+<tr><td>allowed_email_domains</td><td>updated_at</td><td>timestamp</td><td>NOT NULL</td><td>Auto-updated on save</td></tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 13B - ALLOWED EMAIL DOMAINS CREATE                      -->
+<!-- ============================================================ -->
+<div id="screen-13b" class="screen-section">
+<h2>Screen 13B - Allowed Email Domains Create</h2>
+<p>Route: <span class="route">/admin/allowed-email-domains/create</span></p>
+
+<img src="photos/42-allowed-email-domains-create.png" alt="Allowed Email Domains Create Screen">
+
+<div class="desc">
+Form for adding a new permitted email domain. The domain must be entered <strong>without</strong> the <code>@</code> symbol (e.g., <code>university.edu</code>). A regex rule enforces valid domain format. The <strong>Active</strong> toggle defaults to on, meaning the domain is immediately usable for student registration upon creation. Duplicate domains are rejected by a unique constraint.
+</div>
+
+<h3>Key UI Elements</h3>
+<table>
+<tr><th>Element</th><th>Type</th><th>Details</th></tr>
+<tr><td>Domain field</td><td>Text input</td><td>Required. Placeholder: "e.g. university.edu". Helper text: "Enter the domain without the @ symbol". Validated with regex <code>/^[a-zA-Z0-9][a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/</code>.</td></tr>
+<tr><td>Active toggle</td><td>Toggle switch</td><td>Defaults to ON. Controls whether the domain is accepted during student registration.</td></tr>
+<tr><td>Create button</td><td>Submit button</td><td>Saves the new domain and redirects to the List screen.</td></tr>
+<tr><td>Create &amp; create another button</td><td>Submit button</td><td>Saves and resets the form for rapid batch entry.</td></tr>
+<tr><td>Cancel button</td><td>Button</td><td>Discards changes and returns to the List screen.</td></tr>
+</table>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-AED-005</td>
+<td>Create domain with valid data</td>
+<td>1. Navigate to create page. 2. Enter a valid domain (e.g., <code>example.edu</code>). 3. Leave Active on. 4. Click Create.</td>
+<td>New record inserted in <code>allowed_email_domains</code> with <code>is_active = true</code>. Redirect to list with success toast.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-AED-006</td>
+<td>Domain field required</td>
+<td>1. Leave domain blank. 2. Click Create.</td>
+<td>Validation error: "The domain field is required."</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-AED-007</td>
+<td>Invalid domain format rejected</td>
+<td>1. Enter an invalid string (e.g., <code>notadomain</code> or <code>@bad.com</code>). 2. Submit.</td>
+<td>Validation error from regex rule. Record not created.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-AED-008</td>
+<td>Duplicate domain rejected</td>
+<td>1. Enter a domain that already exists in the table. 2. Submit.</td>
+<td>Validation error: domain must be unique. Record not created.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-AED-009</td>
+<td>Inactive domain not usable for registration</td>
+<td>1. Create a domain with Active set to OFF. 2. Attempt student registration using that domain email.</td>
+<td>Registration rejected: domain is in the table but <code>is_active = false</code>, so it is treated as disallowed.</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr><th>Table</th><th>Column</th><th>Type</th><th>Constraints</th><th>Screen Mapping</th></tr>
+<tr><td>allowed_email_domains</td><td>domain</td><td>varchar(255)</td><td>UNIQUE, NOT NULL</td><td>Domain text input</td></tr>
+<tr><td>allowed_email_domains</td><td>is_active</td><td>boolean</td><td>DEFAULT true</td><td>Active toggle</td></tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 13C - ALLOWED EMAIL DOMAINS EDIT                        -->
+<!-- ============================================================ -->
+<div id="screen-13c" class="screen-section">
+<h2>Screen 13C - Allowed Email Domains Edit</h2>
+<p>Route: <span class="route">/admin/allowed-email-domains/{id}/edit</span></p>
+
+<img src="photos/43-allowed-email-domains-edit.png" alt="Allowed Email Domains Edit Screen">
+
+<div class="desc">
+Edit screen for an existing domain record. Form is pre-populated with the current domain and active status. The domain field can be changed (unique constraint ignores the current record). The <strong>Active</strong> toggle is the primary mechanism for temporarily disabling a domain without deleting it — disabling prevents that domain from being used for new registrations while preserving the existing records. A red <strong>Delete</strong> button in the header allows permanent removal.
+</div>
+
+<h3>Key UI Elements</h3>
+<table>
+<tr><th>Element</th><th>Type</th><th>Details</th></tr>
+<tr><td>Domain field</td><td>Text input (pre-filled)</td><td>Required. Editable. Unique constraint ignores current record (<code>ignoreRecord: true</code>).</td></tr>
+<tr><td>Active toggle</td><td>Toggle switch (pre-filled)</td><td>Toggle ON/OFF to enable or disable the domain for student registration.</td></tr>
+<tr><td>Save changes button</td><td>Submit button</td><td>Persists the updated values.</td></tr>
+<tr><td>Cancel button</td><td>Button</td><td>Discards changes and returns to the List.</td></tr>
+<tr><td>Delete button (header)</td><td>Destructive action button</td><td>Permanently deletes the domain record after confirmation.</td></tr>
+</table>
+
+<h3>Test Cases</h3>
+<table>
+<tr>
+<th>Test ID</th>
+<th>Description</th>
+<th>Steps</th>
+<th>Expected Result</th>
+<th>Status</th>
+</tr>
+<tr>
+<td>ADM-AED-010</td>
+<td>Edit domain name</td>
+<td>1. Open an existing domain's edit page. 2. Change the domain text. 3. Click Save changes.</td>
+<td><code>allowed_email_domains.domain</code> updated. List refreshes with the new value.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-AED-011</td>
+<td>Disable a domain via Active toggle</td>
+<td>1. Open edit for an active domain. 2. Toggle Active to OFF. 3. Save.</td>
+<td><code>is_active</code> set to false. That domain is no longer accepted by the student registration validator.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-AED-012</td>
+<td>Re-enable a disabled domain</td>
+<td>1. Open edit for an inactive domain. 2. Toggle Active to ON. 3. Save.</td>
+<td><code>is_active</code> set to true. Student registration now accepts that domain again.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-AED-013</td>
+<td>Delete domain via header button</td>
+<td>1. Open edit page. 2. Click the red Delete button. 3. Confirm.</td>
+<td>Record deleted from <code>allowed_email_domains</code>. Redirected to list.</td>
+<td><input type="checkbox"></td>
+</tr>
+<tr>
+<td>ADM-AED-014</td>
+<td>Duplicate domain on edit rejected</td>
+<td>1. Change domain to value matching another existing record. 2. Save.</td>
+<td>Validation error: domain must be unique (ignoring current record).</td>
+<td><input type="checkbox"></td>
+</tr>
+</table>
+
+<h3>Database Verification</h3>
+<table>
+<tr><th>Table</th><th>Column</th><th>Type</th><th>Constraints</th><th>Screen Mapping</th></tr>
+<tr><td>allowed_email_domains</td><td>domain</td><td>varchar(255)</td><td>UNIQUE, NOT NULL</td><td>Domain text input (pre-filled)</td></tr>
+<tr><td>allowed_email_domains</td><td>is_active</td><td>boolean</td><td>DEFAULT true</td><td>Active toggle (pre-filled)</td></tr>
+<tr><td>allowed_email_domains</td><td>updated_at</td><td>timestamp</td><td>NOT NULL</td><td>Auto-updated on save</td></tr>
 </table>
 </div>
 
