@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Student\Pages\Auth\StudentRegistration;
 use App\Http\Middleware\EnsurePanelAccess;
 use Illuminate\Support\HtmlString;
 use Filament\Http\Middleware\Authenticate;
@@ -27,6 +28,8 @@ class StudentPanelProvider extends PanelProvider
             ->id('student')
             ->path('student')
             ->login()
+            ->registration(StudentRegistration::class)
+            ->emailVerification()
             ->passwordReset()
             ->profile()
             ->viteTheme('resources/css/filament/student/theme.css')
