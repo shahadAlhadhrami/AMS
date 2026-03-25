@@ -3,43 +3,179 @@
 namespace App\Filament\Admin\Resources\RubricTemplateResource\Pages;
 
 use App\Filament\Admin\Resources\RubricTemplateResource;
-use App\Models\Deliverable;
+use App\Models\RubricFolder;
 use App\Models\RubricTemplate;
 use Filament\Actions;
 use Filament\Forms;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Url;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ListRubricTemplates extends ListRecords
 {
     protected static string $resource = RubricTemplateResource::class;
 
+    protected string $view = 'filament.admin.resources.rubric-template-resource.pages.list-rubric-templates';
+
+    #[Url]
+    public ?int $currentFolderId = null;
+
+    protected function getTableQuery(): Builder
+    {
+        return parent::getTableQuery()
+            ->where('rubric_folder_id', $this->currentFolderId);
+    }
+
+    public function navigateToFolder(?int $folderId): void
+    {
+        $this->currentFolderId = $folderId;
+        $this->resetTable();
+    }
+
+    public function getCurrentFolder(): ?RubricFolder
+    {
+        if ($this->currentFolderId === null) {
+            return null;
+        }
+
+        return RubricFolder::find($this->currentFolderId);
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        if ($this->currentFolderId === null) {
+            return [];
+        }
+
+        $folder = $this->getCurrentFolder();
+        if (! $folder) {
+            return [];
+        }
+
+        $breadcrumbs = $folder->getAncestors()
+            ->map(fn (RubricFolder $f) => ['id' => $f->id, 'name' => $f->name])
+            ->toArray();
+
+        $breadcrumbs[] = ['id' => $folder->id, 'name' => $folder->name];
+
+        return $breadcrumbs;
+    }
+
+    public function getSubfolders(): \Illuminate\Database\Eloquent\Collection
+    {
+        return RubricFolder::where('parent_id', $this->currentFolderId)
+            ->orderBy('name')
+            ->with('creator')
+            ->get();
+    }
+
     protected function getHeaderActions(): array
     {
         return [
             Actions\CreateAction::make(),
+            Actions\Action::make('createFolder')
+                ->label('New Folder')
+                ->icon('heroicon-o-folder-plus')
+                ->color('gray')
+                ->form([
+                    Forms\Components\TextInput::make('name')
+                        ->label('Folder Name')
+                        ->required()
+                        ->maxLength(255)
+                        ->placeholder('e.g., Phase I Templates'),
+                ])
+                ->action(function (array $data): void {
+                    RubricFolder::create([
+                        'name' => $data['name'],
+                        'parent_id' => $this->currentFolderId,
+                        'created_by' => auth()->id(),
+                    ]);
+
+                    Notification::make()
+                        ->title("Folder '{$data['name']}' created.")
+                        ->success()
+                        ->send();
+                }),
+            Actions\Action::make('renameFolder')
+                ->label('Rename Folder')
+                ->icon('heroicon-o-pencil')
+                ->color('gray')
+                ->visible(fn (): bool => $this->currentFolderId !== null && $this->getCurrentFolder()?->created_by === auth()->id())
+                ->form(fn (): array => [
+                    Forms\Components\TextInput::make('name')
+                        ->label('New Name')
+                        ->required()
+                        ->maxLength(255)
+                        ->default($this->getCurrentFolder()?->name),
+                ])
+                ->action(function (array $data): void {
+                    $folder = $this->getCurrentFolder();
+                    if (! $folder) {
+                        return;
+                    }
+
+                    $folder->update(['name' => $data['name']]);
+
+                    Notification::make()
+                        ->title("Folder renamed to '{$data['name']}'.")
+                        ->success()
+                        ->send();
+                }),
+            Actions\Action::make('deleteFolder')
+                ->label('Delete Folder')
+                ->icon('heroicon-o-folder-minus')
+                ->color('danger')
+                ->visible(fn (): bool => $this->currentFolderId !== null && $this->getCurrentFolder()?->created_by === auth()->id())
+                ->requiresConfirmation()
+                ->modalHeading('Delete Folder')
+                ->modalDescription('This will only delete the folder itself. Templates and subfolders inside will be moved to "No folder". Are you sure?')
+                ->action(function (): void {
+                    $folder = $this->getCurrentFolder();
+                    if (! $folder) {
+                        return;
+                    }
+
+                    // Move contents to parent before deleting
+                    RubricTemplate::where('rubric_folder_id', $folder->id)
+                        ->update(['rubric_folder_id' => $folder->parent_id]);
+                    RubricFolder::where('parent_id', $folder->id)
+                        ->update(['parent_id' => $folder->parent_id]);
+
+                    $parentId = $folder->parent_id;
+                    $folder->delete();
+
+                    $this->navigateToFolder($parentId);
+
+                    Notification::make()
+                        ->title('Folder deleted.')
+                        ->success()
+                        ->send();
+                }),
             Actions\Action::make('importCsv')
                 ->label('Import from CSV')
                 ->icon('heroicon-o-arrow-up-tray')
                 ->color('gray')
                 ->form([
-                    Forms\Components\TextInput::make('rubric_name')
-                        ->label('Rubric Template Name')
-                        ->required()
-                        ->maxLength(255)
-                        ->placeholder('e.g., Phase 1 - Review I'),
-                    Forms\Components\FileUpload::make('csv_file')
-                        ->label('CSV File')
+                    Forms\Components\FileUpload::make('csv_files')
+                        ->label('CSV File(s)')
                         ->acceptedFileTypes(['text/csv', 'text/plain', 'application/vnd.ms-excel'])
                         ->required()
+                        ->multiple()
                         ->disk('local')
                         ->directory('csv-imports')
                         ->visibility('private'),
+                    Forms\Components\Select::make('rubric_folder_id')
+                        ->label('Save to Folder')
+                        ->options(fn () => RubricTemplateResource::getFolderOptions())
+                        ->searchable()
+                        ->nullable()
+                        ->placeholder('— No folder (root) —'),
                 ])
                 ->action(function (array $data): void {
-                    $this->importRubricFromCsv($data);
+                    $this->importRubricsFromCsv($data);
                 }),
             Actions\Action::make('downloadTemplate')
                 ->label('Download CSV Template')
@@ -51,49 +187,77 @@ class ListRubricTemplates extends ListRecords
         ];
     }
 
-    protected function importRubricFromCsv(array $data): void
+    protected function importRubricsFromCsv(array $data): void
     {
-        $csvPath = $data['csv_file'] ?? null;
-        $rubricName = $data['rubric_name'] ?? null;
+        $files = $data['csv_files'] ?? [];
+        $folderId = $data['rubric_folder_id'] ?? null;
 
-        if (! $csvPath || ! $rubricName) {
-            Notification::make()
-                ->title('Missing required fields.')
-                ->danger()
-                ->send();
+        if (empty($files)) {
+            Notification::make()->title('No files selected.')->danger()->send();
+
             return;
         }
 
-        $filePath = storage_path('app/private/' . $csvPath);
-        if (! file_exists($filePath)) {
-            $filePath = storage_path('app/' . $csvPath);
+        $successCount = 0;
+        $errors = [];
+
+        foreach ($files as $csvPath) {
+            $filePath = storage_path('app/private/' . $csvPath);
+            if (! file_exists($filePath)) {
+                $filePath = storage_path('app/' . $csvPath);
+            }
+
+            if (! file_exists($filePath)) {
+                $errors[] = "{$csvPath}: File not found.";
+
+                continue;
+            }
+
+            $rubricName = pathinfo($csvPath, PATHINFO_FILENAME);
+            // Strip Livewire temp prefix if present (e.g. "tmp-1234-filename" -> "filename")
+            if (preg_match('/^[a-z0-9]+-\d+-(.+)$/', $rubricName, $m)) {
+                $rubricName = $m[1];
+            }
+
+            $result = $this->importSingleCsv($filePath, $rubricName, $folderId);
+            if ($result === true) {
+                $successCount++;
+                @unlink($filePath);
+            } else {
+                $errors[] = "{$rubricName}: {$result}";
+            }
         }
 
-        if (! file_exists($filePath)) {
+        if ($successCount > 0) {
             Notification::make()
-                ->title('CSV file not found.')
+                ->title("{$successCount} rubric template(s) imported successfully.")
+                ->success()
+                ->send();
+        }
+
+        foreach ($errors as $error) {
+            Notification::make()
+                ->title('Import failed: ' . $error)
                 ->danger()
                 ->send();
-            return;
         }
+    }
 
+    /**
+     * @return true|string Returns true on success, or an error message string on failure.
+     */
+    protected function importSingleCsv(string $filePath, string $rubricName, ?int $folderId): true|string
+    {
         $handle = fopen($filePath, 'r');
         if (! $handle) {
-            Notification::make()
-                ->title('Unable to read the CSV file.')
-                ->danger()
-                ->send();
-            return;
+            return 'Unable to read file.';
         }
 
         $headers = fgetcsv($handle, length: 0, escape: '');
         if (! $headers) {
             fclose($handle);
-            Notification::make()
-                ->title('CSV file is empty or has no headers.')
-                ->danger()
-                ->send();
-            return;
+
+            return 'CSV is empty or has no headers.';
         }
 
         $headers = array_map('trim', array_map('strtolower', $headers));
@@ -102,30 +266,20 @@ class ListRubricTemplates extends ListRecords
 
         if (! empty($missingHeaders)) {
             fclose($handle);
-            Notification::make()
-                ->title('Missing required columns: ' . implode(', ', $missingHeaders))
-                ->danger()
-                ->send();
-            return;
+
+            return 'Missing columns: ' . implode(', ', $missingHeaders);
         }
 
         $rows = [];
         while (($row = fgetcsv($handle, length: 0, escape: '')) !== false) {
-            $rowData = array_combine($headers, array_pad($row, count($headers), ''));
-            $rows[] = $rowData;
+            $rows[] = array_combine($headers, array_pad($row, count($headers), ''));
         }
         fclose($handle);
 
         if (empty($rows)) {
-            Notification::make()
-                ->title('CSV file contains no data rows.')
-                ->warning()
-                ->send();
-            return;
+            return 'CSV contains no data rows.';
         }
 
-        // Group rows: deliverable_title → criterion_title → [level rows]
-        // If deliverable_title column is absent, put all criteria under a single "General" deliverable.
         $hasDeliverableCol = in_array('deliverable_title', $headers);
         $deliverableGroups = [];
 
@@ -140,11 +294,7 @@ class ListRubricTemplates extends ListRecords
         }
 
         if (empty($deliverableGroups)) {
-            Notification::make()
-                ->title('No valid criteria found in CSV.')
-                ->warning()
-                ->send();
-            return;
+            return 'No valid criteria found.';
         }
 
         DB::beginTransaction();
@@ -152,6 +302,7 @@ class ListRubricTemplates extends ListRecords
             $rubricTemplate = RubricTemplate::create([
                 'name' => $rubricName,
                 'version' => 1,
+                'rubric_folder_id' => $folderId,
                 'total_marks' => 0,
                 'is_locked' => false,
                 'created_by' => auth()->id(),
@@ -161,8 +312,8 @@ class ListRubricTemplates extends ListRecords
             $deliverableSortOrder = 0;
 
             foreach ($deliverableGroups as $deliverableTitle => $criteriaGroups) {
-                // Infer max_marks from the first row that has deliverable_max_marks, or sum criteria
-                $firstRow = reset(reset($criteriaGroups));
+                $firstCriteriaGroup = reset($criteriaGroups);
+                $firstRow = $firstCriteriaGroup[0] ?? [];
                 $deliverableMaxMarks = $hasDeliverableCol
                     ? (float) ($firstRow['deliverable_max_marks'] ?? 0)
                     : 0;
@@ -204,13 +355,11 @@ class ListRubricTemplates extends ListRecords
                             'label' => $levelLabel,
                             'score_value' => (float) ($levelRow['level_score'] ?? 0),
                             'description' => trim($levelRow['level_description'] ?? '') ?: null,
-                            'percentage_range' => trim($levelRow['level_percentage'] ?? '') ?: null,
                             'sort_order' => $levelSortOrder++,
                         ]);
                     }
                 }
 
-                // If deliverable_max_marks was not provided, derive it from criteria
                 if ($deliverableMaxMarks == 0) {
                     $deliverable->update(['max_marks' => $deliverableTotal]);
                 }
@@ -221,21 +370,13 @@ class ListRubricTemplates extends ListRecords
             $rubricTemplate->update(['total_marks' => $totalMarks]);
 
             DB::commit();
-
-            @unlink($filePath);
-
-            $criteriaCount = array_sum(array_map('count', $deliverableGroups));
-            Notification::make()
-                ->title("Rubric '{$rubricName}' imported: " . count($deliverableGroups) . ' deliverable(s), ' . $criteriaCount . ' criteria.')
-                ->success()
-                ->send();
         } catch (\Exception $e) {
             DB::rollBack();
-            Notification::make()
-                ->title('Import failed: ' . $e->getMessage())
-                ->danger()
-                ->send();
+
+            return $e->getMessage();
         }
+
+        return true;
     }
 
     protected function downloadRubricTemplate(): StreamedResponse
@@ -245,16 +386,16 @@ class ListRubricTemplates extends ListRecords
             fputcsv($file, [
                 'deliverable_title', 'deliverable_max_marks',
                 'criterion_title', 'criterion_description', 'max_score', 'is_individual',
-                'level_label', 'level_score', 'level_percentage', 'level_description',
+                'level_label', 'level_score', 'level_description',
             ]);
             // Deliverable 1: Project Analysis
-            fputcsv($file, ['Project Analysis', '10', 'Literature Review', 'Quality of literature review', '5', 'false', 'Excellent', '5', '90-100%', 'Outstanding']);
-            fputcsv($file, ['Project Analysis', '10', 'Literature Review', 'Quality of literature review', '5', 'false', 'Good', '3', '70-80%', 'Meets expectations']);
-            fputcsv($file, ['Project Analysis', '10', 'Problem Statement', 'Clarity of problem statement', '5', 'false', 'Excellent', '5', '90-100%', 'Very clear']);
-            fputcsv($file, ['Project Analysis', '10', 'Problem Statement', 'Clarity of problem statement', '5', 'false', 'Good', '3', '70-80%', 'Acceptable']);
+            fputcsv($file, ['Project Analysis', '10', 'Literature Review', 'Quality of literature review', '5', 'false', 'Excellent', '5', 'Outstanding']);
+            fputcsv($file, ['Project Analysis', '10', 'Literature Review', 'Quality of literature review', '5', 'false', 'Good', '3', 'Meets expectations']);
+            fputcsv($file, ['Project Analysis', '10', 'Problem Statement', 'Clarity of problem statement', '5', 'false', 'Excellent', '5', 'Very clear']);
+            fputcsv($file, ['Project Analysis', '10', 'Problem Statement', 'Clarity of problem statement', '5', 'false', 'Good', '3', 'Acceptable']);
             // Deliverable 2: Presentation (individual)
-            fputcsv($file, ['Presentation', '5', 'Oral Delivery', '', '5', 'true', 'Excellent', '5', '90-100%', '']);
-            fputcsv($file, ['Presentation', '5', 'Oral Delivery', '', '5', 'true', 'Good', '3', '70-80%', '']);
+            fputcsv($file, ['Presentation', '5', 'Oral Delivery', '', '5', 'true', 'Excellent', '5', '']);
+            fputcsv($file, ['Presentation', '5', 'Oral Delivery', '', '5', 'true', 'Good', '3', '']);
             fclose($file);
         }, 'rubric_import_template.csv');
     }

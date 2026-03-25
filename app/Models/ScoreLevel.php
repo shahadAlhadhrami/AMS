@@ -15,7 +15,6 @@ class ScoreLevel extends Model
         'label',
         'score_value',
         'description',
-        'percentage_range',
         'sort_order',
     ];
 

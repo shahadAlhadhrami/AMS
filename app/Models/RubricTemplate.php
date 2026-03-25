@@ -15,6 +15,7 @@ class RubricTemplate extends Model
         'name',
         'version',
         'parent_template_id',
+        'rubric_folder_id',
         'total_marks',
         'is_locked',
         'created_by',
@@ -32,6 +33,11 @@ class RubricTemplate extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function folder(): BelongsTo
+    {
+        return $this->belongsTo(RubricFolder::class, 'rubric_folder_id');
     }
 
     public function parentTemplate(): BelongsTo

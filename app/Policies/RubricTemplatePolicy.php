@@ -28,7 +28,7 @@ class RubricTemplatePolicy
             return false;
         }
 
-        return $user->hasAnyRole(['Super Admin', 'Coordinator']);
+        return $user->id === $rubricTemplate->created_by;
     }
 
     public function delete(User $user, RubricTemplate $rubricTemplate): bool
@@ -37,7 +37,7 @@ class RubricTemplatePolicy
             return false;
         }
 
-        return $user->hasAnyRole(['Super Admin', 'Coordinator']);
+        return $user->id === $rubricTemplate->created_by;
     }
 
     public function deleteAny(User $user): bool

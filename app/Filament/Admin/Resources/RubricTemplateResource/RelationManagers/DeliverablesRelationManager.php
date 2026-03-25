@@ -27,10 +27,6 @@ class DeliverablesRelationManager extends RelationManager
                     ->numeric()
                     ->minValue(0)
                     ->label('Max Marks'),
-                Forms\Components\TextInput::make('sort_order')
-                    ->numeric()
-                    ->default(0)
-                    ->label('Sort Order'),
                 Forms\Components\Repeater::make('criteria')
                     ->relationship()
                     ->schema([
@@ -50,10 +46,6 @@ class DeliverablesRelationManager extends RelationManager
                         Forms\Components\Toggle::make('is_individual')
                             ->label('Individual scoring per student')
                             ->default(false),
-                        Forms\Components\TextInput::make('sort_order')
-                            ->numeric()
-                            ->default(0)
-                            ->label('Sort Order'),
                         Forms\Components\Repeater::make('scoreLevels')
                             ->relationship()
                             ->schema([
@@ -66,10 +58,6 @@ class DeliverablesRelationManager extends RelationManager
                                     ->numeric()
                                     ->minValue(0)
                                     ->label('Score Value'),
-                                Forms\Components\TextInput::make('percentage_range')
-                                    ->nullable()
-                                    ->label('Percentage Range')
-                                    ->placeholder('e.g., 90-100%'),
                                 Forms\Components\Textarea::make('description')
                                     ->nullable()
                                     ->rows(2),
@@ -102,9 +90,6 @@ class DeliverablesRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('max_marks')
                     ->numeric(decimalPlaces: 2)
                     ->label('Max Marks'),
-                Tables\Columns\TextColumn::make('sort_order')
-                    ->label('Order')
-                    ->sortable(),
                 Tables\Columns\TextColumn::make('criteria_count')
                     ->counts('criteria')
                     ->label('Criteria'),

@@ -150,7 +150,7 @@ trait BuildsEvaluationForm
                 ->label('Score Level')
                 ->options(
                     $scoreLevels->mapWithKeys(fn ($level) => [
-                        $level->id => "{$level->label} ({$level->score_value})" . ($level->percentage_range ? " [{$level->percentage_range}]" : ''),
+                        $level->id => "{$level->label} ({$level->score_value})",
                     ])
                 )
                 ->placeholder('Select or enter manual score')

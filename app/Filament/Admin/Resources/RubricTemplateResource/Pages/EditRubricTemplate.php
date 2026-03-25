@@ -33,11 +33,11 @@ class EditRubricTemplate extends EditRecord
                 ->action(function () {
                     $this->record->update(['is_locked' => true]);
 
-                    return redirect(RubricTemplateResource::getUrl('index'));
+                    return redirect(RubricTemplateResource::getUrl('view', ['record' => $this->record]));
                 })
-                ->hidden(fn (): bool => $this->record->is_locked),
+                ->hidden(fn (): bool => $this->record->is_locked || $this->record->created_by !== auth()->id()),
             Actions\DeleteAction::make()
-                ->hidden(fn (): bool => $this->record->is_locked),
+                ->hidden(fn (): bool => $this->record->is_locked || $this->record->created_by !== auth()->id()),
         ];
     }
 
@@ -45,8 +45,8 @@ class EditRubricTemplate extends EditRecord
     {
         parent::mount($record);
 
-        if ($this->record->is_locked) {
-            redirect(RubricTemplateResource::getUrl('index'));
+        if ($this->record->is_locked || $this->record->created_by !== auth()->id()) {
+            redirect(RubricTemplateResource::getUrl('view', ['record' => $this->record]));
         }
     }
 }
