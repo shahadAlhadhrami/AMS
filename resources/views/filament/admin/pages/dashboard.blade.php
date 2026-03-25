@@ -1,11 +1,5 @@
 <x-filament-panels::page>
-    <x-filament-widgets::widgets
-        :widgets="$this->getHeaderWidgets()"
-        :columns="$this->getHeaderWidgetsColumns()"
-    />
-
-    <x-filament-widgets::widgets
-        :widgets="$this->getFooterWidgets()"
-        :columns="$this->getFooterWidgetsColumns()"
-    />
+    <div class="flex items-center justify-center p-8 mt-8 text-center text-gray-500 text-lg">
+        We still don't know what to display here, we will maybe display some useful information later on.
+    </div>
 </x-filament-panels::page>

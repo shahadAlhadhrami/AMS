@@ -14,38 +14,11 @@ class Dashboard extends Page
 
     public function getHeaderWidgets(): array
     {
-        $user = auth()->user();
-
-        if ($user->hasRole('Super Admin')) {
-            return [
-                \App\Filament\Admin\Widgets\SystemOverviewWidget::class,
-            ];
-        }
-
-        // Coordinator
-        return [
-            \App\Filament\Admin\Widgets\PendingEvaluationsWidget::class,
-        ];
+        return [];
     }
 
     public function getFooterWidgets(): array
     {
-        $user = auth()->user();
-
-        if ($user->hasRole('Super Admin')) {
-            return [
-                \App\Filament\Admin\Widgets\PendingEvaluationsWidget::class,
-                \App\Filament\Admin\Widgets\ProjectStatusWidget::class,
-                \App\Filament\Admin\Widgets\SubmissionProgressWidget::class,
-                \App\Filament\Admin\Widgets\RecentActivityWidget::class,
-            ];
-        }
-
-        // Coordinator: project table + charts scoped to their semesters
-        return [
-            \App\Filament\Admin\Widgets\CoordinatorProjectsWidget::class,
-            \App\Filament\Admin\Widgets\ProjectStatusWidget::class,
-            \App\Filament\Admin\Widgets\SubmissionProgressWidget::class,
-        ];
+        return [];
     }
 }
