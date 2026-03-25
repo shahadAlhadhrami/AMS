@@ -2,12 +2,10 @@
 
 namespace App\Filament\Admin\Resources\ProjectResource\Pages;
 
-use App\Filament\Admin\Pages\ProxyEvaluationForm;
 use App\Filament\Admin\Resources\ProjectResource;
 use App\Models\ConsolidatedMark;
 use App\Models\Evaluation;
 use App\Models\GradingScale;
-use App\Notifications\EvaluationUnlockedNotification;
 use Filament\Actions;
 use Filament\Forms;
 use Filament\Infolists\Components\RepeatableEntry;
@@ -24,62 +22,6 @@ class ViewProject extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\Action::make('unlock_evaluation')
-                ->label('Unlock an Evaluation')
-                ->icon('heroicon-o-lock-open')
-                ->color('warning')
-                ->requiresConfirmation()
-                ->modalHeading('Unlock Evaluation')
-                ->modalDescription('Select the evaluation to unlock, allowing the evaluator to re-edit their marks.')
-                ->form([
-                    \Filament\Forms\Components\Select::make('evaluation_id')
-                        ->label('Evaluation')
-                        ->options(function () {
-                            return $this->record->evaluations()
-                                ->where('status', 'submitted')
-                                ->with('evaluator', 'rubricTemplate')
-                                ->get()
-                                ->mapWithKeys(fn (Evaluation $e) => [
-                                    $e->id => "{$e->evaluator->name} — {$e->rubricTemplate->name}",
-                                ]);
-                        })
-                        ->required(),
-                ])
-                ->action(function (array $data): void {
-                    $evaluation = Evaluation::findOrFail($data['evaluation_id']);
-                    $evaluation->update([
-                        'status' => 'draft',
-                        'unlocked_by' => auth()->id(),
-                    ]);
-                    $evaluation->project->consolidatedMarks()->delete();
-                    $evaluation->project->update(['status' => 'evaluating']);
-                    $evaluation->evaluator->notify(new EvaluationUnlockedNotification($evaluation));
-
-                    Notification::make()->title('Evaluation unlocked.')->success()->send();
-                })
-                ->visible(fn (): bool => $this->record->evaluations()->where('status', 'submitted')->exists()),
-            Actions\Action::make('proxy_entry')
-                ->label('Proxy Mark Entry')
-                ->icon('heroicon-o-user-circle')
-                ->color('info')
-                ->form([
-                    Forms\Components\Select::make('evaluation_id')
-                        ->label('Evaluation')
-                        ->options(function () {
-                            return $this->record->evaluations()
-                                ->whereIn('status', ['pending', 'draft'])
-                                ->with('evaluator', 'rubricTemplate')
-                                ->get()
-                                ->mapWithKeys(fn (Evaluation $e) => [
-                                    $e->id => "{$e->evaluator->name} — {$e->rubricTemplate->name} ({$e->status})",
-                                ]);
-                        })
-                        ->required(),
-                ])
-                ->action(function (array $data) {
-                    return redirect(ProxyEvaluationForm::getUrl(['evaluation' => $data['evaluation_id']]));
-                })
-                ->visible(fn (): bool => $this->record->evaluations()->whereIn('status', ['pending', 'draft'])->exists()),
             Actions\Action::make('override_mark')
                 ->label('Override Mark')
                 ->icon('heroicon-o-pencil-square')
@@ -169,35 +111,6 @@ class ViewProject extends ViewRecord
                                     ->label('Fill Order'),
                                 TextEntry::make('rubricTemplate.total_marks')
                                     ->label('Max Marks'),
-                            ])
-                            ->columns(4),
-                    ]),
-
-                Section::make('Evaluation Status')
-                    ->schema([
-                        RepeatableEntry::make('evaluations')
-                            ->label('')
-                            ->schema([
-                                TextEntry::make('evaluator.name')
-                                    ->label('Evaluator'),
-                                TextEntry::make('evaluator_role')
-                                    ->label('Role')
-                                    ->badge()
-                                    ->color(fn (string $state): string => match ($state) {
-                                        'Supervisor' => 'info',
-                                        'Reviewer'   => 'warning',
-                                        default      => 'gray',
-                                    }),
-                                TextEntry::make('rubricTemplate.name')
-                                    ->label('Rubric'),
-                                TextEntry::make('status')
-                                    ->badge()
-                                    ->color(fn (string $state): string => match ($state) {
-                                        'pending'   => 'gray',
-                                        'draft'     => 'warning',
-                                        'submitted' => 'success',
-                                        default     => 'gray',
-                                    }),
                             ])
                             ->columns(4),
                     ]),

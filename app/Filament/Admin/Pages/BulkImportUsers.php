@@ -15,11 +15,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class BulkImportUsers extends Page
 {
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-arrow-up-tray';
-
-    protected static string | \UnitEnum | null $navigationGroup = 'Tools';
-
-    protected static ?string $navigationLabel = 'Bulk Import';
+    protected static bool $shouldRegisterNavigation = false;
 
     protected static ?string $title = 'Bulk Import Users';
 
