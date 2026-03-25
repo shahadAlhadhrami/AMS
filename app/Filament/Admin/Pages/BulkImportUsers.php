@@ -27,6 +27,21 @@ class BulkImportUsers extends Page
 
     public array $data = [];
 
+    // Step 1 → 2: column mapping
+    public bool $showMapping = false;
+
+    public string $mappingCsvPath = '';
+
+    public array $csvHeaders = [];
+
+    public array $columnMapping = [
+        'university_id' => '',
+        'name'          => '',
+        'email'         => '',
+        'role'          => '',
+    ];
+
+    // Step 2 → 3: preview & import
     public array $previewData = [];
 
     public array $validationErrors = [];
@@ -59,108 +74,127 @@ class BulkImportUsers extends Page
             ->statePath('data');
     }
 
+    /**
+     * Stage 1: Read CSV headers and show the column-mapping UI.
+     */
     public function uploadAndPreview(): void
     {
-        \Log::info('BulkImport: uploadAndPreview called', ['data' => $this->data]);
-        // getState() validates AND processes Filament file uploads (saves temp → final path)
         $formState = $this->form->getState();
-        \Log::info('BulkImport uploadAndPreview', ['formState' => $formState, 'data' => $this->data]);
         $this->imported = false;
         $this->importResults = [];
         $this->previewData = [];
         $this->validationErrors = [];
         $this->hasErrors = false;
+        $this->showMapping = false;
 
         $csvPath = $formState['csvPath'] ?? null;
 
         if (! $csvPath) {
-            Notification::make()
-                ->title('No CSV file uploaded.')
-                ->danger()
-                ->send();
-
+            Notification::make()->title('No CSV file uploaded.')->danger()->send();
             return;
         }
 
         $filePath = storage_path('app/private/' . $csvPath);
-
         if (! file_exists($filePath)) {
-            // Also try without 'private/' prefix (depending on Filament version)
             $filePath = storage_path('app/' . $csvPath);
         }
 
         if (! file_exists($filePath)) {
-            Notification::make()
-                ->title('CSV file not found.')
-                ->danger()
-                ->send();
-
+            Notification::make()->title('CSV file not found.')->danger()->send();
             return;
         }
 
         $handle = fopen($filePath, 'r');
-
         if (! $handle) {
-            Notification::make()
-                ->title('Unable to read the CSV file.')
-                ->danger()
-                ->send();
-
+            Notification::make()->title('Unable to read the CSV file.')->danger()->send();
             return;
         }
 
         $headers = fgetcsv($handle, length: 0, escape: '');
+        fclose($handle);
 
         if (! $headers) {
-            fclose($handle);
-            Notification::make()
-                ->title('CSV file is empty or has no headers.')
-                ->danger()
-                ->send();
-
+            Notification::make()->title('CSV file is empty or has no headers.')->danger()->send();
             return;
         }
 
-        $headers = array_map('trim', array_map('strtolower', $headers));
-        $requiredHeaders = ['university_id', 'name', 'email', 'role'];
+        $this->csvHeaders = array_map('trim', $headers);
+        $this->mappingCsvPath = $csvPath;
 
-        $missingHeaders = array_diff($requiredHeaders, $headers);
+        // Auto-map columns whose header already matches the system field name (case-insensitive)
+        $normalised = array_map('strtolower', $this->csvHeaders);
+        $systemFields = ['university_id', 'name', 'email', 'role'];
+        foreach ($systemFields as $field) {
+            $idx = array_search($field, $normalised);
+            $this->columnMapping[$field] = $idx !== false ? $this->csvHeaders[$idx] : '';
+        }
 
-        if (! empty($missingHeaders)) {
-            fclose($handle);
+        $this->showMapping = true;
+    }
+
+    /**
+     * Stage 2: Apply the column mapping, validate rows, and show the preview table.
+     */
+    public function confirmMappingAndPreview(): void
+    {
+        // Validate that all system fields have been mapped
+        $unmapped = array_filter($this->columnMapping, fn ($v) => empty($v));
+        if (! empty($unmapped)) {
             Notification::make()
-                ->title('Missing required columns: ' . implode(', ', $missingHeaders))
+                ->title('Please map all required columns: ' . implode(', ', array_keys($unmapped)))
                 ->danger()
                 ->send();
-
             return;
         }
+
+        $filePath = storage_path('app/private/' . $this->mappingCsvPath);
+        if (! file_exists($filePath)) {
+            $filePath = storage_path('app/' . $this->mappingCsvPath);
+        }
+
+        if (! file_exists($filePath)) {
+            Notification::make()->title('CSV file not found. Please re-upload.')->danger()->send();
+            $this->showMapping = false;
+            return;
+        }
+
+        $handle = fopen($filePath, 'r');
+        if (! $handle) {
+            Notification::make()->title('Unable to read the CSV file.')->danger()->send();
+            return;
+        }
+
+        // Read raw headers from file
+        $rawHeaders = fgetcsv($handle, length: 0, escape: '');
+        $rawHeaders = array_map('trim', $rawHeaders ?? []);
 
         $rows = [];
         $rowNumber = 1;
-
         while (($row = fgetcsv($handle, length: 0, escape: '')) !== false) {
             $rowNumber++;
-            $rowData = array_combine($headers, array_pad($row, count($headers), ''));
-            $rowData['_row'] = $rowNumber;
-            $rows[] = $rowData;
-        }
+            $rawRow = array_combine($rawHeaders, array_pad($row, count($rawHeaders), ''));
 
+            // Re-map to system field names
+            $mappedRow = [
+                'university_id' => trim($rawRow[$this->columnMapping['university_id']] ?? ''),
+                'name'          => trim($rawRow[$this->columnMapping['name']] ?? ''),
+                'email'         => trim($rawRow[$this->columnMapping['email']] ?? ''),
+                'role'          => trim($rawRow[$this->columnMapping['role']] ?? ''),
+                '_row'          => $rowNumber,
+            ];
+            $rows[] = $mappedRow;
+        }
         fclose($handle);
 
-        if (empty($rows)) {
-            Notification::make()
-                ->title('CSV file contains no data rows.')
-                ->warning()
-                ->send();
+        @unlink($filePath);
 
+        if (empty($rows)) {
+            Notification::make()->title('CSV file contains no data rows.')->warning()->send();
             return;
         }
 
+        $this->showMapping = false;
         $this->validateRows($rows);
-
-        // Clean up the uploaded file
-        @unlink($filePath);
     }
 
     protected function validateRows(array $rows): void
@@ -358,6 +392,10 @@ class BulkImportUsers extends Page
     {
         $this->data = [];
         $this->form->fill();
+        $this->showMapping = false;
+        $this->mappingCsvPath = '';
+        $this->csvHeaders = [];
+        $this->columnMapping = ['university_id' => '', 'name' => '', 'email' => '', 'role' => ''];
         $this->previewData = [];
         $this->validationErrors = [];
         $this->hasErrors = false;

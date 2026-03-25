@@ -11,13 +11,49 @@
     </div>
 
     {{-- Upload Form --}}
-    @if (! $imported)
+    @if (! $imported && ! $showMapping && empty($previewData))
         <div>
             {{ $this->form }}
 
             <div class="mt-4">
                 <x-filament::button wire:click="uploadAndPreview" icon="heroicon-o-eye">
-                    Upload & Preview
+                    Upload & Map Columns
+                </x-filament::button>
+            </div>
+        </div>
+    @endif
+
+    {{-- Column Mapping Step --}}
+    @if ($showMapping)
+        <div class="mt-6 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
+            <h3 class="mb-1 text-lg font-medium text-gray-900 dark:text-white">Map CSV Columns</h3>
+            <p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
+                Match each required field to the corresponding column in your CSV file.
+            </p>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                @foreach (['university_id' => 'University ID', 'name' => 'Full Name', 'email' => 'Email Address', 'role' => 'Role'] as $field => $label)
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            {{ $label }} <span class="text-danger-500">*</span>
+                        </label>
+                        <select
+                            wire:model="columnMapping.{{ $field }}"
+                            class="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                        >
+                            <option value="">— select column —</option>
+                            @foreach ($csvHeaders as $header)
+                                <option value="{{ $header }}" @selected($columnMapping[$field] === $header)>{{ $header }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                @endforeach
+            </div>
+            <div class="mt-6 flex gap-3">
+                <x-filament::button wire:click="confirmMappingAndPreview" icon="heroicon-o-check">
+                    Continue to Preview
+                </x-filament::button>
+                <x-filament::button wire:click="resetImport" color="gray" icon="heroicon-o-arrow-path">
+                    Cancel
                 </x-filament::button>
             </div>
         </div>

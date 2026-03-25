@@ -7,27 +7,21 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Criterion extends Model
+class Deliverable extends Model
 {
     use SoftDeletes;
 
-    protected $table = 'criteria';
-
     protected $fillable = [
-        'title',
-        'description',
-        'max_score',
-        'is_individual',
         'rubric_template_id',
-        'deliverable_id',
+        'title',
+        'max_marks',
         'sort_order',
     ];
 
     protected function casts(): array
     {
         return [
-            'max_score' => 'decimal:2',
-            'is_individual' => 'boolean',
+            'max_marks' => 'decimal:2',
             'sort_order' => 'integer',
         ];
     }
@@ -37,18 +31,8 @@ class Criterion extends Model
         return $this->belongsTo(RubricTemplate::class);
     }
 
-    public function deliverable(): BelongsTo
+    public function criteria(): HasMany
     {
-        return $this->belongsTo(Deliverable::class);
-    }
-
-    public function scoreLevels(): HasMany
-    {
-        return $this->hasMany(ScoreLevel::class);
-    }
-
-    public function evaluationScores(): HasMany
-    {
-        return $this->hasMany(EvaluationScore::class);
+        return $this->hasMany(Criterion::class)->orderBy('sort_order');
     }
 }

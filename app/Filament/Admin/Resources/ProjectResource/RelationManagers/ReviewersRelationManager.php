@@ -34,7 +34,6 @@ class ReviewersRelationManager extends RelationManager
                     })
                     ->recordTitle(fn (User $record): string => "{$record->name} ({$record->university_id})")
                     ->preloadRecordSelect()
-                    ->searchable()
                     ->form(fn (Actions\AttachAction $action): array => [
                         $action->getRecordSelect()
                             ->rules([

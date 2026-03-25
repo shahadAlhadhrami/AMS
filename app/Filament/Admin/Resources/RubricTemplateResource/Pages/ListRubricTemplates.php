@@ -3,9 +3,8 @@
 namespace App\Filament\Admin\Resources\RubricTemplateResource\Pages;
 
 use App\Filament\Admin\Resources\RubricTemplateResource;
-use App\Models\Criterion;
+use App\Models\Deliverable;
 use App\Models\RubricTemplate;
-use App\Models\ScoreLevel;
 use Filament\Actions;
 use Filament\Forms;
 use Filament\Notifications\Notification;
@@ -111,9 +110,7 @@ class ListRubricTemplates extends ListRecords
         }
 
         $rows = [];
-        $rowNumber = 1;
         while (($row = fgetcsv($handle, length: 0, escape: '')) !== false) {
-            $rowNumber++;
             $rowData = array_combine($headers, array_pad($row, count($headers), ''));
             $rows[] = $rowData;
         }
@@ -127,17 +124,22 @@ class ListRubricTemplates extends ListRecords
             return;
         }
 
-        // Group rows by criterion_title
-        $criteriaGroups = [];
+        // Group rows: deliverable_title → criterion_title → [level rows]
+        // If deliverable_title column is absent, put all criteria under a single "General" deliverable.
+        $hasDeliverableCol = in_array('deliverable_title', $headers);
+        $deliverableGroups = [];
+
         foreach ($rows as $row) {
-            $title = trim($row['criterion_title'] ?? '');
-            if (empty($title)) {
+            $criterionTitle = trim($row['criterion_title'] ?? '');
+            if (empty($criterionTitle)) {
                 continue;
             }
-            $criteriaGroups[$title][] = $row;
+            $deliverableTitle = $hasDeliverableCol ? trim($row['deliverable_title'] ?? '') : '';
+            $deliverableTitle = $deliverableTitle ?: 'General';
+            $deliverableGroups[$deliverableTitle][$criterionTitle][] = $row;
         }
 
-        if (empty($criteriaGroups)) {
+        if (empty($deliverableGroups)) {
             Notification::make()
                 ->title('No valid criteria found in CSV.')
                 ->warning()
@@ -156,47 +158,75 @@ class ListRubricTemplates extends ListRecords
             ]);
 
             $totalMarks = 0;
+            $deliverableSortOrder = 0;
 
-            foreach ($criteriaGroups as $title => $levelRows) {
-                $firstRow = $levelRows[0];
-                $maxScore = (float) ($firstRow['max_score'] ?? 0);
-                $isIndividual = filter_var($firstRow['is_individual'] ?? false, FILTER_VALIDATE_BOOLEAN);
-                $description = trim($firstRow['criterion_description'] ?? '');
+            foreach ($deliverableGroups as $deliverableTitle => $criteriaGroups) {
+                // Infer max_marks from the first row that has deliverable_max_marks, or sum criteria
+                $firstRow = reset(reset($criteriaGroups));
+                $deliverableMaxMarks = $hasDeliverableCol
+                    ? (float) ($firstRow['deliverable_max_marks'] ?? 0)
+                    : 0;
 
-                $criterion = $rubricTemplate->criteria()->create([
-                    'title' => $title,
-                    'description' => $description ?: null,
-                    'max_score' => $maxScore,
-                    'is_individual' => $isIndividual,
+                $deliverable = $rubricTemplate->deliverables()->create([
+                    'title' => $deliverableTitle,
+                    'max_marks' => $deliverableMaxMarks,
+                    'sort_order' => $deliverableSortOrder++,
                 ]);
 
-                $totalMarks += $maxScore;
+                $criterionSortOrder = 0;
+                $deliverableTotal = 0;
 
-                $sortOrder = 0;
-                foreach ($levelRows as $levelRow) {
-                    $levelLabel = trim($levelRow['level_label'] ?? '');
-                    if (empty($levelLabel)) {
-                        continue;
-                    }
+                foreach ($criteriaGroups as $criterionTitle => $levelRows) {
+                    $firstCriterionRow = $levelRows[0];
+                    $maxScore = (float) ($firstCriterionRow['max_score'] ?? 0);
+                    $isIndividual = filter_var($firstCriterionRow['is_individual'] ?? false, FILTER_VALIDATE_BOOLEAN);
+                    $description = trim($firstCriterionRow['criterion_description'] ?? '');
 
-                    $criterion->scoreLevels()->create([
-                        'label' => $levelLabel,
-                        'score_value' => (float) ($levelRow['level_score'] ?? 0),
-                        'description' => trim($levelRow['level_description'] ?? '') ?: null,
-                        'sort_order' => $sortOrder++,
+                    $criterion = $deliverable->criteria()->create([
+                        'rubric_template_id' => $rubricTemplate->id,
+                        'title' => $criterionTitle,
+                        'description' => $description ?: null,
+                        'max_score' => $maxScore,
+                        'is_individual' => $isIndividual,
+                        'sort_order' => $criterionSortOrder++,
                     ]);
+
+                    $deliverableTotal += $maxScore;
+                    $levelSortOrder = 0;
+
+                    foreach ($levelRows as $levelRow) {
+                        $levelLabel = trim($levelRow['level_label'] ?? '');
+                        if (empty($levelLabel)) {
+                            continue;
+                        }
+
+                        $criterion->scoreLevels()->create([
+                            'label' => $levelLabel,
+                            'score_value' => (float) ($levelRow['level_score'] ?? 0),
+                            'description' => trim($levelRow['level_description'] ?? '') ?: null,
+                            'percentage_range' => trim($levelRow['level_percentage'] ?? '') ?: null,
+                            'sort_order' => $levelSortOrder++,
+                        ]);
+                    }
                 }
+
+                // If deliverable_max_marks was not provided, derive it from criteria
+                if ($deliverableMaxMarks == 0) {
+                    $deliverable->update(['max_marks' => $deliverableTotal]);
+                }
+
+                $totalMarks += $deliverableTotal;
             }
 
             $rubricTemplate->update(['total_marks' => $totalMarks]);
 
             DB::commit();
 
-            // Clean up file
             @unlink($filePath);
 
+            $criteriaCount = array_sum(array_map('count', $deliverableGroups));
             Notification::make()
-                ->title("Rubric template '{$rubricName}' imported with " . count($criteriaGroups) . ' criteria.')
+                ->title("Rubric '{$rubricName}' imported: " . count($deliverableGroups) . ' deliverable(s), ' . $criteriaCount . ' criteria.')
                 ->success()
                 ->send();
         } catch (\Exception $e) {
@@ -212,14 +242,19 @@ class ListRubricTemplates extends ListRecords
     {
         return response()->streamDownload(function () {
             $file = fopen('php://output', 'w');
-            fputcsv($file, ['criterion_title', 'criterion_description', 'max_score', 'is_individual', 'level_label', 'level_score', 'level_description']);
-            fputcsv($file, ['Literature Review', 'Evaluate quality of literature review', '5', 'false', 'Excellent', '5', 'Outstanding work']);
-            fputcsv($file, ['Literature Review', 'Evaluate quality of literature review', '5', 'false', 'Very Good', '4', 'Above average']);
-            fputcsv($file, ['Literature Review', 'Evaluate quality of literature review', '5', 'false', 'Good', '3', 'Meets expectations']);
-            fputcsv($file, ['Report', 'Evaluate report quality', '5', 'false', 'Excellent', '5', 'Outstanding report']);
-            fputcsv($file, ['Report', 'Evaluate report quality', '5', 'false', 'Good', '3', 'Acceptable report']);
-            fputcsv($file, ['Presentation', '', '5', 'true', 'Excellent', '5', '']);
-            fputcsv($file, ['Presentation', '', '5', 'true', 'Good', '3', '']);
+            fputcsv($file, [
+                'deliverable_title', 'deliverable_max_marks',
+                'criterion_title', 'criterion_description', 'max_score', 'is_individual',
+                'level_label', 'level_score', 'level_percentage', 'level_description',
+            ]);
+            // Deliverable 1: Project Analysis
+            fputcsv($file, ['Project Analysis', '10', 'Literature Review', 'Quality of literature review', '5', 'false', 'Excellent', '5', '90-100%', 'Outstanding']);
+            fputcsv($file, ['Project Analysis', '10', 'Literature Review', 'Quality of literature review', '5', 'false', 'Good', '3', '70-80%', 'Meets expectations']);
+            fputcsv($file, ['Project Analysis', '10', 'Problem Statement', 'Clarity of problem statement', '5', 'false', 'Excellent', '5', '90-100%', 'Very clear']);
+            fputcsv($file, ['Project Analysis', '10', 'Problem Statement', 'Clarity of problem statement', '5', 'false', 'Good', '3', '70-80%', 'Acceptable']);
+            // Deliverable 2: Presentation (individual)
+            fputcsv($file, ['Presentation', '5', 'Oral Delivery', '', '5', 'true', 'Excellent', '5', '90-100%', '']);
+            fputcsv($file, ['Presentation', '5', 'Oral Delivery', '', '5', 'true', 'Good', '3', '70-80%', '']);
             fclose($file);
         }, 'rubric_import_template.csv');
     }

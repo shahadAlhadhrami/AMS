@@ -145,6 +145,7 @@ class ProjectResource extends Resource
                     ->label('Supervisor'),
             ])
             ->actions([
+                Actions\ViewAction::make(),
                 Actions\EditAction::make(),
                 Actions\DeleteAction::make()
                     ->hidden(fn (Project $record): bool => $record->status !== 'setup'),
@@ -169,6 +170,7 @@ class ProjectResource extends Resource
         return [
             'index' => Pages\ListProjects::route('/'),
             'create' => Pages\CreateProject::route('/create'),
+            'view' => Pages\ViewProject::route('/{record}'),
             'edit' => Pages\EditProject::route('/{record}/edit'),
         ];
     }

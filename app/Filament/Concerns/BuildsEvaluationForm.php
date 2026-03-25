@@ -3,6 +3,7 @@
 namespace App\Filament\Concerns;
 
 use App\Models\Criterion;
+use App\Models\Deliverable;
 use Filament\Forms;
 use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Section;
@@ -15,28 +16,103 @@ trait BuildsEvaluationForm
     protected function buildFormSchema(): array
     {
         $schema = [];
-        $criteria = $this->evaluation->rubricTemplate->criteria->sortBy('id');
+        $rubricTemplate = $this->evaluation->rubricTemplate;
         $students = $this->evaluation->project->students;
         $isReadOnly = $this->evaluation->status === 'submitted';
 
-        // Group criteria section
+        $deliverables = $rubricTemplate->deliverables()->with(['criteria.scoreLevels'])->get();
+
+        if ($deliverables->isNotEmpty()) {
+            // New structure: group by Deliverable > Group/Individual Criteria
+            foreach ($deliverables as $deliverable) {
+                $deliverableSchema = $this->buildDeliverableSchema($deliverable, $students, $isReadOnly);
+
+                if (! empty($deliverableSchema)) {
+                    $schema[] = Section::make("{$deliverable->title} ({$deliverable->max_marks} marks)")
+                        ->schema($deliverableSchema)
+                        ->collapsible();
+                }
+            }
+        }
+
+        // Fallback: criteria not linked to any deliverable (backward compat)
+        $orphanCriteria = $rubricTemplate->criteria()
+            ->whereNull('deliverable_id')
+            ->with('scoreLevels')
+            ->orderBy('id')
+            ->get();
+
+        if ($orphanCriteria->isNotEmpty()) {
+            $groupCriteria = $orphanCriteria->where('is_individual', false);
+            $individualCriteria = $orphanCriteria->where('is_individual', true);
+
+            $fallbackSchema = [];
+
+            if ($groupCriteria->isNotEmpty()) {
+                $fallbackSchema[] = Section::make('Group Criteria')
+                    ->description('These criteria are scored once for the entire group.')
+                    ->schema(
+                        $groupCriteria->flatMap(fn (Criterion $criterion) => $this->buildCriterionFields($criterion, null, $isReadOnly)
+                        )->toArray()
+                    );
+            }
+
+            if ($individualCriteria->isNotEmpty()) {
+                $fallbackSchema[] = Section::make('Individual Criteria')
+                    ->description('These criteria are scored individually for each student.')
+                    ->schema(
+                        $individualCriteria->map(fn (Criterion $criterion) => Section::make($criterion->title.' ('.$criterion->max_score.' marks)')
+                            ->description($criterion->description)
+                            ->schema(
+                                $students->map(fn ($student) => Fieldset::make($student->name.' ('.$student->university_id.')')
+                                    ->schema(
+                                        $this->buildCriterionFields($criterion, $student->id, $isReadOnly)
+                                    )
+                                )->toArray()
+                            )
+                            ->collapsible()
+                        )->toArray()
+                    );
+            }
+
+            if (! empty($fallbackSchema)) {
+                $schema[] = Section::make('General')->schema($fallbackSchema)->collapsible();
+            }
+        }
+
+        // General feedback
+        $schema[] = Forms\Components\Textarea::make('general_feedback')
+            ->label('General Feedback')
+            ->rows(4)
+            ->disabled($isReadOnly)
+            ->columnSpanFull();
+
+        return $schema;
+    }
+
+    /**
+     * Build the schema for a single deliverable (group + individual sections).
+     */
+    protected function buildDeliverableSchema(Deliverable $deliverable, $students, bool $isReadOnly): array
+    {
+        $criteria = $deliverable->criteria;
+        $schema = [];
+
         $groupCriteria = $criteria->where('is_individual', false);
+        $individualCriteria = $criteria->where('is_individual', true);
 
         if ($groupCriteria->isNotEmpty()) {
             $schema[] = Section::make('Group Criteria')
-                ->description('These criteria are scored once for the entire group.')
+                ->description('Scored once for the entire group.')
                 ->schema(
                     $groupCriteria->flatMap(fn (Criterion $criterion) => $this->buildCriterionFields($criterion, null, $isReadOnly)
                     )->toArray()
                 );
         }
 
-        // Individual criteria section
-        $individualCriteria = $criteria->where('is_individual', true);
-
         if ($individualCriteria->isNotEmpty()) {
             $schema[] = Section::make('Individual Criteria')
-                ->description('These criteria are scored individually for each student.')
+                ->description('Scored individually for each student.')
                 ->schema(
                     $individualCriteria->map(fn (Criterion $criterion) => Section::make($criterion->title.' ('.$criterion->max_score.' marks)')
                         ->description($criterion->description)
@@ -51,13 +127,6 @@ trait BuildsEvaluationForm
                     )->toArray()
                 );
         }
-
-        // General feedback
-        $schema[] = Forms\Components\Textarea::make('general_feedback')
-            ->label('General Feedback')
-            ->rows(4)
-            ->disabled($isReadOnly)
-            ->columnSpanFull();
 
         return $schema;
     }
@@ -81,7 +150,7 @@ trait BuildsEvaluationForm
                 ->label('Score Level')
                 ->options(
                     $scoreLevels->mapWithKeys(fn ($level) => [
-                        $level->id => "{$level->label} ({$level->score_value})",
+                        $level->id => "{$level->label} ({$level->score_value})" . ($level->percentage_range ? " [{$level->percentage_range}]" : ''),
                     ])
                 )
                 ->placeholder('Select or enter manual score')

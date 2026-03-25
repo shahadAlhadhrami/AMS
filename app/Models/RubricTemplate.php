@@ -44,6 +44,11 @@ class RubricTemplate extends Model
         return $this->hasMany(RubricTemplate::class, 'parent_template_id');
     }
 
+    public function deliverables(): HasMany
+    {
+        return $this->hasMany(Deliverable::class)->orderBy('sort_order');
+    }
+
     public function criteria(): HasMany
     {
         return $this->hasMany(Criterion::class);

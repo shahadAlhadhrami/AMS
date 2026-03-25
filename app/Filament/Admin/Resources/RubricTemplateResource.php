@@ -121,12 +121,43 @@ class RubricTemplateResource extends Resource
             'created_by' => auth()->id(),
         ]);
 
-        foreach ($original->criteria as $criterion) {
+        foreach ($original->deliverables as $deliverable) {
+            $newDeliverable = $newTemplate->deliverables()->create([
+                'title' => $deliverable->title,
+                'max_marks' => $deliverable->max_marks,
+                'sort_order' => $deliverable->sort_order,
+            ]);
+
+            foreach ($deliverable->criteria as $criterion) {
+                $newCriterion = $newDeliverable->criteria()->create([
+                    'rubric_template_id' => $newTemplate->id,
+                    'title' => $criterion->title,
+                    'description' => $criterion->description,
+                    'max_score' => $criterion->max_score,
+                    'is_individual' => $criterion->is_individual,
+                    'sort_order' => $criterion->sort_order,
+                ]);
+
+                foreach ($criterion->scoreLevels as $scoreLevel) {
+                    $newCriterion->scoreLevels()->create([
+                        'label' => $scoreLevel->label,
+                        'score_value' => $scoreLevel->score_value,
+                        'description' => $scoreLevel->description,
+                        'percentage_range' => $scoreLevel->percentage_range,
+                        'sort_order' => $scoreLevel->sort_order,
+                    ]);
+                }
+            }
+        }
+
+        // Clone any orphan criteria (no deliverable) for backward compatibility
+        foreach ($original->criteria()->whereNull('deliverable_id')->get() as $criterion) {
             $newCriterion = $newTemplate->criteria()->create([
                 'title' => $criterion->title,
                 'description' => $criterion->description,
                 'max_score' => $criterion->max_score,
                 'is_individual' => $criterion->is_individual,
+                'sort_order' => $criterion->sort_order,
             ]);
 
             foreach ($criterion->scoreLevels as $scoreLevel) {
@@ -134,6 +165,7 @@ class RubricTemplateResource extends Resource
                     'label' => $scoreLevel->label,
                     'score_value' => $scoreLevel->score_value,
                     'description' => $scoreLevel->description,
+                    'percentage_range' => $scoreLevel->percentage_range,
                     'sort_order' => $scoreLevel->sort_order,
                 ]);
             }
@@ -145,7 +177,7 @@ class RubricTemplateResource extends Resource
     public static function getRelations(): array
     {
         return [
-            RelationManagers\CriteriaRelationManager::class,
+            RelationManagers\DeliverablesRelationManager::class,
         ];
     }
 
