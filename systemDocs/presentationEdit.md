@@ -27,7 +27,7 @@ Thank you for your time and attention.
 
 
 regarding the objecteves:
-we have listed different ones in the project proposal:
+we have listed different ones in the project proposal :
 1-To create secure login interfaces for all assessors.
 
 2-To enable entry of marks for Proposal, First Review, Second Review, and Final Review.
