@@ -26,3 +26,16 @@ We believe this system can make the assessment process more efficient and reliab
 Thank you for your time and attention.
 
 
+regarding the objecteves:
+we have lested defrent ones in the project proposal:
+1-To create secure login interfaces for all assessors.
+
+2-To enable entry of marks for Proposal, First Review, Second Review, and Final Review.
+
+3-To consolidate all assessment marks automatically.
+
+4-To enforce CIA (Confidentiality, Integrity, Availability) principles in system architecture and data handling.
+
+5-To generate secure, auditable reports for academic records.
+
+7- (i need you to find me another one more objecteve regarding/about the Coordinator)
