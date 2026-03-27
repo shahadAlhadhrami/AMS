@@ -8,6 +8,7 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Auth\MultiFactor\AppAuthentication\AppAuthentication;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -29,6 +30,9 @@ class StudentPanelProvider extends PanelProvider
             ->login()
             ->passwordReset()
             ->profile()
+            ->multiFactorAuthentication([
+                AppAuthentication::make()->recoverable(),
+            ])
             ->viteTheme('resources/css/filament/student/theme.css')
             ->brandName('AMS')
             ->brandLogo(new HtmlString('<style>@import url("https://fonts.googleapis.com/css2?family=Anta&display=swap");</style><div style="width:100%; text-align:center;"><span style="font-family: \'Anta\', sans-serif; font-weight:400; letter-spacing:0.08em; font-size:2.5rem; line-height:1; color:#d97706;">AMS</span></div>'))
