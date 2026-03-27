@@ -84,10 +84,6 @@ class UserResource extends Resource
                     ->searchable()
                     ->preload()
                     ->nullable(),
-                Forms\Components\Toggle::make('is_approved')
-                    ->label('Account Approved')
-                    ->default(true)
-                    ->visible(fn () => auth()->user()?->hasRole('Super Admin')),
                 Forms\Components\CheckboxList::make('roles')
                     ->relationship('roles', 'name')
                     ->options(function () {
@@ -121,13 +117,6 @@ class UserResource extends Resource
                     ->badge(),
                 Tables\Columns\TextColumn::make('specialization.name')
                     ->sortable(),
-                Tables\Columns\IconColumn::make('is_approved')
-                    ->label('Approved')
-                    ->boolean()
-                    ->trueIcon('heroicon-o-check-circle')
-                    ->falseIcon('heroicon-o-clock')
-                    ->trueColor('success')
-                    ->falseColor('warning'),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('roles')
@@ -137,10 +126,6 @@ class UserResource extends Resource
                 Tables\Filters\SelectFilter::make('specialization_id')
                     ->relationship('specialization', 'name')
                     ->label('Specialization'),
-                Tables\Filters\TernaryFilter::make('is_approved')
-                    ->label('Approval Status')
-                    ->trueLabel('Approved')
-                    ->falseLabel('Pending'),
             ])
             ->actions([
                 Actions\Action::make('approve')
