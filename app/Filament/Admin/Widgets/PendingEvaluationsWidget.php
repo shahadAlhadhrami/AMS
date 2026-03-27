@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class PendingEvaluationsWidget extends StatsOverviewWidget
 {
+    protected static ?int $sort = 2;
+
     protected function getStats(): array
     {
         $baseQuery = Evaluation::query()
@@ -37,5 +39,10 @@ class PendingEvaluationsWidget extends StatsOverviewWidget
                 ->icon('heroicon-o-check-circle')
                 ->color('success'),
         ];
+    }
+
+    public static function canView(): bool
+    {
+        return auth()->user()?->hasAnyRole(['Super Admin', 'Coordinator']) ?? false;
     }
 }
