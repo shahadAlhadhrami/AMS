@@ -26,11 +26,8 @@ class Dashboard extends Page
         $widgets = [];
         $user = auth()->user();
 
-        if ($user->hasRole('Supervisor')) {
+        if ($user->hasRole('Reviewer/Supervisor')) {
             $widgets[] = \App\Filament\Staff\Widgets\SupervisedProjectsWidget::class;
-        }
-
-        if ($user->hasRole('Reviewer')) {
             $widgets[] = \App\Filament\Staff\Widgets\ReviewAssignmentsWidget::class;
         }
 

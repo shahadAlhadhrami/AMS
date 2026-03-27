@@ -15,7 +15,7 @@ class ReviewAssignmentsWidget extends TableWidget
 
     public static function canView(): bool
     {
-        return auth()->user()->hasRole('Reviewer');
+        return auth()->user()->hasRole('Reviewer/Supervisor');
     }
 
     public function table(Table $table): Table
