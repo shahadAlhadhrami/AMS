@@ -28,6 +28,11 @@ class EnsurePanelAccess
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
+            // Give a specific message if they have the coordinator role but not yet approved
+            if ($user->hasRole('Coordinator') && ! $user->is_approved) {
+                session()->flash('status', 'Your account is pending approval by a Super Administrator. You will be notified once it is activated.');
+            }
+
             return redirect($panel->getLoginUrl());
         }
 
