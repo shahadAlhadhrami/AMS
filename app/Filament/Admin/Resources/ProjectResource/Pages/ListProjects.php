@@ -168,8 +168,8 @@ class ListProjects extends ListRecords
             $supervisor = $supervisorUid ? User::where('university_id', $supervisorUid)->first() : null;
             if (! $supervisor) {
                 $rowErrors[] = "Supervisor with university_id '{$supervisorUid}' not found";
-            } elseif (! $supervisor->hasRole('Supervisor')) {
-                $rowErrors[] = "User '{$supervisorUid}' does not have the Supervisor role";
+            } elseif (! $supervisor->hasRole('Reviewer/Supervisor')) {
+                $rowErrors[] = "User '{$supervisorUid}' does not have the Reviewer/Supervisor role";
             }
 
             // Resolve students
@@ -221,8 +221,8 @@ class ListProjects extends ListRecords
                 $reviewer = User::where('university_id', $uid)->first();
                 if (! $reviewer) {
                     $rowErrors[] = "Reviewer with university_id '{$uid}' not found";
-                } elseif (! $reviewer->hasRole('Reviewer')) {
-                    $rowErrors[] = "User '{$uid}' does not have the Reviewer role";
+                } elseif (! $reviewer->hasRole('Reviewer/Supervisor')) {
+                    $rowErrors[] = "User '{$uid}' does not have the Reviewer/Supervisor role";
                 } else {
                     $reviewerIds[] = $reviewer->id;
 
