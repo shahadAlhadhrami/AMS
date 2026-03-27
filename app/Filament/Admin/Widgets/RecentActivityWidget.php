@@ -9,6 +9,8 @@ use Spatie\Activitylog\Models\Activity;
 
 class RecentActivityWidget extends BaseWidget
 {
+    protected static ?int $sort = 6;
+
     protected static ?string $heading = 'Recent Activity';
 
     protected int|string|array $columnSpan = 'full';
@@ -33,5 +35,10 @@ class RecentActivityWidget extends BaseWidget
                     ->sortable(),
             ])
             ->paginated(false);
+    }
+
+    public static function canView(): bool
+    {
+        return auth()->user()?->hasRole('Super Admin') ?? false;
     }
 }

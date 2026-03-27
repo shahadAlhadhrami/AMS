@@ -27,6 +27,10 @@ class ListUsers extends ListRecords
 
     public function getTabs(): array
     {
+        if (! auth()->user()?->hasRole('Super Admin')) {
+            return [];
+        }
+
         $pendingCount = User::where('is_approved', false)->count();
 
         return [

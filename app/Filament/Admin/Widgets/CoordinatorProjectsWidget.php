@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class CoordinatorProjectsWidget extends BaseWidget
 {
+    protected static ?int $sort = 5;
+
     protected static ?string $heading = 'My Active Projects';
 
     protected int|string|array $columnSpan = 'full';
@@ -54,12 +56,17 @@ class CoordinatorProjectsWidget extends BaseWidget
                     ->alignCenter(),
             ])
             ->actions([
-                Tables\Actions\Action::make('view')
+                \Filament\Actions\Action::make('view')
                     ->label('View')
                     ->icon('heroicon-o-eye')
                     ->url(fn (Project $record): string => \App\Filament\Admin\Resources\ProjectResource::getUrl('view', ['record' => $record])),
             ])
             ->paginated([10, 25])
             ->defaultSort('status');
+    }
+
+    public static function canView(): bool
+    {
+        return auth()->user()?->hasAnyRole(['Super Admin', 'Coordinator']) ?? false;
     }
 }
