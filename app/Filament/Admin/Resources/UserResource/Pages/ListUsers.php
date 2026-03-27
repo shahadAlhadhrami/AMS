@@ -43,9 +43,6 @@ class ListUsers extends ListRecords
                 ->badgeColor('danger')
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('is_approved', false)),
 
-            'approved' => Tab::make('Approved')
-                ->icon('heroicon-o-check-circle')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('is_approved', true)),
         ];
     }
 }
