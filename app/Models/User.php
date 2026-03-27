@@ -28,6 +28,7 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
         'name',
         'email',
         'password',
+        'is_approved',
         'specialization_id',
     ];
 
@@ -43,11 +44,16 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_approved' => 'boolean',
         ];
     }
 
     public function canAccessPanel(Panel $panel): bool
     {
+        if (! $this->is_approved) {
+            return false;
+        }
+
         return match ($panel->getId()) {
             'admin' => $this->hasAnyRole(['Super Admin', 'Coordinator']),
             'staff' => $this->hasAnyRole(['Supervisor', 'Reviewer']),

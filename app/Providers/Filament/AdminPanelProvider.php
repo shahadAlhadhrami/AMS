@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Admin\Pages\CoordinatorRegistration;
 use App\Http\Middleware\EnsurePanelAccess;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Illuminate\Support\HtmlString;
@@ -30,12 +31,14 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->login()
+            ->registration(CoordinatorRegistration::class)
             ->passwordReset()
             ->profile()
             ->multiFactorAuthentication([
                 AppAuthentication::make()->recoverable(),
             ])
-            ->brandName(new HtmlString('<style>@import url("https://fonts.googleapis.com/css2?family=Anta&display=swap");</style><div style="width:100%; text-align:center;"><span style="font-family: \'Anta\', sans-serif; font-weight:400; letter-spacing:0.08em; font-size:2.5rem; line-height:1; color:#2563eb;">AMS</span></div>'))
+            ->brandName('AMS')
+            ->brandLogo(new HtmlString('<style>@import url("https://fonts.googleapis.com/css2?family=Anta&display=swap");</style><div style="width:100%; text-align:center;"><span style="font-family: \'Anta\', sans-serif; font-weight:400; letter-spacing:0.08em; font-size:2.5rem; line-height:1; color:#2563eb;">AMS</span></div>'))
             ->colors([
                 'primary' => Color::Blue,
             ])

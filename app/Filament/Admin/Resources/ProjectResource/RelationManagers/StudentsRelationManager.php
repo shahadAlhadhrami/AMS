@@ -18,6 +18,7 @@ class StudentsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            ->inverseRelationship('studentProjects')
             ->columns([
                 Tables\Columns\TextColumn::make('university_id')
                     ->searchable(),

@@ -16,6 +16,7 @@ class ReviewersRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            ->inverseRelationship('reviewedProjects')
             ->columns([
                 Tables\Columns\TextColumn::make('university_id')
                     ->searchable(),

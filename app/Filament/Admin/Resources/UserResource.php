@@ -22,6 +22,25 @@ class UserResource extends Resource
 
     protected static ?int $navigationSort = 1;
 
+    public static function getNavigationBadge(): ?string
+    {
+        $count = User::where('is_approved', false)->count();
+
+        return $count > 0 ? (string) $count : null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return User::where('is_approved', false)->exists() ? 'danger' : null;
+    }
+
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        $count = User::where('is_approved', false)->count();
+
+        return $count > 0 ? "{$count} pending coordinator approval(s)" : null;
+    }
+
     public static function form(Schema $form): Schema
     {
         return $form
@@ -53,6 +72,10 @@ class UserResource extends Resource
                     ->searchable()
                     ->preload()
                     ->nullable(),
+                Forms\Components\Toggle::make('is_approved')
+                    ->label('Account Approved')
+                    ->default(true)
+                    ->visible(fn () => auth()->user()?->hasRole('Super Admin')),
                 Forms\Components\CheckboxList::make('roles')
                     ->relationship('roles', 'name')
                     ->options(function () {
@@ -86,6 +109,13 @@ class UserResource extends Resource
                     ->badge(),
                 Tables\Columns\TextColumn::make('specialization.name')
                     ->sortable(),
+                Tables\Columns\IconColumn::make('is_approved')
+                    ->label('Approved')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->falseIcon('heroicon-o-clock')
+                    ->trueColor('success')
+                    ->falseColor('warning'),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('roles')
@@ -95,8 +125,49 @@ class UserResource extends Resource
                 Tables\Filters\SelectFilter::make('specialization_id')
                     ->relationship('specialization', 'name')
                     ->label('Specialization'),
+                Tables\Filters\TernaryFilter::make('is_approved')
+                    ->label('Approval Status')
+                    ->trueLabel('Approved')
+                    ->falseLabel('Pending'),
             ])
             ->actions([
+                Actions\Action::make('approve')
+                    ->label('Approve')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->modalHeading('Approve Coordinator')
+                    ->modalDescription('Are you sure you want to approve this coordinator account? They will be able to log in immediately.')
+                    ->modalSubmitActionLabel('Yes, Approve')
+                    ->visible(fn (User $record): bool => ! $record->is_approved)
+                    ->action(function (User $record): void {
+                        $record->update(['is_approved' => true]);
+
+                        \Filament\Notifications\Notification::make()
+                            ->title('Coordinator Approved')
+                            ->body("{$record->name} can now log in to the system.")
+                            ->success()
+                            ->send();
+                    }),
+                Actions\Action::make('reject')
+                    ->label('Reject')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalHeading('Reject & Delete Account')
+                    ->modalDescription('This will permanently delete this coordinator\'s registration. This action cannot be undone.')
+                    ->modalSubmitActionLabel('Yes, Reject & Delete')
+                    ->visible(fn (User $record): bool => ! $record->is_approved)
+                    ->action(function (User $record): void {
+                        $name = $record->name;
+                        $record->forceDelete();
+
+                        \Filament\Notifications\Notification::make()
+                            ->title('Registration Rejected')
+                            ->body("{$name}'s registration has been removed.")
+                            ->danger()
+                            ->send();
+                    }),
                 Actions\EditAction::make(),
                 Actions\DeleteAction::make(),
             ])
@@ -110,9 +181,9 @@ class UserResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListUsers::route('/'),
+            'index'  => Pages\ListUsers::route('/'),
             'create' => Pages\CreateUser::route('/create'),
-            'edit' => Pages\EditUser::route('/{record}/edit'),
+            'edit'   => Pages\EditUser::route('/{record}/edit'),
         ];
     }
 }
