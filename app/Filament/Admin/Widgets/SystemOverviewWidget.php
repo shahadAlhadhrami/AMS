@@ -26,7 +26,7 @@ class SystemOverviewWidget extends StatsOverviewWidget
             Stat::make('Total Users', $totalUsers)
                 ->description(
                     'Students: ' . User::role('Student')->count()
-                    . '  |  Staff: ' . (User::role('Supervisor')->count() + User::role('Reviewer')->count())
+                    . '  |  Staff: ' . User::role('Reviewer/Supervisor')->count()
                 )
                 ->icon('heroicon-o-users')
                 ->color('primary'),
