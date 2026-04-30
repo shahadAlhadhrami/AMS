@@ -15,7 +15,7 @@ class SupervisedProjectsWidget extends TableWidget
 
     public static function canView(): bool
     {
-        return auth()->user()->hasRole('Supervisor');
+        return auth()->user()->hasRole('Reviewer/Supervisor');
     }
 
     public function table(Table $table): Table

@@ -69,7 +69,7 @@ class ProjectResource extends Resource
                 Forms\Components\Select::make('supervisor_id')
                     ->label('Supervisor')
                     ->options(function () {
-                        return User::role('Supervisor')->get()
+                        return User::role('Reviewer/Supervisor')->get()
                             ->mapWithKeys(fn (User $user) => [
                                 $user->id => "{$user->name} ({$user->university_id})",
                             ]);

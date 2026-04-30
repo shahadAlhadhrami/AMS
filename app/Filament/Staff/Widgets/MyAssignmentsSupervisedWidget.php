@@ -1,33 +1,20 @@
 <?php
 
-namespace App\Filament\Staff\Pages;
+namespace App\Filament\Staff\Widgets;
 
+use App\Filament\Staff\Pages\EvaluationForm;
+use App\Filament\Staff\Pages\ProjectDetail;
 use App\Models\Project;
 use Filament\Actions;
-use Filament\Pages\Page;
 use Filament\Tables;
-use Filament\Tables\Concerns\InteractsWithTable;
-use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
+use Filament\Widgets\TableWidget;
 
-class MySupervisedProjects extends Page implements HasTable
+class MyAssignmentsSupervisedWidget extends TableWidget
 {
-    use InteractsWithTable;
+    protected static ?string $heading = 'Projects I am Supervising';
 
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-academic-cap';
-
-    protected static ?string $navigationLabel = 'My Supervised Projects';
-
-    protected static string|\UnitEnum|null $navigationGroup = 'Supervision';
-
-    protected static ?int $navigationSort = 1;
-
-    protected string $view = 'filament.staff.pages.my-supervised-projects';
-
-    public static function canAccess(): bool
-    {
-        return auth()->user()->hasRole('Supervisor');
-    }
+    protected int|string|array $columnSpan = 'full';
 
     public function table(Table $table): Table
     {
@@ -62,10 +49,10 @@ class MySupervisedProjects extends Page implements HasTable
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'setup' => 'gray',
-                        'evaluating' => 'warning',
-                        'completed' => 'success',
-                        default => 'gray',
+                        'setup'       => 'gray',
+                        'evaluating'  => 'warning',
+                        'completed'   => 'success',
+                        default       => 'gray',
                     }),
                 Tables\Columns\TextColumn::make('evaluation_progress')
                     ->label('Progress')
@@ -74,9 +61,9 @@ class MySupervisedProjects extends Page implements HasTable
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
-                        'setup' => 'Setup',
+                        'setup'      => 'Setup',
                         'evaluating' => 'Evaluating',
-                        'completed' => 'Completed',
+                        'completed'  => 'Completed',
                     ]),
             ])
             ->actions([

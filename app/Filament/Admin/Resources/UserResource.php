@@ -24,6 +24,10 @@ class UserResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
+        if (! auth()->user()?->hasRole('Super Admin')) {
+            return null;
+        }
+
         $count = User::where('is_approved', false)->count();
 
         return $count > 0 ? (string) $count : null;
@@ -31,11 +35,19 @@ class UserResource extends Resource
 
     public static function getNavigationBadgeColor(): ?string
     {
+        if (! auth()->user()?->hasRole('Super Admin')) {
+            return null;
+        }
+
         return User::where('is_approved', false)->exists() ? 'danger' : null;
     }
 
     public static function getNavigationBadgeTooltip(): ?string
     {
+        if (! auth()->user()?->hasRole('Super Admin')) {
+            return null;
+        }
+
         $count = User::where('is_approved', false)->count();
 
         return $count > 0 ? "{$count} pending coordinator approval(s)" : null;
@@ -72,10 +84,6 @@ class UserResource extends Resource
                     ->searchable()
                     ->preload()
                     ->nullable(),
-                Forms\Components\Toggle::make('is_approved')
-                    ->label('Account Approved')
-                    ->default(true)
-                    ->visible(fn () => auth()->user()?->hasRole('Super Admin')),
                 Forms\Components\CheckboxList::make('roles')
                     ->relationship('roles', 'name')
                     ->options(function () {
@@ -109,13 +117,6 @@ class UserResource extends Resource
                     ->badge(),
                 Tables\Columns\TextColumn::make('specialization.name')
                     ->sortable(),
-                Tables\Columns\IconColumn::make('is_approved')
-                    ->label('Approved')
-                    ->boolean()
-                    ->trueIcon('heroicon-o-check-circle')
-                    ->falseIcon('heroicon-o-clock')
-                    ->trueColor('success')
-                    ->falseColor('warning'),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('roles')
@@ -125,10 +126,6 @@ class UserResource extends Resource
                 Tables\Filters\SelectFilter::make('specialization_id')
                     ->relationship('specialization', 'name')
                     ->label('Specialization'),
-                Tables\Filters\TernaryFilter::make('is_approved')
-                    ->label('Approval Status')
-                    ->trueLabel('Approved')
-                    ->falseLabel('Pending'),
             ])
             ->actions([
                 Actions\Action::make('approve')
@@ -139,7 +136,7 @@ class UserResource extends Resource
                     ->modalHeading('Approve Coordinator')
                     ->modalDescription('Are you sure you want to approve this coordinator account? They will be able to log in immediately.')
                     ->modalSubmitActionLabel('Yes, Approve')
-                    ->visible(fn (User $record): bool => ! $record->is_approved)
+                    ->visible(fn (User $record): bool => ! $record->is_approved && auth()->user()?->hasRole('Super Admin'))
                     ->action(function (User $record): void {
                         $record->update(['is_approved' => true]);
 
@@ -157,7 +154,7 @@ class UserResource extends Resource
                     ->modalHeading('Reject & Delete Account')
                     ->modalDescription('This will permanently delete this coordinator\'s registration. This action cannot be undone.')
                     ->modalSubmitActionLabel('Yes, Reject & Delete')
-                    ->visible(fn (User $record): bool => ! $record->is_approved)
+                    ->visible(fn (User $record): bool => ! $record->is_approved && auth()->user()?->hasRole('Super Admin'))
                     ->action(function (User $record): void {
                         $name = $record->name;
                         $record->forceDelete();
@@ -185,5 +182,16 @@ class UserResource extends Resource
             'create' => Pages\CreateUser::route('/create'),
             'edit'   => Pages\EditUser::route('/{record}/edit'),
         ];
+    }
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        if (auth()->check() && ! auth()->user()->hasRole('Super Admin')) {
+            $query->where('is_approved', true);
+        }
+
+        return $query;
     }
 }

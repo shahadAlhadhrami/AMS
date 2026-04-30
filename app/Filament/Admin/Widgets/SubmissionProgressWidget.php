@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class SubmissionProgressWidget extends ChartWidget
 {
+    protected static ?int $sort = 4;
+
     protected ?string $heading = 'Submission Progress by Semester';
 
     protected int|string|array $columnSpan = 1;
@@ -55,5 +57,10 @@ class SubmissionProgressWidget extends ChartWidget
             ],
             'labels' => $labels,
         ];
+    }
+
+    public static function canView(): bool
+    {
+        return auth()->user()?->hasAnyRole(['Super Admin', 'Coordinator']) ?? false;
     }
 }

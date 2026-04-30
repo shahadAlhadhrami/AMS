@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class ProjectStatusWidget extends ChartWidget
 {
+    protected static ?int $sort = 3;
+
     protected ?string $heading = 'Project Status Distribution';
 
     protected int|string|array $columnSpan = 1;
@@ -46,5 +48,10 @@ class ProjectStatusWidget extends ChartWidget
             ],
             'labels' => ['Setup', 'Evaluating', 'Completed'],
         ];
+    }
+
+    public static function canView(): bool
+    {
+        return auth()->user()?->hasAnyRole(['Super Admin', 'Coordinator']) ?? false;
     }
 }

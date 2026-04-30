@@ -30,7 +30,7 @@ class ReviewersRelationManager extends RelationManager
                     ->recordSelectOptionsQuery(function (Builder $query) {
                         $supervisorId = $this->ownerRecord->supervisor_id;
 
-                        return $query->role('Reviewer')
+                        return $query->role('Reviewer/Supervisor')
                             ->when($supervisorId, fn (Builder $q) => $q->where('users.id', '!=', $supervisorId));
                     })
                     ->recordTitle(fn (User $record): string => "{$record->name} ({$record->university_id})")

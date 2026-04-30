@@ -44,7 +44,50 @@ We would like to extend our thanks to the following sponsors for funding Laravel
 
 ## Contributing
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Common Commands After Making Changes
+
+Quick reference for commands to run after different types of changes.
+
+### After changing a Blade / UI file
+```bash
+php artisan view:clear
+```
+> Clears cached compiled views so Laravel re-renders from the updated source file.
+
+### After changing any PHP file (config, routes, providers, etc.)
+```bash
+php artisan optimize:clear
+```
+> Clears all Laravel caches at once: config, routes, views, events, compiled files, and Filament cache.
+
+### After adding or changing Tailwind CSS classes in a Blade file
+```bash
+npm run build
+```
+> Recompiles CSS/JS assets. Required whenever you add new Tailwind utility classes that weren't previously in the compiled stylesheet.
+
+### After creating or modifying a migration file
+```bash
+php artisan migrate
+```
+> Runs any pending migrations against the database.
+
+### After modifying a seeder
+```bash
+php artisan db:seed
+# or to re-seed a specific seeder:
+php artisan db:seed --class=ExampleSeeder
+```
+
+### Nuclear option — something looks wrong and nothing else works
+```bash
+php artisan optimize:clear && npm run build
+```
+> Clears all server-side caches and rebuilds all frontend assets. Also do a hard browser refresh (`Cmd+Shift+R` / `Ctrl+Shift+R`) after this.
+
+---
+
+## Database Schema vs Migrations
 
 ## Code of Conduct
 

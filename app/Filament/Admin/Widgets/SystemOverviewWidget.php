@@ -11,6 +11,8 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class SystemOverviewWidget extends StatsOverviewWidget
 {
+    protected static ?int $sort = 1;
+
     protected function getStats(): array
     {
         $activeProjects = Project::whereHas('semester', fn ($q) => $q->where('is_active', true))->count();
@@ -24,7 +26,7 @@ class SystemOverviewWidget extends StatsOverviewWidget
             Stat::make('Total Users', $totalUsers)
                 ->description(
                     'Students: ' . User::role('Student')->count()
-                    . '  |  Staff: ' . (User::role('Supervisor')->count() + User::role('Reviewer')->count())
+                    . '  |  Staff: ' . User::role('Reviewer/Supervisor')->count()
                 )
                 ->icon('heroicon-o-users')
                 ->color('primary'),
@@ -39,5 +41,10 @@ class SystemOverviewWidget extends StatsOverviewWidget
                 ->icon('heroicon-o-clock')
                 ->color('danger'),
         ];
+    }
+
+    public static function canView(): bool
+    {
+        return auth()->user()?->hasRole('Super Admin') ?? false;
     }
 }

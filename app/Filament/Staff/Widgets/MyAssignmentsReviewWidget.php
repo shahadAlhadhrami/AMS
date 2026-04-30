@@ -1,34 +1,21 @@
 <?php
 
-namespace App\Filament\Staff\Pages;
+namespace App\Filament\Staff\Widgets;
 
+use App\Filament\Staff\Pages\EvaluationForm;
+use App\Filament\Staff\Pages\ProjectDetail;
 use App\Models\Evaluation;
 use App\Services\EvaluationService;
 use Filament\Actions;
-use Filament\Pages\Page;
 use Filament\Tables;
-use Filament\Tables\Concerns\InteractsWithTable;
-use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
+use Filament\Widgets\TableWidget;
 
-class MyReviewAssignments extends Page implements HasTable
+class MyAssignmentsReviewWidget extends TableWidget
 {
-    use InteractsWithTable;
+    protected static ?string $heading = 'My Review Assignments';
 
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-check';
-
-    protected static ?string $navigationLabel = 'My Review Assignments';
-
-    protected static string|\UnitEnum|null $navigationGroup = 'Reviews';
-
-    protected static ?int $navigationSort = 1;
-
-    protected string $view = 'filament.staff.pages.my-review-assignments';
-
-    public static function canAccess(): bool
-    {
-        return auth()->user()->hasRole('Reviewer');
-    }
+    protected int|string|array $columnSpan = 'full';
 
     public function table(Table $table): Table
     {
@@ -54,10 +41,10 @@ class MyReviewAssignments extends Page implements HasTable
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'pending' => 'warning',
-                        'draft' => 'info',
+                        'pending'   => 'warning',
+                        'draft'     => 'info',
                         'submitted' => 'success',
-                        default => 'gray',
+                        default     => 'gray',
                     }),
             ])
             ->actions([

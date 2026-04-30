@@ -1,36 +1,36 @@
 <x-filament-panels::page>
-    {{-- Project Info --}}
+    {{-- Project Information --}}
     <x-filament::section heading="Project Information">
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <div>
-                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Title</span>
-                <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ $this->project->title }}</p>
+        <dl class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div class="flex flex-col gap-1">
+                <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Title</dt>
+                <dd class="text-sm font-medium text-gray-900 dark:text-white">{{ $this->project->title }}</dd>
             </div>
-            <div>
-                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Course</span>
-                <p class="mt-1 text-sm text-gray-900 dark:text-white">
-                    {{ $this->project->course?->code }} - {{ $this->project->course?->title }}
-                </p>
+            <div class="flex flex-col gap-1">
+                <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Course</dt>
+                <dd class="text-sm font-medium text-gray-900 dark:text-white">
+                    {{ $this->project->course?->code }} — {{ $this->project->course?->title }}
+                </dd>
             </div>
-            <div>
-                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Semester</span>
-                <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ $this->project->semester?->name }}</p>
+            <div class="flex flex-col gap-1">
+                <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Semester</dt>
+                <dd class="text-sm font-medium text-gray-900 dark:text-white">{{ $this->project->semester?->name }}</dd>
             </div>
-            <div>
-                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Phase Template</span>
-                <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ $this->project->phaseTemplate?->name }}</p>
+            <div class="flex flex-col gap-1">
+                <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Phase Template</dt>
+                <dd class="text-sm font-medium text-gray-900 dark:text-white">{{ $this->project->phaseTemplate?->name }}</dd>
             </div>
-            <div>
-                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Specialization</span>
-                <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ $this->project->specialization?->name }}</p>
+            <div class="flex flex-col gap-1">
+                <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Specialization</dt>
+                <dd class="text-sm font-medium text-gray-900 dark:text-white">{{ $this->project->specialization?->name }}</dd>
             </div>
-            <div>
-                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Supervisor</span>
-                <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ $this->project->supervisor?->name }}</p>
+            <div class="flex flex-col gap-1">
+                <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Supervisor</dt>
+                <dd class="text-sm font-medium text-gray-900 dark:text-white">{{ $this->project->supervisor?->name }}</dd>
             </div>
-            <div>
-                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Status</span>
-                <p class="mt-1">
+            <div class="flex flex-col gap-1">
+                <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Status</dt>
+                <dd class="mt-1">
                     <x-filament::badge :color="match($this->project->status) {
                         'setup' => 'gray',
                         'evaluating' => 'warning',
@@ -39,27 +39,27 @@
                     }">
                         {{ ucfirst($this->project->status) }}
                     </x-filament::badge>
-                </p>
+                </dd>
             </div>
-        </div>
+        </dl>
     </x-filament::section>
 
     {{-- Team Members --}}
     <x-filament::section heading="Team Members">
         @if($this->project->students->isNotEmpty())
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm text-left">
-                    <thead class="text-xs uppercase text-gray-500 dark:text-gray-400 border-b dark:border-gray-700">
-                        <tr>
-                            <th class="px-4 py-3">Name</th>
-                            <th class="px-4 py-3">University ID</th>
+            <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Name</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">University ID</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                         @foreach($this->project->students as $student)
-                            <tr class="border-b dark:border-gray-700">
-                                <td class="px-4 py-3 text-gray-900 dark:text-white">{{ $student->name }}</td>
-                                <td class="px-4 py-3 text-gray-900 dark:text-white">{{ $student->university_id }}</td>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">{{ $student->name }}</td>
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ $student->university_id }}</td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -73,23 +73,23 @@
     {{-- Evaluation Status --}}
     <x-filament::section heading="Evaluation Status">
         @if($this->project->evaluations->isNotEmpty())
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm text-left">
-                    <thead class="text-xs uppercase text-gray-500 dark:text-gray-400 border-b dark:border-gray-700">
-                        <tr>
-                            <th class="px-4 py-3">Rubric</th>
-                            <th class="px-4 py-3">Evaluator</th>
-                            <th class="px-4 py-3">Role</th>
-                            <th class="px-4 py-3">Status</th>
+            <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Rubric</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Evaluator</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Role</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Status</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                         @foreach($this->project->evaluations as $evaluation)
-                            <tr class="border-b dark:border-gray-700">
-                                <td class="px-4 py-3 text-gray-900 dark:text-white">
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">
                                     {{ $evaluation->rubricTemplate?->name }}
                                 </td>
-                                <td class="px-4 py-3 text-gray-900 dark:text-white">
+                                <td class="px-4 py-3 text-gray-600 dark:text-gray-300">
                                     {{ $evaluation->evaluator?->name }}
                                 </td>
                                 <td class="px-4 py-3">
