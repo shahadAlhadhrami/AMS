@@ -17,6 +17,7 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Wizard;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\HtmlString;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -117,7 +118,7 @@ class SemesterSetupWizard extends Page
             ])
             ->columns(2)
             ->afterValidation(function () {
-                $state = $this->form->getState();
+                $state = $this->data;
 
                 if ($this->createdSemesterId) {
                     $semester = Semester::find($this->createdSemesterId);
@@ -148,7 +149,7 @@ class SemesterSetupWizard extends Page
                     }
                 }
 
-                Notification::make()
+                Log::info('Reached afterValidation!'); Notification::make()
                     ->title('Semester saved successfully.')
                     ->success()
                     ->send();
@@ -182,7 +183,7 @@ class SemesterSetupWizard extends Page
                     ->bulkToggleable(),
             ])
             ->afterValidation(function () {
-                $state = $this->form->getState();
+                $state = $this->data;
                 $this->selectedPhaseTemplateIds = $state['phase_template_ids'] ?? [];
             });
     }
@@ -264,12 +265,16 @@ class SemesterSetupWizard extends Page
                                 Forms\Components\Select::make('supervisor_id')
                                     ->label('Supervisor')
                                     ->options(function () {
-                                        return User::role('Supervisor')
-                                            ->orderBy('name')
-                                            ->get()
-                                            ->mapWithKeys(fn ($u) => [
-                                                $u->id => "{$u->name} ({$u->university_id})",
-                                            ]);
+                                        try {
+                                            return User::role('Supervisor')
+                                                ->orderBy('name')
+                                                ->get()
+                                                ->mapWithKeys(fn ($u) => [
+                                                    $u->id => "{$u->name} ({$u->university_id})",
+                                                ]);
+                                        } catch (\Spatie\Permission\Exceptions\RoleDoesNotExist $e) {
+                                            return [];
+                                        }
                                     })
                                     ->searchable()
                                     ->required(),
@@ -278,12 +283,16 @@ class SemesterSetupWizard extends Page
                                     ->label('Students')
                                     ->multiple()
                                     ->options(function () {
-                                        return User::role('Student')
-                                            ->orderBy('name')
-                                            ->get()
-                                            ->mapWithKeys(fn ($u) => [
-                                                $u->id => "{$u->name} ({$u->university_id})",
-                                            ]);
+                                        try {
+                                            return User::role('Student')
+                                                ->orderBy('name')
+                                                ->get()
+                                                ->mapWithKeys(fn ($u) => [
+                                                    $u->id => "{$u->name} ({$u->university_id})",
+                                                ]);
+                                        } catch (\Spatie\Permission\Exceptions\RoleDoesNotExist $e) {
+                                            return [];
+                                        }
                                     })
                                     ->searchable()
                                     ->maxItems(4),
@@ -292,12 +301,16 @@ class SemesterSetupWizard extends Page
                                     ->label('Reviewers')
                                     ->multiple()
                                     ->options(function () {
-                                        return User::role('Reviewer')
-                                            ->orderBy('name')
-                                            ->get()
-                                            ->mapWithKeys(fn ($u) => [
-                                                $u->id => "{$u->name} ({$u->university_id})",
-                                            ]);
+                                        try {
+                                            return User::role('Reviewer')
+                                                ->orderBy('name')
+                                                ->get()
+                                                ->mapWithKeys(fn ($u) => [
+                                                    $u->id => "{$u->name} ({$u->university_id})",
+                                                ]);
+                                        } catch (\Spatie\Permission\Exceptions\RoleDoesNotExist $e) {
+                                            return [];
+                                        }
                                     })
                                     ->searchable(),
                             ])
@@ -337,7 +350,7 @@ class SemesterSetupWizard extends Page
                     ]),
             ])
             ->afterValidation(function () {
-                $state = $this->form->getState();
+                $state = $this->data;
                 $method = $state['project_entry_method'] ?? 'manual';
 
                 if ($method === 'manual') {
@@ -368,7 +381,7 @@ class SemesterSetupWizard extends Page
 
     public function previewCsv(): void
     {
-        $state = $this->form->getState();
+        $state = $this->data;
         $csvPath = $state['projects_csv'] ?? null;
 
         $this->csvPreviewData = [];
@@ -377,7 +390,7 @@ class SemesterSetupWizard extends Page
         $this->csvValidated = false;
 
         if (! $csvPath) {
-            Notification::make()->title('No CSV file uploaded.')->danger()->send();
+            Log::info('Reached afterValidation!'); Notification::make()->title('No CSV file uploaded.')->danger()->send();
 
             return;
         }
@@ -388,14 +401,14 @@ class SemesterSetupWizard extends Page
         }
 
         if (! file_exists($filePath)) {
-            Notification::make()->title('CSV file not found.')->danger()->send();
+            Log::info('Reached afterValidation!'); Notification::make()->title('CSV file not found.')->danger()->send();
 
             return;
         }
 
         $handle = fopen($filePath, 'r');
         if (! $handle) {
-            Notification::make()->title('Unable to read the CSV file.')->danger()->send();
+            Log::info('Reached afterValidation!'); Notification::make()->title('Unable to read the CSV file.')->danger()->send();
 
             return;
         }
@@ -403,7 +416,7 @@ class SemesterSetupWizard extends Page
         $headers = fgetcsv($handle, length: 0, escape: '');
         if (! $headers) {
             fclose($handle);
-            Notification::make()->title('CSV file is empty or has no headers.')->danger()->send();
+            Log::info('Reached afterValidation!'); Notification::make()->title('CSV file is empty or has no headers.')->danger()->send();
 
             return;
         }
@@ -418,7 +431,7 @@ class SemesterSetupWizard extends Page
 
         if (! empty($missingHeaders)) {
             fclose($handle);
-            Notification::make()
+            Log::info('Reached afterValidation!'); Notification::make()
                 ->title('Missing required columns: ' . implode(', ', $missingHeaders))
                 ->danger()
                 ->send();
@@ -437,7 +450,7 @@ class SemesterSetupWizard extends Page
         fclose($handle);
 
         if (empty($rows)) {
-            Notification::make()->title('CSV contains no data rows.')->warning()->send();
+            Log::info('Reached afterValidation!'); Notification::make()->title('CSV contains no data rows.')->warning()->send();
 
             return;
         }
@@ -611,14 +624,14 @@ class SemesterSetupWizard extends Page
 
             DB::commit();
 
-            Notification::make()
+            Log::info('Reached afterValidation!'); Notification::make()
                 ->title(count($projects) . ' project(s) created successfully.')
                 ->success()
                 ->send();
         } catch (\Exception $e) {
             DB::rollBack();
 
-            Notification::make()
+            Log::info('Reached afterValidation!'); Notification::make()
                 ->title('Failed to create projects: ' . $e->getMessage())
                 ->danger()
                 ->send();
@@ -630,7 +643,7 @@ class SemesterSetupWizard extends Page
     protected function createProjectsFromCsv(): void
     {
         if ($this->csvHasErrors || empty($this->csvPreviewData)) {
-            Notification::make()
+            Log::info('Reached afterValidation!'); Notification::make()
                 ->title('Cannot import: fix validation errors or preview CSV first.')
                 ->danger()
                 ->send();
@@ -665,14 +678,14 @@ class SemesterSetupWizard extends Page
 
             DB::commit();
 
-            Notification::make()
+            Log::info('Reached afterValidation!'); Notification::make()
                 ->title(count($this->csvPreviewData) . ' project(s) imported successfully.')
                 ->success()
                 ->send();
         } catch (\Exception $e) {
             DB::rollBack();
 
-            Notification::make()
+            Log::info('Reached afterValidation!'); Notification::make()
                 ->title('Import failed: ' . $e->getMessage())
                 ->danger()
                 ->send();
@@ -734,7 +747,7 @@ class SemesterSetupWizard extends Page
 
     public function finishSetup(): void
     {
-        Notification::make()
+        Log::info('Reached afterValidation!'); Notification::make()
             ->title('Semester setup complete!')
             ->body('The semester and all projects have been created successfully.')
             ->success()
