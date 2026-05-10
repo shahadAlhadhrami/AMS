@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 class RubricTemplate extends Model
 {
@@ -28,6 +30,24 @@ class RubricTemplate extends Model
             'is_locked' => 'boolean',
             'version' => 'integer',
         ];
+    }
+
+    public function scopeLocked(Builder $query): Builder
+    {
+        return $this->whereBooleanLiteral($query, 'is_locked', true);
+    }
+
+    public function scopeUnlocked(Builder $query): Builder
+    {
+        return $this->whereBooleanLiteral($query, 'is_locked', false);
+    }
+
+    private function whereBooleanLiteral(Builder $query, string $column, bool $value): Builder
+    {
+        return $query->where(
+            $query->getModel()->qualifyColumn($column),
+            DB::raw($value ? 'true' : 'false')
+        );
     }
 
     public function creator(): BelongsTo

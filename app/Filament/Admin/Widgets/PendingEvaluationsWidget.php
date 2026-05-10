@@ -14,7 +14,7 @@ class PendingEvaluationsWidget extends StatsOverviewWidget
     protected function getStats(): array
     {
         $baseQuery = Evaluation::query()
-            ->whereHas('project.semester', fn (Builder $q) => $q->where('is_active', true));
+            ->whereHas('project.semester', fn (Builder $q) => $q->active());
 
         // Scope to coordinator's semesters if not Super Admin
         $user = auth()->user();

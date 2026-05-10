@@ -15,9 +15,9 @@ class SystemOverviewWidget extends StatsOverviewWidget
 
     protected function getStats(): array
     {
-        $activeProjects = Project::whereHas('semester', fn ($q) => $q->where('is_active', true))->count();
-        $activeSemesters = Semester::where('is_active', true)->count();
-        $pendingEvaluations = Evaluation::whereHas('project.semester', fn ($q) => $q->where('is_active', true))
+        $activeProjects = Project::whereHas('semester', fn ($q) => $q->active())->count();
+        $activeSemesters = Semester::active()->count();
+        $pendingEvaluations = Evaluation::whereHas('project.semester', fn ($q) => $q->active())
             ->whereIn('status', ['pending', 'draft'])
             ->count();
         $totalUsers = User::count();
@@ -25,8 +25,8 @@ class SystemOverviewWidget extends StatsOverviewWidget
         return [
             Stat::make('Total Users', $totalUsers)
                 ->description(
-                    'Students: ' . User::role('Student')->count()
-                    . '  |  Staff: ' . User::role('Reviewer/Supervisor')->count()
+                    'Students: '.User::role('Student')->count()
+                    .'  |  Staff: '.User::role('Reviewer/Supervisor')->count()
                 )
                 ->icon('heroicon-o-users')
                 ->color('primary'),

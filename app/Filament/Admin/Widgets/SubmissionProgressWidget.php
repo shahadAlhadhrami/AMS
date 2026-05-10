@@ -22,7 +22,7 @@ class SubmissionProgressWidget extends ChartWidget
 
     protected function getData(): array
     {
-        $semesterQuery = Semester::where('is_active', true);
+        $semesterQuery = Semester::active();
 
         $user = auth()->user();
         if ($user->hasRole('Coordinator') && ! $user->hasRole('Super Admin')) {

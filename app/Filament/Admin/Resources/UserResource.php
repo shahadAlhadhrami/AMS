@@ -28,7 +28,7 @@ class UserResource extends Resource
             return null;
         }
 
-        $count = User::where('is_approved', false)->count();
+        $count = User::unapproved()->count();
 
         return $count > 0 ? (string) $count : null;
     }
@@ -39,7 +39,7 @@ class UserResource extends Resource
             return null;
         }
 
-        return User::where('is_approved', false)->exists() ? 'danger' : null;
+        return User::unapproved()->exists() ? 'danger' : null;
     }
 
     public static function getNavigationBadgeTooltip(): ?string
@@ -48,7 +48,7 @@ class UserResource extends Resource
             return null;
         }
 
-        $count = User::where('is_approved', false)->count();
+        $count = User::unapproved()->count();
 
         return $count > 0 ? "{$count} pending coordinator approval(s)" : null;
     }
@@ -189,7 +189,7 @@ class UserResource extends Resource
         $query = parent::getEloquentQuery();
 
         if (auth()->check() && ! auth()->user()->hasRole('Super Admin')) {
-            $query->where('is_approved', true);
+            $query->approved();
         }
 
         return $query;

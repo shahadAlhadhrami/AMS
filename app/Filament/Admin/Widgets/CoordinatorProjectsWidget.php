@@ -23,7 +23,7 @@ class CoordinatorProjectsWidget extends BaseWidget
         return $table
             ->query(
                 Project::query()
-                    ->whereHas('semester', fn (Builder $q) => $q->where('is_active', true))
+                    ->whereHas('semester', fn (Builder $q) => $q->active())
                     ->when(
                         $user->hasRole('Coordinator') && ! $user->hasRole('Super Admin'),
                         fn (Builder $q) => $q->whereHas('semester.coordinators', fn (Builder $inner) => $inner->where('users.id', $user->id))
@@ -45,14 +45,14 @@ class CoordinatorProjectsWidget extends BaseWidget
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'setup'      => 'gray',
+                        'setup' => 'gray',
                         'evaluating' => 'warning',
-                        'completed'  => 'success',
-                        default      => 'gray',
+                        'completed' => 'success',
+                        default => 'gray',
                     }),
                 Tables\Columns\TextColumn::make('submitted_evaluations_count')
                     ->label('Submitted / Total Evals')
-                    ->formatStateUsing(fn ($state, Project $record): string => $state . ' / ' . $record->evaluations_count)
+                    ->formatStateUsing(fn ($state, Project $record): string => $state.' / '.$record->evaluations_count)
                     ->alignCenter(),
             ])
             ->actions([

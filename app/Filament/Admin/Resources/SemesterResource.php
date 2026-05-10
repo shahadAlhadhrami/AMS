@@ -5,10 +5,10 @@ namespace App\Filament\Admin\Resources;
 use App\Filament\Admin\Resources\SemesterResource\Pages;
 use App\Filament\Admin\Resources\SemesterResource\RelationManagers;
 use App\Models\Semester;
+use Filament\Actions;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Actions;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -17,9 +17,9 @@ class SemesterResource extends Resource
 {
     protected static ?string $model = Semester::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-academic-cap';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-academic-cap';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Academic Setup';
+    protected static string|\UnitEnum|null $navigationGroup = 'Academic Setup';
 
     protected static ?int $navigationSort = 1;
 
@@ -87,9 +87,17 @@ class SemesterResource extends Resource
             ])
             ->filters([
                 Tables\Filters\TernaryFilter::make('is_active')
-                    ->label('Active Status'),
+                    ->label('Active Status')
+                    ->queries(
+                        true: fn (Builder $query): Builder => $query->active(),
+                        false: fn (Builder $query): Builder => $query->inactive(),
+                    ),
                 Tables\Filters\TernaryFilter::make('is_closed')
-                    ->label('Closed Status'),
+                    ->label('Closed Status')
+                    ->queries(
+                        true: fn (Builder $query): Builder => $query->closed(),
+                        false: fn (Builder $query): Builder => $query->open(),
+                    ),
                 Tables\Filters\SelectFilter::make('academic_year')
                     ->options(fn () => Semester::query()
                         ->distinct()

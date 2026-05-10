@@ -6,20 +6,21 @@ use App\Filament\Admin\Resources\RubricTemplateResource\Pages;
 use App\Filament\Admin\Resources\RubricTemplateResource\RelationManagers;
 use App\Models\RubricFolder;
 use App\Models\RubricTemplate;
+use Filament\Actions;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Actions;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class RubricTemplateResource extends Resource
 {
     protected static ?string $model = RubricTemplate::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-clipboard-document-list';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-list';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Template Pool';
+    protected static string|\UnitEnum|null $navigationGroup = 'Template Pool';
 
     protected static ?int $navigationSort = 1;
 
@@ -83,7 +84,11 @@ class RubricTemplateResource extends Resource
             ])
             ->filters([
                 Tables\Filters\TernaryFilter::make('is_locked')
-                    ->label('Locked Status'),
+                    ->label('Locked Status')
+                    ->queries(
+                        true: fn (Builder $query): Builder => $query->locked(),
+                        false: fn (Builder $query): Builder => $query->unlocked(),
+                    ),
                 Tables\Filters\SelectFilter::make('rubric_folder_id')
                     ->label('Folder')
                     ->options(fn () => self::getFolderOptions())
@@ -199,13 +204,13 @@ class RubricTemplateResource extends Resource
         $folders = RubricFolder::orderBy('name')->get()->keyBy('id');
         $options = [];
 
-        $buildOptions = function (int|null $parentId, string $prefix) use (&$buildOptions, $folders, &$options, $excludeId): void {
+        $buildOptions = function (?int $parentId, string $prefix) use (&$buildOptions, $folders, &$options, $excludeId): void {
             foreach ($folders->where('parent_id', $parentId) as $folder) {
                 if ($folder->id === $excludeId) {
                     continue;
                 }
-                $options[$folder->id] = $prefix . $folder->name;
-                $buildOptions($folder->id, $prefix . '— ');
+                $options[$folder->id] = $prefix.$folder->name;
+                $buildOptions($folder->id, $prefix.'— ');
             }
         };
 

@@ -3,10 +3,10 @@
 namespace App\Filament\Admin\Resources\PhaseTemplateResource\RelationManagers;
 
 use App\Models\RubricTemplate;
+use Filament\Actions;
 use Filament\Forms;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
-use Filament\Actions;
 use Filament\Tables;
 use Filament\Tables\Table;
 
@@ -21,7 +21,7 @@ class PhaseRubricRulesRelationManager extends RelationManager
                 Forms\Components\Select::make('rubric_template_id')
                     ->label('Rubric Template')
                     ->options(
-                        RubricTemplate::where('is_locked', true)
+                        RubricTemplate::locked()
                             ->pluck('name', 'id')
                     )
                     ->searchable()

@@ -31,7 +31,7 @@ class ListUsers extends ListRecords
             return [];
         }
 
-        $pendingCount = User::where('is_approved', false)->count();
+        $pendingCount = User::unapproved()->count();
 
         return [
             'all' => Tab::make('All Users')
@@ -41,7 +41,7 @@ class ListUsers extends ListRecords
                 ->icon('heroicon-o-clock')
                 ->badge($pendingCount ?: null)
                 ->badgeColor('danger')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('is_approved', false)),
+                ->modifyQueryUsing(fn (Builder $query) => $query->unapproved()),
 
         ];
     }
