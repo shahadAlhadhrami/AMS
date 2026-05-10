@@ -6,6 +6,8 @@ use App\Models\Criterion;
 use App\Models\Project;
 use App\Observers\CriterionObserver;
 use App\Observers\ProjectObserver;
+use App\Database\CaseInsensitivePostgresGrammar;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Filament\Support\Facades\FilamentView;
@@ -23,6 +25,11 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        if (config('database.default') === 'pgsql') {
+            $connection = DB::connection();
+            $connection->setQueryGrammar(new CaseInsensitivePostgresGrammar($connection));
+        }
+
         Gate::before(function ($user, $ability) {
             return $user->hasRole('Super Admin') ? true : null;
         });

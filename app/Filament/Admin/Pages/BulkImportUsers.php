@@ -319,7 +319,7 @@ class BulkImportUsers extends Page
                 ]);
 
                 // Find the role with proper casing from the database
-                $role = Role::whereRaw('LOWER(name) = ?', [strtolower($row['role'])])->first();
+                $role = Role::whereRaw('LOWER(name) = LOWER(?)', [$row['role']])->first();
 
                 if ($role) {
                     $user->assignRole($role);
