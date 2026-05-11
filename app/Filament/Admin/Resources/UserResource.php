@@ -5,22 +5,24 @@ namespace App\Filament\Admin\Resources;
 use App\Filament\Admin\Resources\UserResource\Pages;
 use App\Models\User;
 use App\Support\FilamentLookupCache;
+use Filament\Actions;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Actions;
 use Filament\Tables;
 use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Validation\Rules\Unique;
+use Livewire\Component;
 
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-users';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-users';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'User Management';
+    protected static string|\UnitEnum|null $navigationGroup = 'User Management';
 
     protected static ?int $navigationSort = 1;
 
@@ -66,7 +68,10 @@ class UserResource extends Resource
             ->schema([
                 Forms\Components\TextInput::make('university_id')
                     ->required()
-                    ->unique(ignoreRecord: true)
+                    ->unique(
+                        ignoreRecord: true,
+                        modifyRuleUsing: fn (Unique $rule): Unique => $rule->whereNull('deleted_at'),
+                    )
                     ->maxLength(255),
                 Forms\Components\TextInput::make('name')
                     ->required()
@@ -74,7 +79,10 @@ class UserResource extends Resource
                 Forms\Components\TextInput::make('email')
                     ->required()
                     ->email()
-                    ->unique(ignoreRecord: true)
+                    ->unique(
+                        ignoreRecord: true,
+                        modifyRuleUsing: fn (Unique $rule): Unique => $rule->whereNull('deleted_at'),
+                    )
                     ->maxLength(255),
                 Forms\Components\Select::make('specialization_id')
                     ->options(fn (): array => FilamentLookupCache::specializationOptions())
@@ -144,9 +152,9 @@ class UserResource extends Resource
                     ->modalDescription('Are you sure you want to approve this coordinator account? They will be able to log in immediately.')
                     ->modalSubmitActionLabel('Yes, Approve')
                     ->visible(fn (User $record): bool => ! $record->is_approved && auth()->user()?->hasRole('Super Admin'))
-                    ->action(function (User $record): void {
+                    ->action(function (User $record, Component $livewire): void {
                         $record->update(['is_approved' => true]);
-                        FilamentLookupCache::forgetPendingCoordinatorApprovals();
+                        static::refreshPendingApprovalBadges($livewire);
 
                         \Filament\Notifications\Notification::make()
                             ->title('Coordinator Approved')
@@ -163,10 +171,10 @@ class UserResource extends Resource
                     ->modalDescription('This will permanently delete this coordinator\'s registration. This action cannot be undone.')
                     ->modalSubmitActionLabel('Yes, Reject & Delete')
                     ->visible(fn (User $record): bool => ! $record->is_approved && auth()->user()?->hasRole('Super Admin'))
-                    ->action(function (User $record): void {
+                    ->action(function (User $record, Component $livewire): void {
                         $name = $record->name;
                         $record->forceDelete();
-                        FilamentLookupCache::forgetPendingCoordinatorApprovals();
+                        static::refreshPendingApprovalBadges($livewire);
 
                         \Filament\Notifications\Notification::make()
                             ->title('Registration Rejected')
@@ -187,9 +195,9 @@ class UserResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListUsers::route('/'),
+            'index' => Pages\ListUsers::route('/'),
             'create' => Pages\CreateUser::route('/create'),
-            'edit'   => Pages\EditUser::route('/{record}/edit'),
+            'edit' => Pages\EditUser::route('/{record}/edit'),
         ];
     }
 
@@ -203,5 +211,17 @@ class UserResource extends Resource
         }
 
         return $query;
+    }
+
+    protected static function refreshPendingApprovalBadges(Component $livewire): void
+    {
+        FilamentLookupCache::forgetPendingCoordinatorApprovals();
+
+        if ($livewire instanceof Pages\ListUsers) {
+            $livewire->refreshPendingApprovalTabs();
+        }
+
+        $livewire->dispatch('refresh-sidebar');
+        $livewire->dispatch('refresh-topbar');
     }
 }

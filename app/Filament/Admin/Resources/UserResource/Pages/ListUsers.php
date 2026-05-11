@@ -5,8 +5,8 @@ namespace App\Filament\Admin\Resources\UserResource\Pages;
 use App\Filament\Admin\Pages\BulkImports;
 use App\Filament\Admin\Resources\UserResource;
 use Filament\Actions;
-use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Schemas\Components\Tabs\Tab;
 use Illuminate\Database\Eloquent\Builder;
 
 class ListUsers extends ListRecords
@@ -38,10 +38,15 @@ class ListUsers extends ListRecords
 
             'pending' => Tab::make('Pending Approvals')
                 ->icon('heroicon-o-clock')
-                ->badge($pendingCount ?: null)
+                ->badge($pendingCount > 0 ? $pendingCount : null)
                 ->badgeColor('danger')
                 ->modifyQueryUsing(fn (Builder $query) => $query->unapproved()),
 
         ];
+    }
+
+    public function refreshPendingApprovalTabs(): void
+    {
+        unset($this->cachedTabs);
     }
 }

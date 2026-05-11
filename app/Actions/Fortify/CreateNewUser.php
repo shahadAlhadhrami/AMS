@@ -29,7 +29,7 @@ class CreateNewUser implements CreatesNewUsers
                 'string',
                 'email',
                 'max:255',
-                Rule::unique(User::class),
+                Rule::unique(User::class)->whereNull('deleted_at'),
             ],
             'password' => $this->passwordRules(),
         ])->validate();

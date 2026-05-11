@@ -2,16 +2,18 @@
 
 namespace App\Providers;
 
+use App\Database\BooleanSafePostgresConnection;
+use App\Database\CaseInsensitivePostgresGrammar;
 use App\Models\Criterion;
 use App\Models\Project;
 use App\Observers\CriterionObserver;
 use App\Observers\ProjectObserver;
-use App\Database\CaseInsensitivePostgresGrammar;
+use Filament\Support\Facades\FilamentView;
+use Filament\View\PanelsRenderHook;
+use Illuminate\Database\Connection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
-use Filament\Support\Facades\FilamentView;
-use Filament\View\PanelsRenderHook;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -20,7 +22,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        Connection::resolverFor('pgsql', function ($connection, $database, $prefix, array $config) {
+            return new BooleanSafePostgresConnection($connection, $database, $prefix, $config);
+        });
     }
 
     public function boot(): void
@@ -39,7 +43,7 @@ class AppServiceProvider extends ServiceProvider
 
         FilamentView::registerRenderHook(
             PanelsRenderHook::STYLES_AFTER,
-            fn(): string => '<style>
+            fn (): string => '<style>
                 form:has(.fi-one-time-code-input-ctn) .fi-fo-field-label-col {
                     display: flex;
                     justify-content: center;
