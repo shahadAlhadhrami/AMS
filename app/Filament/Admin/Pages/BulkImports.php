@@ -83,8 +83,13 @@ class BulkImports extends Page
             $fileField = $fileField->multiple();
         }
 
+        $extraFields = $importer->extraFormFields();
+        $components = $importer->key() === 'rubric-templates'
+            ? array_merge($extraFields, [$fileField])
+            : array_merge([$fileField], $extraFields);
+
         return $form
-            ->components(array_merge([$fileField], $importer->extraFormFields()))
+            ->components($components)
             ->statePath('data');
     }
 
