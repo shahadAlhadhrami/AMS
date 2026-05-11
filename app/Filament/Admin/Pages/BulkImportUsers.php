@@ -382,9 +382,11 @@ class BulkImportUsers extends Page
         return response()->streamDownload(function () {
             $file = fopen('php://output', 'w');
             fputcsv($file, ['university_id', 'name', 'email', 'role']);
+            fputcsv($file, ['26s2020', 'Hamed Al-Balushi', '26s2020@utas.edu.om', 'Student']);
+            fputcsv($file, ['26j2174', 'Aisha Al-Harthi', '26j2174@utas.edu.om', 'Student']);
             fputcsv($file, ['e4382', 'Ahmed Al-Balushi', 'ahmed.al-balushi@utas.edu.om', 'Supervisor']);
             fputcsv($file, ['e7051', 'Nawal Al-Kharusi', 'nawal.al-kharusi@utas.edu.om', 'Reviewer']);
-            fputcsv($file, ['26s2020', 'Hamed Al-Balushi', '26s2020@utas.edu.om', 'Student']);
+            fputcsv($file, ['e1926', 'Salim Al-Harthy', 'salim.al-harthy@utas.edu.om', 'Reviewer/Supervisor']);
             fclose($file);
         }, 'users_import_template.csv');
     }
