@@ -42,6 +42,10 @@ class BulkImports extends Page
     public array $validationErrors = [];
     public bool $hasErrors = false;
 
+    // Stage 3 → 4: optional context step (semester/course/phase/specialization for projects, etc.)
+    public bool $showContextStep = false;
+    public array $contextData = [];
+
     // Post-import state
     public bool $imported = false;
     public int $importedCount = 0;
@@ -91,6 +95,26 @@ class BulkImports extends Page
         return $form
             ->components($components)
             ->statePath('data');
+    }
+
+    public function contextForm(Schema $form): Schema
+    {
+        return $form
+            ->components($this->importer()->contextFormFields())
+            ->statePath('contextData');
+    }
+
+    protected function getForms(): array
+    {
+        return [
+            'form',
+            'contextForm',
+        ];
+    }
+
+    public function importerNeedsContextStep(): bool
+    {
+        return ! empty($this->importer()->contextFormFields());
     }
 
     public function getImporters(): array
@@ -218,6 +242,65 @@ class BulkImports extends Page
         }
     }
 
+    /**
+     * Preview → context step (only used by importers whose contextFormFields() is non-empty).
+     */
+    public function continueToContextStep(): void
+    {
+        if ($this->hasErrors || empty($this->previewData)) {
+            Notification::make()
+                ->title('Cannot continue: fix validation errors first.')
+                ->danger()
+                ->send();
+            return;
+        }
+
+        if (! $this->importerNeedsContextStep()) {
+            $this->runImport();
+            return;
+        }
+
+        $this->showContextStep = true;
+        $this->contextForm->fill();
+    }
+
+    /**
+     * Context step → validate context → import.
+     */
+    public function confirmContextAndImport(): void
+    {
+        if (! $this->importerNeedsContextStep()) {
+            $this->runImport();
+            return;
+        }
+
+        $state = $this->contextForm->getState();
+        $this->contextData = $state;
+
+        $importer = $this->importer();
+        $contextErrors = $importer->validateContext($this->previewData, $this->contextData);
+
+        // Replace any prior context-validation errors so retries don't accumulate, while
+        // keeping the per-row errors from the preview stage.
+        $this->validationErrors = array_values(array_filter(
+            $this->validationErrors,
+            fn ($e) => ! str_starts_with($e, '[Context] '),
+        ));
+
+        $newErrors = array_map(fn ($e) => "[Context] {$e}", $contextErrors['errors'] ?? []);
+        if (! empty($newErrors)) {
+            $this->validationErrors = array_merge($this->validationErrors, $newErrors);
+            $this->hasErrors = true;
+            Notification::make()
+                ->title('Context validation failed — review errors and adjust your selections.')
+                ->danger()
+                ->send();
+            return;
+        }
+
+        $this->runImport();
+    }
+
     public function runImport(): void
     {
         if ($this->hasErrors || empty($this->previewData)) {
@@ -229,10 +312,11 @@ class BulkImports extends Page
         }
 
         $importer = $this->importer();
+        $context = array_merge($this->extraContext, $this->contextData);
 
         DB::beginTransaction();
         try {
-            $result = $importer->import($this->previewData, $this->extraContext);
+            $result = $importer->import($this->previewData, $context);
             DB::commit();
 
             $this->imported = true;
@@ -286,6 +370,9 @@ class BulkImports extends Page
         $this->previewColumns = [];
         $this->validationErrors = [];
         $this->hasErrors = false;
+
+        $this->showContextStep = false;
+        $this->contextData = [];
 
         $this->imported = false;
         $this->importedCount = 0;

@@ -42,6 +42,16 @@ class UsersBulkImporter implements BulkImporter
         return [];
     }
 
+    public function contextFormFields(): array
+    {
+        return [];
+    }
+
+    public function validateContext(array $previewData, array $context): array
+    {
+        return ['errors' => [], 'hasErrors' => false];
+    }
+
     public function systemFields(): array
     {
         return ['university_id', 'name', 'email', 'role'];

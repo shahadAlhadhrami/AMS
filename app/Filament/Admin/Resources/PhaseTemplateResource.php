@@ -42,6 +42,21 @@ class PhaseTemplateResource extends Resource
                     ->numeric()
                     ->minValue(0)
                     ->label('Total Phase Marks'),
+                Forms\Components\Select::make('reviewers')
+                    ->label('Reviewers')
+                    ->helperText('Users assigned here are copied onto every project that uses this Phase Template during bulk import.')
+                    ->relationship(
+                        name: 'reviewers',
+                        titleAttribute: 'name',
+                        modifyQueryUsing: fn (Builder $query) => $query->whereHas(
+                            'roles',
+                            fn (Builder $q) => $q->where('name', 'Reviewer/Supervisor'),
+                        ),
+                    )
+                    ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->name} ({$record->university_id})")
+                    ->multiple()
+                    ->preload()
+                    ->searchable(),
             ]);
     }
 
@@ -63,6 +78,9 @@ class PhaseTemplateResource extends Resource
                 Tables\Columns\TextColumn::make('phase_rubric_rules_count')
                     ->counts('phaseRubricRules')
                     ->label('Rubric Rules'),
+                Tables\Columns\TextColumn::make('reviewers_count')
+                    ->counts('reviewers')
+                    ->label('Reviewers'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

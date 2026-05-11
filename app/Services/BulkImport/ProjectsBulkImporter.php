@@ -8,6 +8,8 @@ use App\Models\Project;
 use App\Models\Semester;
 use App\Models\Specialization;
 use App\Models\User;
+use Filament\Forms;
+use Illuminate\Database\Eloquent\Builder;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ProjectsBulkImporter implements BulkImporter
@@ -26,7 +28,7 @@ class ProjectsBulkImporter implements BulkImporter
 
     public function description(): string
     {
-        return 'Create projects with supervisor, students, and reviewers in bulk. Lookups resolve by semester name, course code, and university IDs.';
+        return 'Create projects in bulk. One CSV row per student — repeat the project title and supervisor across that project\'s students. Semester, course, phase template, specialization, and reviewers are chosen in the UI after the CSV is previewed.';
     }
 
     public function requiresColumnMapping(): bool
@@ -47,28 +49,18 @@ class ProjectsBulkImporter implements BulkImporter
     public function systemFields(): array
     {
         return [
-            'title',
-            'semester_name',
-            'course_code',
-            'phase_template_name',
-            'specialization_name',
-            'supervisor_university_id',
-            'student_university_ids',
-            'reviewer_university_ids',
+            'project_title',
+            'supervisor_id',
+            'student_id',
         ];
     }
 
     public function systemFieldLabels(): array
     {
         return [
-            'title' => 'Project Title',
-            'semester_name' => 'Semester Name',
-            'course_code' => 'Course Code',
-            'phase_template_name' => 'Phase Template Name',
-            'specialization_name' => 'Specialization Name',
-            'supervisor_university_id' => 'Supervisor University ID',
-            'student_university_ids' => 'Student University IDs (pipe-separated)',
-            'reviewer_university_ids' => 'Reviewer University IDs (pipe-separated)',
+            'project_title' => 'Project Title',
+            'supervisor_id' => 'Supervisor ID',
+            'student_id' => 'Student ID',
         ];
     }
 
@@ -76,30 +68,45 @@ class ProjectsBulkImporter implements BulkImporter
     {
         return response()->streamDownload(function () {
             $file = fopen('php://output', 'w');
-            fputcsv($file, [
-                'title', 'semester_name', 'course_code', 'phase_template_name',
-                'specialization_name', 'supervisor_university_id',
-                'student_university_ids', 'reviewer_university_ids',
-            ]);
-            fputcsv($file, [
-                'Smart Campus App', 'Fall 2026', 'CS101', 'Phase 1 Template',
-                'Software Engineering', 'SUP001',
-                'STU001|STU002|STU003', 'REV001|REV002',
-            ]);
-            fputcsv($file, [
-                'AI Assessment System', 'Fall 2026', 'CS101', 'Phase 1 Template',
-                'Software Engineering', 'SUP002',
-                'STU004|STU005', 'REV001',
-            ]);
+            fputcsv($file, ['project_title', 'supervisor_id', 'student_id']);
+            fputcsv($file, ['Smart Campus Companion App', 'e9173', '26s3614']);
+            fputcsv($file, ['Smart Campus Companion App', 'e9173', '26j3729']);
+            fputcsv($file, ['Smart Campus Companion App', 'e9173', '26s3846']);
+            fputcsv($file, ['AI-Powered Assessment Dashboard', 'e6248', '26j3952']);
+            fputcsv($file, ['AI-Powered Assessment Dashboard', 'e6248', '26s4078']);
             fclose($file);
         }, 'projects_import_template.csv');
     }
 
+    public function contextFormFields(): array
+    {
+        return [
+            Forms\Components\Select::make('semester_id')
+                ->label('Semester')
+                ->options(fn () => Semester::orderByDesc('id')->pluck('name', 'id')->toArray())
+                ->required()
+                ->searchable(),
+            Forms\Components\Select::make('course_id')
+                ->label('Course')
+                ->options(fn () => Course::orderBy('code')->get()->mapWithKeys(fn ($c) => [$c->id => "{$c->code} — {$c->name}"])->toArray())
+                ->required()
+                ->searchable(),
+            Forms\Components\Select::make('phase_template_id')
+                ->label('Phase Template')
+                ->helperText('Reviewers assigned on this Phase Template will be copied onto every imported project.')
+                ->options(fn () => PhaseTemplate::orderBy('name')->pluck('name', 'id')->toArray())
+                ->required()
+                ->searchable(),
+            Forms\Components\Select::make('specialization_id')
+                ->label('Specialization')
+                ->options(fn () => Specialization::orderBy('name')->pluck('name', 'id')->toArray())
+                ->required()
+                ->searchable(),
+        ];
+    }
+
     public function validateRows(array $files, array $columnMapping, array $context): array
     {
-        $previewData = [];
-        $errors = [];
-
         $csvPath = $files[0] ?? null;
         $filePath = $this->resolveCsvFilePath($csvPath);
 
@@ -132,20 +139,21 @@ class ProjectsBulkImporter implements BulkImporter
             $rawRow = array_combine($rawHeaders, array_pad($row, count($rawHeaders), ''));
 
             $rows[] = [
-                'title' => trim($rawRow[$columnMapping['title']] ?? ''),
-                'semester_name' => trim($rawRow[$columnMapping['semester_name']] ?? ''),
-                'course_code' => trim($rawRow[$columnMapping['course_code']] ?? ''),
-                'phase_template_name' => trim($rawRow[$columnMapping['phase_template_name']] ?? ''),
-                'specialization_name' => trim($rawRow[$columnMapping['specialization_name']] ?? ''),
-                'supervisor_university_id' => trim($rawRow[$columnMapping['supervisor_university_id']] ?? ''),
-                'student_university_ids' => trim($rawRow[$columnMapping['student_university_ids']] ?? ''),
-                'reviewer_university_ids' => trim($rawRow[$columnMapping['reviewer_university_ids']] ?? ''),
+                'project_title' => trim($rawRow[$columnMapping['project_title']] ?? ''),
+                'supervisor_id' => trim($rawRow[$columnMapping['supervisor_id']] ?? ''),
+                'student_id' => trim($rawRow[$columnMapping['student_id']] ?? ''),
                 '_row' => $rowNumber,
             ];
         }
         fclose($handle);
 
         @unlink($filePath);
+
+        // Drop fully blank rows (a trailing blank line in a spreadsheet shouldn't error).
+        $rows = array_values(array_filter(
+            $rows,
+            fn ($r) => $r['project_title'] !== '' || $r['supervisor_id'] !== '' || $r['student_id'] !== '',
+        ));
 
         if (empty($rows)) {
             return [
@@ -156,134 +164,166 @@ class ProjectsBulkImporter implements BulkImporter
             ];
         }
 
-        $studentSemesterTracker = [];
+        // ─── Pass 1: per-row resolution + per-row errors ────────────────────────────
+        $errors = [];
         $hasErrors = false;
+        $rowOutputs = [];
+
+        // Per-CSV caches to avoid repeated lookups for repeated IDs.
+        $userCache = [];
+
+        $resolveUser = function (string $uid) use (&$userCache): ?User {
+            if (! array_key_exists($uid, $userCache)) {
+                $userCache[$uid] = $uid === '' ? null : User::where('university_id', $uid)->first();
+            }
+            return $userCache[$uid];
+        };
 
         foreach ($rows as $row) {
             $rowNum = $row['_row'];
             $rowErrors = [];
 
-            $title = $row['title'];
-            if (empty($title)) {
-                $rowErrors[] = 'title is required';
+            $title = $row['project_title'];
+            if ($title === '') {
+                $rowErrors[] = 'project_title is required';
             }
 
-            $semesterName = $row['semester_name'];
-            $semester = $semesterName ? Semester::where('name', $semesterName)->first() : null;
-            if (! $semester) {
-                $rowErrors[] = "Semester '{$semesterName}' not found";
-            }
-
-            $courseCode = $row['course_code'];
-            $course = $courseCode ? Course::where('code', $courseCode)->first() : null;
-            if (! $course) {
-                $rowErrors[] = "Course '{$courseCode}' not found";
-            }
-
-            $phaseTemplateName = $row['phase_template_name'];
-            $phaseTemplate = $phaseTemplateName ? PhaseTemplate::where('name', $phaseTemplateName)->first() : null;
-            if (! $phaseTemplate) {
-                $rowErrors[] = "Phase template '{$phaseTemplateName}' not found";
-            }
-
-            $specName = $row['specialization_name'];
-            $specialization = $specName ? Specialization::where('name', $specName)->first() : null;
-            if (! $specialization) {
-                $rowErrors[] = "Specialization '{$specName}' not found";
-            }
-
-            $supervisorUid = $row['supervisor_university_id'];
-            $supervisor = $supervisorUid ? User::where('university_id', $supervisorUid)->first() : null;
-            if (! $supervisor) {
-                $rowErrors[] = "Supervisor with university_id '{$supervisorUid}' not found";
-            } elseif (! $supervisor->hasRole('Reviewer/Supervisor')) {
-                $rowErrors[] = "User '{$supervisorUid}' does not have the Reviewer/Supervisor role";
-            }
-
-            $studentUids = array_filter(array_map('trim', explode('|', $row['student_university_ids'])));
-            $studentIds = [];
-            foreach ($studentUids as $uid) {
-                if (empty($uid)) {
-                    continue;
+            $supervisorUid = $row['supervisor_id'];
+            $supervisor = null;
+            if ($supervisorUid === '') {
+                $rowErrors[] = 'supervisor_id is required';
+            } else {
+                $supervisor = $resolveUser($supervisorUid);
+                if (! $supervisor) {
+                    $rowErrors[] = "Supervisor with university_id '{$supervisorUid}' not found";
+                } elseif (! $supervisor->hasRole('Reviewer/Supervisor')) {
+                    $rowErrors[] = "User '{$supervisorUid}' does not have the Reviewer/Supervisor role";
                 }
-                $student = User::where('university_id', $uid)->first();
+            }
+
+            $studentUid = $row['student_id'];
+            $student = null;
+            if ($studentUid === '') {
+                $rowErrors[] = 'student_id is required';
+            } else {
+                $student = $resolveUser($studentUid);
                 if (! $student) {
-                    $rowErrors[] = "Student with university_id '{$uid}' not found";
+                    $rowErrors[] = "Student with university_id '{$studentUid}' not found";
                 } elseif (! $student->hasRole('Student')) {
-                    $rowErrors[] = "User '{$uid}' does not have the Student role";
-                } else {
-                    $studentIds[] = $student->id;
-
-                    if ($semester) {
-                        $existsInDb = Project::where('semester_id', $semester->id)
-                            ->whereHas('students', fn ($q) => $q->where('users.id', $student->id))
-                            ->exists();
-                        if ($existsInDb) {
-                            $rowErrors[] = "Student '{$uid}' is already in another project in semester '{$semesterName}'";
-                        }
-
-                        $trackKey = $semester->id . '-' . $student->id;
-                        if (isset($studentSemesterTracker[$trackKey])) {
-                            $rowErrors[] = "Student '{$uid}' appears in multiple projects for semester '{$semesterName}' in this CSV";
-                        }
-                        $studentSemesterTracker[$trackKey] = $rowNum;
-                    }
+                    $rowErrors[] = "User '{$studentUid}' does not have the Student role";
                 }
             }
 
-            if (count($studentIds) > 4) {
-                $rowErrors[] = 'Maximum 4 students per project (found ' . count($studentIds) . ')';
+            $rowOutputs[] = [
+                '_row' => $rowNum,
+                'project_title' => $title,
+                'supervisor_id' => $supervisorUid,
+                'student_id' => $studentUid,
+                '_supervisor_user_id' => $supervisor?->id,
+                '_student_user_id' => $student?->id,
+                '_errors' => $rowErrors,
+            ];
+
+            foreach ($rowErrors as $error) {
+                $errors[] = "Row {$rowNum}: {$error}";
+            }
+            if (! empty($rowErrors)) {
+                $hasErrors = true;
+            }
+        }
+
+        // ─── Pass 2: group rows by project_title ─────────────────────────────────────
+        // Order is preserved by first-appearance of each title.
+        $groups = [];
+        foreach ($rowOutputs as $output) {
+            $title = $output['project_title'];
+            if ($title === '') {
+                continue; // already reported as a per-row error
+            }
+            $groups[$title][] = $output;
+        }
+
+        // Track students globally across the CSV to flag duplicates across projects.
+        $studentFirstSeen = []; // student_id => "Row N (project X)"
+
+        $previewData = [];
+        foreach ($groups as $title => $groupRows) {
+            $groupErrors = [];
+
+            // Supervisors: every row in the group must agree.
+            $distinctSupervisors = collect($groupRows)
+                ->pluck('supervisor_id')
+                ->filter(fn ($v) => $v !== '')
+                ->unique()
+                ->values()
+                ->all();
+
+            if (count($distinctSupervisors) > 1) {
+                $groupErrors[] = "Project '{$title}' has inconsistent supervisor IDs across rows: " . implode(', ', $distinctSupervisors);
             }
 
-            $reviewerUids = array_filter(array_map('trim', explode('|', $row['reviewer_university_ids'])));
-            $reviewerIds = [];
-            foreach ($reviewerUids as $uid) {
-                if (empty($uid)) {
+            // Students: collect distinct, enforce max 4 per project, detect duplicates within the CSV.
+            $seenInGroup = [];
+            $studentUserIds = [];
+            foreach ($groupRows as $output) {
+                $sid = $output['student_id'];
+                if ($sid === '') {
+                    continue; // missing-required already reported
+                }
+
+                if (isset($seenInGroup[$sid])) {
+                    $groupErrors[] = "Student '{$sid}' is listed twice in project '{$title}'";
                     continue;
                 }
-                $reviewer = User::where('university_id', $uid)->first();
-                if (! $reviewer) {
-                    $rowErrors[] = "Reviewer with university_id '{$uid}' not found";
-                } elseif (! $reviewer->hasRole('Reviewer/Supervisor')) {
-                    $rowErrors[] = "User '{$uid}' does not have the Reviewer/Supervisor role";
+                $seenInGroup[$sid] = true;
+
+                if (isset($studentFirstSeen[$sid])) {
+                    $groupErrors[] = "Student '{$sid}' appears in project '{$title}' and also in {$studentFirstSeen[$sid]} — a student can only be in one project per import";
                 } else {
-                    $reviewerIds[] = $reviewer->id;
-                    if ($supervisor && $reviewer->id === $supervisor->id) {
-                        $rowErrors[] = "Supervisor '{$supervisorUid}' cannot also be a reviewer";
-                    }
+                    $studentFirstSeen[$sid] = "project '{$title}'";
+                }
+
+                if ($output['_student_user_id'] !== null) {
+                    $studentUserIds[] = $output['_student_user_id'];
                 }
             }
 
-            $status = empty($rowErrors) ? 'valid' : 'error';
+            $studentUserIds = array_values(array_unique($studentUserIds));
+            $studentCount = count($seenInGroup);
+
+            if ($studentCount > 4) {
+                $groupErrors[] = "Project '{$title}' has {$studentCount} students (maximum 4)";
+            }
+
+            // Pick the first non-empty supervisor as canonical (validation already flagged conflicts).
+            $supervisorUid = $distinctSupervisors[0] ?? '';
+            $supervisorUserId = collect($groupRows)
+                ->firstWhere('supervisor_id', $supervisorUid)['_supervisor_user_id'] ?? null;
+
+            $firstRow = $groupRows[0]['_row'];
+            $rowAnyHasErrors = collect($groupRows)->contains(fn ($r) => ! empty($r['_errors']));
+            $status = (empty($groupErrors) && ! $rowAnyHasErrors) ? 'valid' : 'error';
 
             $previewData[] = [
-                'row' => $rowNum,
+                'row' => $firstRow,
                 'title' => $title,
-                'semester' => $semesterName,
-                'course' => $courseCode,
                 'supervisor' => $supervisorUid,
-                'students_count' => count($studentIds),
-                'reviewers_count' => count($reviewerIds),
+                'students_count' => $studentCount,
+                'student_ids_display' => implode(', ', collect($groupRows)->pluck('student_id')->filter()->unique()->all()),
                 'status' => $status,
-                'errors' => $rowErrors,
-                // Resolved IDs carried forward to import():
+                'errors' => $groupErrors,
                 '_resolved' => [
                     'title' => $title,
-                    'semester_id' => $semester?->id,
-                    'course_id' => $course?->id,
-                    'phase_template_id' => $phaseTemplate?->id,
-                    'specialization_id' => $specialization?->id,
-                    'supervisor_id' => $supervisor?->id,
-                    'student_ids' => $studentIds,
-                    'reviewer_ids' => $reviewerIds,
+                    'supervisor_id' => $supervisorUserId,
+                    'student_ids' => $studentUserIds,
                 ],
             ];
 
-            if (! empty($rowErrors)) {
+            foreach ($groupErrors as $error) {
+                $errors[] = "Project '{$title}': {$error}";
+            }
+            if (! empty($groupErrors)) {
                 $hasErrors = true;
-                foreach ($rowErrors as $error) {
-                    $errors[] = "Row {$rowNum}: {$error}";
-                }
             }
         }
 
@@ -295,19 +335,85 @@ class ProjectsBulkImporter implements BulkImporter
         ];
     }
 
+    public function validateContext(array $previewData, array $context): array
+    {
+        $errors = [];
+
+        $semesterId = $context['semester_id'] ?? null;
+        if (! $semesterId) {
+            return ['errors' => $errors, 'hasErrors' => false];
+        }
+
+        $semester = Semester::find($semesterId);
+        $semesterName = $semester?->name ?? "id {$semesterId}";
+
+        // Collect all student IDs from the preview, then a single query to check existing
+        // memberships in this semester. Avoids N+1.
+        $allStudentIds = collect($previewData)
+            ->pluck('_resolved.student_ids')
+            ->flatten()
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        if (empty($allStudentIds)) {
+            return ['errors' => $errors, 'hasErrors' => false];
+        }
+
+        $clashes = User::query()
+            ->whereIn('id', $allStudentIds)
+            ->whereHas(
+                'studentProjects',
+                fn (Builder $q) => $q->where('semester_id', $semesterId),
+            )
+            ->pluck('university_id', 'id')
+            ->toArray();
+
+        if (empty($clashes)) {
+            return ['errors' => $errors, 'hasErrors' => false];
+        }
+
+        // Map each clashing student to the project it appears in for this CSV.
+        foreach ($previewData as $row) {
+            $studentIds = $row['_resolved']['student_ids'] ?? [];
+            foreach ($studentIds as $sid) {
+                if (isset($clashes[$sid])) {
+                    $uid = $clashes[$sid];
+                    $errors[] = "Project '{$row['title']}': student '{$uid}' is already in another project in semester '{$semesterName}'";
+                }
+            }
+        }
+
+        return ['errors' => $errors, 'hasErrors' => ! empty($errors)];
+    }
+
     public function import(array $previewData, array $context): array
     {
-        $count = 0;
+        $semesterId = $context['semester_id'] ?? null;
+        $courseId = $context['course_id'] ?? null;
+        $phaseTemplateId = $context['phase_template_id'] ?? null;
+        $specializationId = $context['specialization_id'] ?? null;
 
+        $reviewerIds = [];
+        if ($phaseTemplateId) {
+            $reviewerIds = PhaseTemplate::with('reviewers:id')
+                ->find($phaseTemplateId)
+                ?->reviewers
+                ?->pluck('id')
+                ->all() ?? [];
+        }
+
+        $count = 0;
         foreach ($previewData as $row) {
             $resolved = $row['_resolved'];
 
             $project = Project::create([
                 'title' => $resolved['title'],
-                'semester_id' => $resolved['semester_id'],
-                'course_id' => $resolved['course_id'],
-                'phase_template_id' => $resolved['phase_template_id'],
-                'specialization_id' => $resolved['specialization_id'],
+                'semester_id' => $semesterId,
+                'course_id' => $courseId,
+                'phase_template_id' => $phaseTemplateId,
+                'specialization_id' => $specializationId,
                 'supervisor_id' => $resolved['supervisor_id'],
                 'status' => 'setup',
             ]);
@@ -316,8 +422,8 @@ class ProjectsBulkImporter implements BulkImporter
                 $project->students()->attach($resolved['student_ids']);
             }
 
-            if (! empty($resolved['reviewer_ids'])) {
-                $project->reviewers()->attach($resolved['reviewer_ids']);
+            if (! empty($reviewerIds)) {
+                $project->reviewers()->attach($reviewerIds);
             }
 
             $count++;
@@ -339,12 +445,10 @@ class ProjectsBulkImporter implements BulkImporter
     protected function previewColumns(): array
     {
         return [
-            'title' => 'Title',
-            'semester' => 'Semester',
-            'course' => 'Course',
+            'title' => 'Project',
             'supervisor' => 'Supervisor',
-            'students_count' => 'Students',
-            'reviewers_count' => 'Reviewers',
+            'students_count' => '# Students',
+            'student_ids_display' => 'Students',
         ];
     }
 }

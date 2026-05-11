@@ -65,7 +65,7 @@ interface BulkImporter
      * Stage 2: validate the mapped/parsed rows. Receives:
      *  - $files: array of relative storage paths under the local disk (always an array, even for single-file importers).
      *  - $columnMapping: ['system_field' => 'csv_header', ...] (empty for fixed-schema importers).
-     *  - $context: extra form values (e.g. ['rubric_folder_id' => 42]).
+     *  - $context: extra form values from the upload step (e.g. ['rubric_folder_id' => 42]).
      *
      * Returns:
      *  [
@@ -78,7 +78,33 @@ interface BulkImporter
     public function validateRows(array $files, array $columnMapping, array $context): array;
 
     /**
-     * Stage 3: persist previously-validated rows. Wrapped by the caller in a DB transaction.
+     * Filament form components for the post-preview "context" step (Stage 3).
+     * Return an empty array if the importer does not need a context step — the wizard
+     * will then jump straight from preview to import.
+     *
+     * Example use: Projects asks for Semester / Course / Phase Template / Specialization
+     * here so those values aren't duplicated on every CSV row.
+     *
+     * @return array<int, \Filament\Schemas\Components\Component>
+     */
+    public function contextFormFields(): array;
+
+    /**
+     * Stage 3.5: validate the chosen context against the already-validated preview data.
+     * Runs only when contextFormFields() is non-empty, and only after the admin submits
+     * the context form. Used for checks that need the context values to be meaningful
+     * (e.g. "is this student already in another project for the chosen semester?").
+     *
+     * Returns the same shape as validateRows() (sans previewColumns) so the page can merge
+     * errors into the existing list.
+     *
+     * @return array{errors: array<int, string>, hasErrors: bool}
+     */
+    public function validateContext(array $previewData, array $context): array;
+
+    /**
+     * Stage 4: persist previously-validated rows. Wrapped by the caller in a DB transaction.
+     * $context is the merge of the upload-step extras and the context-step values.
      *
      * Returns:
      *  [

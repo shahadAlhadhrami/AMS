@@ -39,7 +39,7 @@
     </div>
 
     {{-- Upload Form --}}
-    @if (! $imported && ! $showMapping && empty($previewData))
+    @if (! $imported && ! $showMapping && ! $showContextStep && empty($previewData))
         <div>
             {{ $this->form }}
 
@@ -106,7 +106,7 @@
     @endif
 
     {{-- Preview Table --}}
-    @if (count($previewData) > 0 && ! $imported)
+    @if (count($previewData) > 0 && ! $imported && ! $showContextStep)
         <div class="mt-6">
             <h3 class="mb-3 text-lg font-medium text-gray-900 dark:text-white">
                 Preview ({{ count($previewData) }} {{ \Illuminate\Support\Str::plural('row', count($previewData)) }})
@@ -153,13 +153,49 @@
                 </table>
             </div>
 
-            {{-- Import Button --}}
+            {{-- Import / Continue Button --}}
             <div class="mt-4 flex gap-3">
+                @if ($this->importerNeedsContextStep())
+                    <x-filament::button
+                        wire:click="continueToContextStep"
+                        color="primary"
+                        icon="heroicon-o-arrow-right"
+                        :disabled="$hasErrors"
+                    >
+                        Continue
+                    </x-filament::button>
+                @else
+                    <x-filament::button
+                        wire:click="runImport"
+                        color="success"
+                        icon="heroicon-o-check-circle"
+                        :disabled="$hasErrors"
+                    >
+                        Import {{ count($previewData) }} {{ $importer->label() }}
+                    </x-filament::button>
+                @endif
+                <x-filament::button wire:click="resetImport" color="gray" icon="heroicon-o-arrow-path">
+                    Cancel
+                </x-filament::button>
+            </div>
+        </div>
+    @endif
+
+    {{-- Context Step (optional, e.g. Projects asks for Semester / Course / Phase Template / Specialization here) --}}
+    @if ($showContextStep && ! $imported)
+        <div class="mt-6 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
+            <h3 class="mb-1 text-lg font-medium text-gray-900 dark:text-white">Select Import Context</h3>
+            <p class="mb-4 text-sm text-gray-500 dark:text-gray-400">
+                These values apply to every {{ \Illuminate\Support\Str::lower(\Illuminate\Support\Str::singular($importer->label())) }} in this import.
+            </p>
+
+            {{ $this->contextForm }}
+
+            <div class="mt-6 flex gap-3">
                 <x-filament::button
-                    wire:click="runImport"
+                    wire:click="confirmContextAndImport"
                     color="success"
                     icon="heroicon-o-check-circle"
-                    :disabled="$hasErrors"
                 >
                     Import {{ count($previewData) }} {{ $importer->label() }}
                 </x-filament::button>

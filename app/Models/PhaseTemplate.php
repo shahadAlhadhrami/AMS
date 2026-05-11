@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -33,6 +34,13 @@ class PhaseTemplate extends Model
     public function projects(): HasMany
     {
         return $this->hasMany(Project::class);
+    }
+
+    public function reviewers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'phase_template_reviewer')
+                    ->withTimestamps()
+                    ->withPivot('id');
     }
 
     public function consolidatedMarks(): HasMany

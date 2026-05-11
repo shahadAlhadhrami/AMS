@@ -56,6 +56,16 @@ class RubricTemplatesBulkImporter implements BulkImporter
         ];
     }
 
+    public function contextFormFields(): array
+    {
+        return [];
+    }
+
+    public function validateContext(array $previewData, array $context): array
+    {
+        return ['errors' => [], 'hasErrors' => false];
+    }
+
     public function systemFields(): array
     {
         return [
