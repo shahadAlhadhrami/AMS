@@ -1,4 +1,32 @@
 <x-filament-panels::page>
+    @php
+        $importer = $this->getImporter();
+        $importers = $this->getImporters();
+    @endphp
+
+    {{-- Import Type Selector --}}
+    <div class="mb-6">
+        <div class="inline-flex rounded-lg border border-gray-200 bg-gray-100 p-1 dark:border-gray-700 dark:bg-gray-800">
+            @foreach ($importers as $key => $i)
+                <button
+                    type="button"
+                    wire:click="$set('type', '{{ $key }}')"
+                    @class([
+                        'rounded-md px-4 py-2 text-sm font-medium transition-all duration-150 whitespace-nowrap',
+                        'bg-white text-primary-600 shadow-sm dark:bg-gray-700 dark:text-primary-400' => $type === $key,
+                        'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200' => $type !== $key,
+                    ])
+                >
+                    {{ $i->label() }}
+                </button>
+            @endforeach
+        </div>
+    </div>
+
+    <p class="mb-6 text-sm text-gray-500 dark:text-gray-400">
+        {{ $importer->description() }}
+    </p>
+
     {{-- Download Template --}}
     <div class="mb-6">
         <x-filament::button
@@ -6,7 +34,7 @@
             color="gray"
             icon="heroicon-o-arrow-down-tray"
         >
-            Download CSV Template
+            Download {{ $importer->label() }} CSV Template
         </x-filament::button>
     </div>
 
@@ -17,7 +45,11 @@
 
             <div class="mt-4">
                 <x-filament::button wire:click="uploadAndPreview" icon="heroicon-o-eye">
-                    Upload & Map Columns
+                    @if ($importer->requiresColumnMapping())
+                        Upload & Map Columns
+                    @else
+                        Upload & Preview
+                    @endif
                 </x-filament::button>
             </div>
         </div>
@@ -31,7 +63,7 @@
                 Match each required field to the corresponding column in your CSV file.
             </p>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                @foreach (['university_id' => 'University ID', 'name' => 'Full Name', 'email' => 'Email Address', 'role' => 'Role'] as $field => $label)
+                @foreach ($importer->systemFieldLabels() as $field => $label)
                     <div>
                         <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                             {{ $label }} <span class="text-danger-500">*</span>
@@ -42,7 +74,7 @@
                         >
                             <option value="">— select column —</option>
                             @foreach ($csvHeaders as $header)
-                                <option value="{{ $header }}" @selected($columnMapping[$field] === $header)>{{ $header }}</option>
+                                <option value="{{ $header }}" @selected(($columnMapping[$field] ?? '') === $header)>{{ $header }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -77,29 +109,33 @@
     @if (count($previewData) > 0 && ! $imported)
         <div class="mt-6">
             <h3 class="mb-3 text-lg font-medium text-gray-900 dark:text-white">
-                Preview ({{ count($previewData) }} rows)
+                Preview ({{ count($previewData) }} {{ \Illuminate\Support\Str::plural('row', count($previewData)) }})
             </h3>
 
             <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
                 <table class="w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead class="bg-gray-50 dark:bg-gray-800">
                         <tr>
-                            <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Row</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">University ID</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Name</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Email</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Role</th>
+                            @if (! empty($previewData[0]['row'] ?? null))
+                                <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Row</th>
+                            @endif
+                            @foreach ($previewColumns as $key => $label)
+                                <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">{{ $label }}</th>
+                            @endforeach
                             <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Status</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
                         @foreach ($previewData as $row)
                             <tr class="{{ $row['status'] === 'error' ? 'bg-danger-50 dark:bg-danger-950/20' : '' }}">
-                                <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-900 dark:text-white">{{ $row['row'] }}</td>
-                                <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-900 dark:text-white">{{ $row['university_id'] }}</td>
-                                <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-900 dark:text-white">{{ $row['name'] }}</td>
-                                <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-900 dark:text-white">{{ $row['email'] }}</td>
-                                <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-900 dark:text-white">{{ $row['role'] }}</td>
+                                @if (! empty($row['row'] ?? null))
+                                    <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-900 dark:text-white">{{ $row['row'] }}</td>
+                                @endif
+                                @foreach ($previewColumns as $key => $label)
+                                    <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-900 dark:text-white">
+                                        {{ $row[$key] ?? '' }}
+                                    </td>
+                                @endforeach
                                 <td class="whitespace-nowrap px-4 py-3 text-sm">
                                     @if ($row['status'] === 'valid')
                                         <span class="inline-flex items-center rounded-full bg-success-100 px-2.5 py-0.5 text-xs font-medium text-success-800 dark:bg-success-900/20 dark:text-success-400">
@@ -118,14 +154,17 @@
             </div>
 
             {{-- Import Button --}}
-            <div class="mt-4">
+            <div class="mt-4 flex gap-3">
                 <x-filament::button
-                    wire:click="importUsers"
+                    wire:click="runImport"
                     color="success"
                     icon="heroicon-o-check-circle"
                     :disabled="$hasErrors"
                 >
-                    Import {{ count($previewData) }} Users
+                    Import {{ count($previewData) }} {{ $importer->label() }}
+                </x-filament::button>
+                <x-filament::button wire:click="resetImport" color="gray" icon="heroicon-o-arrow-path">
+                    Cancel
                 </x-filament::button>
             </div>
         </div>
@@ -138,16 +177,18 @@
                 Import Successful
             </h3>
             <p class="mt-1 text-sm text-success-700 dark:text-success-300">
-                {{ $importedCount }} users have been created successfully.
+                {{ $importedCount }} {{ $importer->label() }} {{ $importedCount === 1 ? 'has' : 'have' }} been created successfully.
             </p>
             <div class="mt-4 flex gap-3">
-                <x-filament::button
-                    wire:click="downloadResults"
-                    color="warning"
-                    icon="heroicon-o-arrow-down-tray"
-                >
-                    Download Results CSV (includes passwords)
-                </x-filament::button>
+                @if ($importer->hasResultsDownload())
+                    <x-filament::button
+                        wire:click="downloadResults"
+                        color="warning"
+                        icon="heroicon-o-arrow-down-tray"
+                    >
+                        Download Results CSV
+                    </x-filament::button>
+                @endif
 
                 <x-filament::button
                     wire:click="resetImport"

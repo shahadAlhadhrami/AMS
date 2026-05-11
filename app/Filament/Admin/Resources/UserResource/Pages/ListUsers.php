@@ -2,7 +2,7 @@
 
 namespace App\Filament\Admin\Resources\UserResource\Pages;
 
-use App\Filament\Admin\Pages\BulkImportUsers;
+use App\Filament\Admin\Pages\BulkImports;
 use App\Filament\Admin\Resources\UserResource;
 use App\Models\User;
 use Filament\Actions;
@@ -21,7 +21,7 @@ class ListUsers extends ListRecords
             Actions\Action::make('importCsv')
                 ->label('Import CSV')
                 ->icon('heroicon-o-arrow-up-tray')
-                ->url(BulkImportUsers::getUrl()),
+                ->url(BulkImports::getUrl(['type' => 'users'])),
         ];
     }
 

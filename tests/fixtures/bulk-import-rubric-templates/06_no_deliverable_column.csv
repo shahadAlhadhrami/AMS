@@ -1,0 +1,5 @@
+criterion_title,criterion_description,max_score,is_individual,level_label,level_score,level_description
+Clarity,Quality of writing,10,false,Excellent,10,Outstanding
+Clarity,Quality of writing,10,false,Good,6,Acceptable
+Originality,Novelty,5,false,Excellent,5,Highly original
+Originality,Novelty,5,false,Good,3,Some original ideas

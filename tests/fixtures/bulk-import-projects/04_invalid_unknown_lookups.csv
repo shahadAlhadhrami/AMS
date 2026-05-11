@@ -1,0 +1,7 @@
+title,semester_name,course_code,phase_template_name,specialization_name,supervisor_university_id,student_university_ids,reviewer_university_ids
+Unknown Semester,Doesnotexist 2099,CS101,Phase 1 Template,Software Engineering,e4382,26s2020,e7051
+Unknown Course,Fall 2026,ZZZ999,Phase 1 Template,Software Engineering,e4382,26s2020,e7051
+Unknown Phase Template,Fall 2026,CS101,Nonexistent Phase,Software Engineering,e4382,26s2020,e7051
+Unknown Specialization,Fall 2026,CS101,Phase 1 Template,Bogus Specialization,e4382,26s2020,e7051
+Unknown Supervisor,Fall 2026,CS101,Phase 1 Template,Software Engineering,e9999,26s2020,e7051
+Unknown Student,Fall 2026,CS101,Phase 1 Template,Software Engineering,e4382,26s9999,e7051
