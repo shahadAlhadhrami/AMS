@@ -6,11 +6,13 @@ use App\Filament\Admin\Resources\RubricTemplateResource\Pages;
 use App\Filament\Admin\Resources\RubricTemplateResource\RelationManagers;
 use App\Models\RubricFolder;
 use App\Models\RubricTemplate;
+use App\Support\FilamentLookupCache;
 use Filament\Actions;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables;
+use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -24,6 +26,12 @@ class RubricTemplateResource extends Resource
 
     protected static ?int $navigationSort = 1;
 
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->with(['folder', 'creator', 'parentTemplate']);
+    }
+
     public static function form(Schema $form): Schema
     {
         return $form
@@ -33,7 +41,7 @@ class RubricTemplateResource extends Resource
                     ->maxLength(255),
                 Forms\Components\Select::make('rubric_folder_id')
                     ->label('Folder')
-                    ->options(fn () => self::getFolderOptions())
+                    ->options(fn (): array => self::getFolderOptions())
                     ->searchable()
                     ->nullable()
                     ->placeholder('— No folder —'),
@@ -51,6 +59,7 @@ class RubricTemplateResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->paginationMode(PaginationMode::Simple)
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->searchable()
@@ -91,10 +100,10 @@ class RubricTemplateResource extends Resource
                     ),
                 Tables\Filters\SelectFilter::make('rubric_folder_id')
                     ->label('Folder')
-                    ->options(fn () => self::getFolderOptions())
+                    ->options(fn (): array => self::getFolderOptions())
                     ->placeholder('All Folders'),
                 Tables\Filters\SelectFilter::make('created_by')
-                    ->relationship('creator', 'name')
+                    ->options(fn (): array => FilamentLookupCache::userNameOptions())
                     ->label('Created By')
                     ->searchable()
                     ->preload(),
@@ -201,22 +210,7 @@ class RubricTemplateResource extends Resource
      */
     public static function getFolderOptions(?int $excludeId = null): array
     {
-        $folders = RubricFolder::orderBy('name')->get()->keyBy('id');
-        $options = [];
-
-        $buildOptions = function (?int $parentId, string $prefix) use (&$buildOptions, $folders, &$options, $excludeId): void {
-            foreach ($folders->where('parent_id', $parentId) as $folder) {
-                if ($folder->id === $excludeId) {
-                    continue;
-                }
-                $options[$folder->id] = $prefix.$folder->name;
-                $buildOptions($folder->id, $prefix.'— ');
-            }
-        };
-
-        $buildOptions(null, '');
-
-        return $options;
+        return FilamentLookupCache::rubricFolderOptions($excludeId);
     }
 
     public static function getRelations(): array

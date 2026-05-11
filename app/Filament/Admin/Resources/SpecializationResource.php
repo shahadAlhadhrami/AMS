@@ -4,11 +4,13 @@ namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\SpecializationResource\Pages;
 use App\Models\Specialization;
+use App\Support\FilamentLookupCache;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Actions;
 use Filament\Tables;
+use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Table;
 
 class SpecializationResource extends Resource
@@ -26,7 +28,7 @@ class SpecializationResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Select::make('department_id')
-                    ->relationship('department', 'name')
+                    ->options(fn (): array => FilamentLookupCache::departmentOptions())
                     ->required()
                     ->searchable()
                     ->preload(),
@@ -39,6 +41,7 @@ class SpecializationResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->paginationMode(PaginationMode::Simple)
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->searchable()
@@ -51,7 +54,7 @@ class SpecializationResource extends Resource
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('department_id')
-                    ->relationship('department', 'name')
+                    ->options(fn (): array => FilamentLookupCache::departmentOptions())
                     ->label('Department'),
             ])
             ->actions([

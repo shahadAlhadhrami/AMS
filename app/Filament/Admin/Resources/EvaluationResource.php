@@ -5,12 +5,14 @@ namespace App\Filament\Admin\Resources;
 use App\Filament\Admin\Resources\EvaluationResource\Pages;
 use App\Models\Evaluation;
 use App\Notifications\EvaluationUnlockedNotification;
+use App\Support\FilamentLookupCache;
 use Filament\Actions;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
+use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -26,7 +28,8 @@ class EvaluationResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
+        $query = parent::getEloquentQuery()
+            ->with(['project.semester', 'rubricTemplate', 'evaluator', 'onBehalfOfUser', 'unlockedByUser']);
         $user = auth()->user();
 
         if ($user && $user->hasRole('Coordinator') && ! $user->hasRole('Super Admin')) {
@@ -41,6 +44,7 @@ class EvaluationResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->paginationMode(PaginationMode::Simple)
             ->columns([
                 Tables\Columns\TextColumn::make('project.title')
                     ->label('Project')
@@ -81,7 +85,14 @@ class EvaluationResource extends Resource
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('semester')
-                    ->relationship('project.semester', 'name')
+                    ->options(fn (): array => FilamentLookupCache::semesterOptions())
+                    ->query(function (Builder $query, array $data): Builder {
+                        $semesterId = $data['value'] ?? null;
+
+                        return blank($semesterId)
+                            ? $query
+                            : $query->whereHas('project', fn (Builder $query): Builder => $query->where('semester_id', $semesterId));
+                    })
                     ->searchable()
                     ->preload()
                     ->label('Semester'),

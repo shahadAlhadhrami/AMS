@@ -10,6 +10,7 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Actions;
 use Filament\Tables;
+use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Table;
 
 class GradingScaleResource extends Resource
@@ -77,6 +78,7 @@ class GradingScaleResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->paginationMode(PaginationMode::Simple)
             ->defaultSort('min_score', 'desc')
             ->columns([
                 Tables\Columns\TextColumn::make('letter_grade')

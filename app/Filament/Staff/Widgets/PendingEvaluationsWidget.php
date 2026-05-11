@@ -12,17 +12,15 @@ class PendingEvaluationsWidget extends StatsOverviewWidget
     {
         $userId = auth()->id();
 
-        $pending = Evaluation::where('evaluator_id', $userId)
-            ->where('status', 'pending')
-            ->count();
+        $counts = Evaluation::query()
+            ->where('evaluator_id', $userId)
+            ->selectRaw('status, COUNT(*) as aggregate')
+            ->groupBy('status')
+            ->pluck('aggregate', 'status');
 
-        $draft = Evaluation::where('evaluator_id', $userId)
-            ->where('status', 'draft')
-            ->count();
-
-        $submitted = Evaluation::where('evaluator_id', $userId)
-            ->where('status', 'submitted')
-            ->count();
+        $pending = (int) $counts->get('pending', 0);
+        $draft = (int) $counts->get('draft', 0);
+        $submitted = (int) $counts->get('submitted', 0);
 
         return [
             Stat::make('Pending Evaluations', $pending)

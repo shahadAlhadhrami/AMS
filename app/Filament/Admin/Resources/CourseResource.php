@@ -9,6 +9,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Actions;
 use Filament\Tables;
+use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Table;
 
 class CourseResource extends Resource
@@ -39,6 +40,7 @@ class CourseResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->paginationMode(PaginationMode::Simple)
             ->columns([
                 Tables\Columns\TextColumn::make('code')
                     ->searchable()

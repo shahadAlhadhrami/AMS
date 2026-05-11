@@ -5,11 +5,13 @@ namespace App\Filament\Admin\Resources;
 use App\Filament\Admin\Resources\SemesterResource\Pages;
 use App\Filament\Admin\Resources\SemesterResource\RelationManagers;
 use App\Models\Semester;
+use App\Support\FilamentLookupCache;
 use Filament\Actions;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables;
+use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -60,6 +62,7 @@ class SemesterResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->paginationMode(PaginationMode::Simple)
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->searchable()
@@ -99,11 +102,7 @@ class SemesterResource extends Resource
                         false: fn (Builder $query): Builder => $query->open(),
                     ),
                 Tables\Filters\SelectFilter::make('academic_year')
-                    ->options(fn () => Semester::query()
-                        ->distinct()
-                        ->pluck('academic_year', 'academic_year')
-                        ->toArray()
-                    ),
+                    ->options(fn (): array => FilamentLookupCache::academicYearOptions()),
             ])
             ->actions([
                 Actions\Action::make('closeSemester')

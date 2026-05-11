@@ -4,7 +4,6 @@ namespace App\Filament\Admin\Resources\UserResource\Pages;
 
 use App\Filament\Admin\Pages\BulkImports;
 use App\Filament\Admin\Resources\UserResource;
-use App\Models\User;
 use Filament\Actions;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Resources\Pages\ListRecords;
@@ -31,7 +30,7 @@ class ListUsers extends ListRecords
             return [];
         }
 
-        $pendingCount = User::unapproved()->count();
+        $pendingCount = UserResource::pendingApprovalCount();
 
         return [
             'all' => Tab::make('All Users')

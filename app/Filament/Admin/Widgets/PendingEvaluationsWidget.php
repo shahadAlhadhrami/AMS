@@ -24,9 +24,14 @@ class PendingEvaluationsWidget extends StatsOverviewWidget
             });
         }
 
-        $pending = (clone $baseQuery)->where('status', 'pending')->count();
-        $draft = (clone $baseQuery)->where('status', 'draft')->count();
-        $submitted = (clone $baseQuery)->where('status', 'submitted')->count();
+        $counts = $baseQuery
+            ->selectRaw('status, COUNT(*) as aggregate')
+            ->groupBy('status')
+            ->pluck('aggregate', 'status');
+
+        $pending = (int) $counts->get('pending', 0);
+        $draft = (int) $counts->get('draft', 0);
+        $submitted = (int) $counts->get('submitted', 0);
 
         return [
             Stat::make('Pending Evaluations', $pending)

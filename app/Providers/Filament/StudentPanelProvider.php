@@ -27,6 +27,7 @@ class StudentPanelProvider extends PanelProvider
         return $panel
             ->id('student')
             ->path('student')
+            ->spa()
             ->login()
             ->passwordReset()
             ->profile()

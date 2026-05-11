@@ -27,6 +27,7 @@ class StaffPanelProvider extends PanelProvider
         return $panel
             ->id('staff')
             ->path('staff')
+            ->spa()
             ->login()
             ->passwordReset()
             ->profile()

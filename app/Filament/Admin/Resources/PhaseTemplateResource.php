@@ -10,7 +10,9 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Actions;
 use Filament\Tables;
+use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class PhaseTemplateResource extends Resource
 {
@@ -21,6 +23,12 @@ class PhaseTemplateResource extends Resource
     protected static string | \UnitEnum | null $navigationGroup = 'Template Pool';
 
     protected static ?int $navigationSort = 2;
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->with('creator');
+    }
 
     public static function form(Schema $form): Schema
     {
@@ -40,6 +48,7 @@ class PhaseTemplateResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->paginationMode(PaginationMode::Simple)
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->searchable()

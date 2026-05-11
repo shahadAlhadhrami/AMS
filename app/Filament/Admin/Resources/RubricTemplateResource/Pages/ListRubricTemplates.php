@@ -6,6 +6,7 @@ use App\Filament\Admin\Pages\BulkImports;
 use App\Filament\Admin\Resources\RubricTemplateResource;
 use App\Models\RubricFolder;
 use App\Models\RubricTemplate;
+use App\Support\FilamentLookupCache;
 use Filament\Actions;
 use Filament\Forms;
 use Filament\Notifications\Notification;
@@ -92,6 +93,7 @@ class ListRubricTemplates extends ListRecords
                         'parent_id' => $this->currentFolderId,
                         'created_by' => auth()->id(),
                     ]);
+                    FilamentLookupCache::forgetRubricFolders();
 
                     Notification::make()
                         ->title("Folder '{$data['name']}' created.")
@@ -117,6 +119,7 @@ class ListRubricTemplates extends ListRecords
                     }
 
                     $folder->update(['name' => $data['name']]);
+                    FilamentLookupCache::forgetRubricFolders();
 
                     Notification::make()
                         ->title("Folder renamed to '{$data['name']}'.")
@@ -145,6 +148,7 @@ class ListRubricTemplates extends ListRecords
 
                     $parentId = $folder->parent_id;
                     $folder->delete();
+                    FilamentLookupCache::forgetRubricFolders();
 
                     $this->navigateToFolder($parentId);
 

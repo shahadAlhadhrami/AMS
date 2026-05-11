@@ -5,12 +5,13 @@ namespace App\Filament\Admin\Resources;
 use App\Filament\Admin\Resources\ProjectResource\Pages;
 use App\Filament\Admin\Resources\ProjectResource\RelationManagers;
 use App\Models\Project;
-use App\Models\User;
+use App\Support\FilamentLookupCache;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Actions;
 use Filament\Tables;
+use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -26,7 +27,8 @@ class ProjectResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
+        $query = parent::getEloquentQuery()
+            ->with(['semester', 'course', 'specialization', 'supervisor']);
         $user = auth()->user();
 
         if ($user && $user->hasRole('Coordinator') && ! $user->hasRole('Super Admin')) {
@@ -46,39 +48,33 @@ class ProjectResource extends Resource
                     ->required()
                     ->maxLength(255),
                 Forms\Components\Select::make('semester_id')
-                    ->relationship('semester', 'name')
+                    ->options(fn (): array => FilamentLookupCache::semesterOptions())
                     ->searchable()
                     ->preload()
                     ->required(),
                 Forms\Components\Select::make('course_id')
-                    ->relationship('course', 'title')
-                    ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->code} - {$record->title}")
+                    ->options(fn (): array => FilamentLookupCache::courseOptions())
                     ->searchable()
                     ->preload()
                     ->required(),
                 Forms\Components\Select::make('phase_template_id')
-                    ->relationship('phaseTemplate', 'name')
+                    ->options(fn (): array => FilamentLookupCache::phaseTemplateOptions())
                     ->searchable()
                     ->preload()
                     ->required(),
                 Forms\Components\Select::make('specialization_id')
-                    ->relationship('specialization', 'name')
+                    ->options(fn (): array => FilamentLookupCache::specializationOptions())
                     ->searchable()
                     ->preload()
                     ->required(),
                 Forms\Components\Select::make('supervisor_id')
                     ->label('Supervisor')
-                    ->options(function () {
-                        return User::role('Reviewer/Supervisor')->get()
-                            ->mapWithKeys(fn (User $user) => [
-                                $user->id => "{$user->name} ({$user->university_id})",
-                            ]);
-                    })
+                    ->options(fn (): array => FilamentLookupCache::supervisorOptions())
                     ->searchable()
                     ->required(),
                 Forms\Components\Select::make('previous_phase_project_id')
                     ->label('Previous Phase Project')
-                    ->relationship('previousPhaseProject', 'title')
+                    ->options(fn (): array => FilamentLookupCache::projectOptions())
                     ->searchable()
                     ->nullable(),
                 Forms\Components\Select::make('status')
@@ -95,6 +91,7 @@ class ProjectResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->paginationMode(PaginationMode::Simple)
             ->columns([
                 Tables\Columns\TextColumn::make('title')
                     ->searchable()
@@ -125,7 +122,7 @@ class ProjectResource extends Resource
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('semester_id')
-                    ->relationship('semester', 'name')
+                    ->options(fn (): array => FilamentLookupCache::semesterOptions())
                     ->searchable()
                     ->preload()
                     ->label('Semester'),
@@ -136,10 +133,10 @@ class ProjectResource extends Resource
                         'completed' => 'Completed',
                     ]),
                 Tables\Filters\SelectFilter::make('course_id')
-                    ->relationship('course', 'title')
+                    ->options(fn (): array => FilamentLookupCache::courseOptions())
                     ->label('Course'),
                 Tables\Filters\SelectFilter::make('supervisor_id')
-                    ->relationship('supervisor', 'name')
+                    ->options(fn (): array => FilamentLookupCache::supervisorOptions())
                     ->searchable()
                     ->preload()
                     ->label('Supervisor'),

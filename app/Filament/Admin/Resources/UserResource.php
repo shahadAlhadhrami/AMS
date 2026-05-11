@@ -4,13 +4,15 @@ namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\UserResource\Pages;
 use App\Models\User;
+use App\Support\FilamentLookupCache;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Actions;
 use Filament\Tables;
+use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Table;
-use Spatie\Permission\Models\Role;
+use Illuminate\Database\Eloquent\Builder;
 
 class UserResource extends Resource
 {
@@ -28,7 +30,7 @@ class UserResource extends Resource
             return null;
         }
 
-        $count = User::unapproved()->count();
+        $count = static::pendingApprovalCount();
 
         return $count > 0 ? (string) $count : null;
     }
@@ -39,7 +41,7 @@ class UserResource extends Resource
             return null;
         }
 
-        return User::unapproved()->exists() ? 'danger' : null;
+        return static::pendingApprovalCount() > 0 ? 'danger' : null;
     }
 
     public static function getNavigationBadgeTooltip(): ?string
@@ -48,9 +50,14 @@ class UserResource extends Resource
             return null;
         }
 
-        $count = User::unapproved()->count();
+        $count = static::pendingApprovalCount();
 
         return $count > 0 ? "{$count} pending coordinator approval(s)" : null;
+    }
+
+    public static function pendingApprovalCount(): int
+    {
+        return FilamentLookupCache::pendingCoordinatorApprovals();
     }
 
     public static function form(Schema $form): Schema
@@ -70,7 +77,7 @@ class UserResource extends Resource
                     ->unique(ignoreRecord: true)
                     ->maxLength(255),
                 Forms\Components\Select::make('specialization_id')
-                    ->relationship('specialization', 'name')
+                    ->options(fn (): array => FilamentLookupCache::specializationOptions())
                     ->searchable()
                     ->preload()
                     ->nullable(),
@@ -86,15 +93,7 @@ class UserResource extends Resource
                     ->dehydrated(false),
                 Forms\Components\CheckboxList::make('roles')
                     ->relationship('roles', 'name')
-                    ->options(function () {
-                        $query = Role::query();
-
-                        if (! auth()->user()->hasRole('Super Admin')) {
-                            $query->whereNotIn('name', ['Super Admin', 'Coordinator']);
-                        }
-
-                        return $query->pluck('name', 'id');
-                    })
+                    ->options(fn (): array => FilamentLookupCache::roleOptions(auth()->user()->hasRole('Super Admin')))
                     ->columns(2)
                     ->required(),
             ]);
@@ -103,6 +102,7 @@ class UserResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->paginationMode(PaginationMode::Simple)
             ->columns([
                 Tables\Columns\TextColumn::make('university_id')
                     ->searchable()
@@ -120,11 +120,18 @@ class UserResource extends Resource
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('roles')
-                    ->relationship('roles', 'name')
+                    ->options(fn (): array => FilamentLookupCache::roleOptions())
                     ->multiple()
-                    ->preload(),
+                    ->preload()
+                    ->query(function (Builder $query, array $data): Builder {
+                        $roleIds = array_filter($data['values'] ?? []);
+
+                        return empty($roleIds)
+                            ? $query
+                            : $query->whereHas('roles', fn (Builder $query): Builder => $query->whereKey($roleIds));
+                    }),
                 Tables\Filters\SelectFilter::make('specialization_id')
-                    ->relationship('specialization', 'name')
+                    ->options(fn (): array => FilamentLookupCache::specializationOptions())
                     ->label('Specialization'),
             ])
             ->actions([
@@ -139,6 +146,7 @@ class UserResource extends Resource
                     ->visible(fn (User $record): bool => ! $record->is_approved && auth()->user()?->hasRole('Super Admin'))
                     ->action(function (User $record): void {
                         $record->update(['is_approved' => true]);
+                        FilamentLookupCache::forgetPendingCoordinatorApprovals();
 
                         \Filament\Notifications\Notification::make()
                             ->title('Coordinator Approved')
@@ -158,6 +166,7 @@ class UserResource extends Resource
                     ->action(function (User $record): void {
                         $name = $record->name;
                         $record->forceDelete();
+                        FilamentLookupCache::forgetPendingCoordinatorApprovals();
 
                         \Filament\Notifications\Notification::make()
                             ->title('Registration Rejected')
@@ -184,9 +193,10 @@ class UserResource extends Resource
         ];
     }
 
-    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
+        $query = parent::getEloquentQuery()
+            ->with(['roles', 'specialization']);
 
         if (auth()->check() && ! auth()->user()->hasRole('Super Admin')) {
             $query->approved();

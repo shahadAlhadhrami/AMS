@@ -5,6 +5,7 @@ namespace App\Filament\Admin\Resources;
 use App\Filament\Admin\Resources\ConsolidatedMarkResource\Pages;
 use App\Models\ConsolidatedMark;
 use App\Models\GradingScale;
+use App\Support\FilamentLookupCache;
 use Filament\Actions;
 use Filament\Forms;
 use Filament\Infolists\Components\RepeatableEntry;
@@ -13,6 +14,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
+use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -28,7 +30,8 @@ class ConsolidatedMarkResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
+        $query = parent::getEloquentQuery()
+            ->with(['project.semester', 'student']);
         $user = auth()->user();
 
         if ($user && $user->hasRole('Coordinator') && ! $user->hasRole('Super Admin')) {
@@ -43,6 +46,7 @@ class ConsolidatedMarkResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->paginationMode(PaginationMode::Simple)
             ->columns([
                 Tables\Columns\TextColumn::make('project.title')
                     ->label('Project')
@@ -79,12 +83,19 @@ class ConsolidatedMarkResource extends Resource
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('semester')
-                    ->relationship('project.semester', 'name')
+                    ->options(fn (): array => FilamentLookupCache::semesterOptions())
+                    ->query(function (Builder $query, array $data): Builder {
+                        $semesterId = $data['value'] ?? null;
+
+                        return blank($semesterId)
+                            ? $query
+                            : $query->whereHas('project', fn (Builder $query): Builder => $query->where('semester_id', $semesterId));
+                    })
                     ->searchable()
                     ->preload()
                     ->label('Semester'),
                 Tables\Filters\SelectFilter::make('project')
-                    ->relationship('project', 'title')
+                    ->options(fn (): array => FilamentLookupCache::projectOptions())
                     ->searchable()
                     ->preload()
                     ->label('Project'),
