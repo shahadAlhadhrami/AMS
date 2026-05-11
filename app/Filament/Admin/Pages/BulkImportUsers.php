@@ -15,6 +15,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class BulkImportUsers extends Page
 {
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-arrow-up-tray';
 
     protected static string | \UnitEnum | null $navigationGroup = 'Tools';
@@ -199,8 +201,9 @@ class BulkImportUsers extends Page
 
     protected function validateRows(array $rows): void
     {
-        $validRoles = Role::pluck('name')->map(fn ($name) => strtolower($name))->toArray();
-        $isSuperAdmin = auth()->user()->hasRole('Super Admin');
+        $validRoles = Role::pluck('name')
+            ->mapWithKeys(fn ($name) => [Str::lower($name) => $name])
+            ->toArray();
         $restrictedRoles = ['super admin', 'coordinator'];
 
         $seenUniversityIds = [];
@@ -263,10 +266,14 @@ class BulkImportUsers extends Page
             if (empty($role)) {
                 $rowErrors[] = 'role is required';
             } else {
-                if (! in_array(strtolower($role), $validRoles)) {
+                $resolvedRole = $this->resolveImportRole($role, $validRoles);
+
+                if (! $resolvedRole) {
                     $rowErrors[] = "Role '{$role}' is not valid";
-                } elseif (! $isSuperAdmin && in_array(strtolower($role), $restrictedRoles)) {
-                    $rowErrors[] = "You do not have permission to assign the '{$role}' role";
+                } elseif (in_array(Str::lower($resolvedRole), $restrictedRoles)) {
+                    $rowErrors[] = "Role '{$role}' cannot be assigned via bulk import";
+                } else {
+                    $role = $resolvedRole;
                 }
             }
 
@@ -290,6 +297,22 @@ class BulkImportUsers extends Page
                 }
             }
         }
+    }
+
+    protected function resolveImportRole(string $role, array $validRoles): ?string
+    {
+        $normalisedRole = preg_replace('/\s*\/\s*/', '/', Str::lower(trim($role)));
+
+        $aliases = [
+            'reviewer' => 'Reviewer/Supervisor',
+            'supervisor' => 'Reviewer/Supervisor',
+            'reviewer/supervisor' => 'Reviewer/Supervisor',
+            'supervisor/reviewer' => 'Reviewer/Supervisor',
+        ];
+
+        $role = $aliases[$normalisedRole] ?? trim($role);
+
+        return $validRoles[Str::lower($role)] ?? null;
     }
 
     public function importUsers(): void
@@ -359,9 +382,9 @@ class BulkImportUsers extends Page
         return response()->streamDownload(function () {
             $file = fopen('php://output', 'w');
             fputcsv($file, ['university_id', 'name', 'email', 'role']);
-            fputcsv($file, ['IT001234', 'Ali Al-Busaidi', 'ali@example.edu', 'Supervisor']);
-            fputcsv($file, ['IT001235', 'Sara Al-Habsi', 'sara@example.edu', 'Reviewer']);
-            fputcsv($file, ['IT001236', 'Mohammed Al-Sadi', 'mohammed@example.edu', 'Student']);
+            fputcsv($file, ['e4382', 'Ahmed Al-Balushi', 'ahmed.al-balushi@utas.edu.om', 'Supervisor']);
+            fputcsv($file, ['e7051', 'Nawal Al-Kharusi', 'nawal.al-kharusi@utas.edu.om', 'Reviewer']);
+            fputcsv($file, ['26s2020', 'Hamed Al-Balushi', '26s2020@utas.edu.om', 'Student']);
             fclose($file);
         }, 'users_import_template.csv');
     }

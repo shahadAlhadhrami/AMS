@@ -69,6 +69,11 @@ class UserResource extends Resource
                     ->email()
                     ->unique(ignoreRecord: true)
                     ->maxLength(255),
+                Forms\Components\Select::make('specialization_id')
+                    ->relationship('specialization', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->nullable(),
                 Forms\Components\TextInput::make('password')
                     ->password()
                     ->required(fn (string $operation): bool => $operation === 'create')
@@ -79,11 +84,6 @@ class UserResource extends Resource
                     ->password()
                     ->requiredWith('password')
                     ->dehydrated(false),
-                Forms\Components\Select::make('specialization_id')
-                    ->relationship('specialization', 'name')
-                    ->searchable()
-                    ->preload()
-                    ->nullable(),
                 Forms\Components\CheckboxList::make('roles')
                     ->relationship('roles', 'name')
                     ->options(function () {
