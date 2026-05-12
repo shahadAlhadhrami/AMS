@@ -25,9 +25,7 @@ class MasterDataSetup
 
     public static function isComplete(): bool
     {
-        static $result = null;
-
-        return $result ??= Department::query()->exists()
+        return Department::query()->exists()
             && Specialization::query()->exists()
             && Course::query()->exists()
             && GradingScale::query()->exists();

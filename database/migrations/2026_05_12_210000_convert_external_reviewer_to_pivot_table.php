@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -16,10 +17,16 @@ return new class extends Migration
             $table->unique(['phase_template_id', 'user_id']);
         });
 
-        Schema::table('phase_templates', function (Blueprint $table) {
-            $table->dropForeign('phase_templates_external_reviewer_id_foreign');
-            $table->dropColumn('external_reviewer_id');
-        });
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
+
+        if (Schema::hasColumn('phase_templates', 'external_reviewer_id')) {
+            Schema::table('phase_templates', function (Blueprint $table) {
+                $table->dropForeign('phase_templates_external_reviewer_id_foreign');
+                $table->dropColumn('external_reviewer_id');
+            });
+        }
     }
 
     public function down(): void

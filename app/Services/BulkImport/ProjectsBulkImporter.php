@@ -82,9 +82,9 @@ class ProjectsBulkImporter implements BulkImporter
             ['',                                  '',      '26s4489'],
         ];
 
-        $tmpPath = tempnam(sys_get_temp_dir(), 'ams_tpl_') . '.xlsx';
+        $tmpPath = tempnam(sys_get_temp_dir(), 'ams_tpl_').'.xlsx';
 
-        $options = new XlsxOptions();
+        $options = new XlsxOptions;
         $options->setColumnWidth(38, 1);
         $options->setColumnWidth(16, 2);
         $options->setColumnWidth(16, 3);
@@ -98,7 +98,7 @@ class ProjectsBulkImporter implements BulkImporter
         $writer = new XlsxWriter($options);
         $writer->openToFile($tmpPath);
 
-        $headerStyle = (new Style())->setFontBold();
+        $headerStyle = (new Style)->setFontBold();
         $writer->addRow(Row::fromValues(['project_title', 'supervisor_id', 'student_id'], $headerStyle));
 
         foreach ($dataRows as $rowData) {
@@ -160,10 +160,11 @@ class ProjectsBulkImporter implements BulkImporter
             $parsed = SpreadsheetReader::read($filePath);
         } catch (\Throwable $e) {
             @unlink($filePath);
+
             return [
                 'previewData' => [],
                 'previewColumns' => $this->previewColumns(),
-                'errors' => ['Unable to read the spreadsheet: ' . $e->getMessage()],
+                'errors' => ['Unable to read the spreadsheet: '.$e->getMessage()],
                 'hasErrors' => true,
             ];
         }
@@ -240,6 +241,7 @@ class ProjectsBulkImporter implements BulkImporter
             if (! array_key_exists($uid, $userCache)) {
                 $userCache[$uid] = $uid === '' ? null : User::where('university_id', $uid)->first();
             }
+
             return $userCache[$uid];
         };
 
@@ -323,7 +325,7 @@ class ProjectsBulkImporter implements BulkImporter
                 ->all();
 
             if (count($distinctSupervisors) > 1) {
-                $groupErrors[] = "Project '{$title}' has inconsistent supervisor IDs across rows: " . implode(', ', $distinctSupervisors);
+                $groupErrors[] = "Project '{$title}' has inconsistent supervisor IDs across rows: ".implode(', ', $distinctSupervisors);
             }
 
             // Students: collect distinct and detect duplicates within the CSV.
@@ -337,6 +339,7 @@ class ProjectsBulkImporter implements BulkImporter
 
                 if (isset($seenInGroup[$sid])) {
                     $groupErrors[] = "Student '{$sid}' is listed twice in project '{$title}'";
+
                     continue;
                 }
                 $seenInGroup[$sid] = true;
@@ -441,7 +444,7 @@ class ProjectsBulkImporter implements BulkImporter
                     }
 
                     $warnings[] = "Project '{$row['title']}': "
-                        . StudentProjectReassignment::warningMessage($student, $existingProject, $row['title']);
+                        .StudentProjectReassignment::warningMessage($student, $existingProject, $row['title']);
                 }
             }
         }
@@ -471,6 +474,7 @@ class ProjectsBulkImporter implements BulkImporter
         }
 
         $count = 0;
+        $projectIds = [];
         foreach ($previewData as $row) {
             $resolved = $row['_resolved'];
             $studentIds = $resolved['student_ids'] ?? [];
@@ -498,9 +502,10 @@ class ProjectsBulkImporter implements BulkImporter
             }
 
             $count++;
+            $projectIds[] = $project->id;
         }
 
-        return ['count' => $count, 'results' => []];
+        return ['count' => $count, 'results' => [], 'project_ids' => $projectIds];
     }
 
     public function hasResultsDownload(): bool

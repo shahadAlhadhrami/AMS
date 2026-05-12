@@ -7,10 +7,11 @@ use App\Filament\Admin\Resources\ProjectResource\Pages;
 use App\Filament\Admin\Resources\ProjectResource\RelationManagers;
 use App\Models\Project;
 use App\Support\FilamentLookupCache;
+use Closure;
+use Filament\Actions;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Actions;
 use Filament\Tables;
 use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Table;
@@ -22,9 +23,9 @@ class ProjectResource extends Resource
 
     protected static ?string $model = Project::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-briefcase';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-briefcase';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Academic Setup';
+    protected static string|\UnitEnum|null $navigationGroup = 'Academic Setup';
 
     protected static ?int $navigationSort = 2;
 
@@ -46,49 +47,72 @@ class ProjectResource extends Resource
     public static function form(Schema $form): Schema
     {
         return $form
-            ->schema([
-                Forms\Components\TextInput::make('title')
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\Select::make('semester_id')
-                    ->options(fn (): array => FilamentLookupCache::semesterOptions())
-                    ->searchable()
-                    ->preload()
-                    ->required(),
-                Forms\Components\Select::make('course_id')
-                    ->options(fn (): array => FilamentLookupCache::courseOptions())
-                    ->searchable()
-                    ->preload()
-                    ->required(),
-                Forms\Components\Select::make('phase_template_id')
-                    ->options(fn (): array => FilamentLookupCache::phaseTemplateOptions())
-                    ->searchable()
-                    ->preload()
-                    ->required(),
-                Forms\Components\Select::make('specialization_id')
-                    ->options(fn (): array => FilamentLookupCache::specializationOptions())
-                    ->searchable()
-                    ->preload()
-                    ->required(),
-                Forms\Components\Select::make('supervisor_id')
-                    ->label('Supervisor')
-                    ->options(fn (): array => FilamentLookupCache::supervisorOptions())
-                    ->searchable()
-                    ->required(),
-                Forms\Components\Select::make('previous_phase_project_id')
-                    ->label('Previous Phase Project')
-                    ->options(fn (): array => FilamentLookupCache::projectOptions())
-                    ->searchable()
-                    ->nullable(),
-                Forms\Components\Select::make('status')
-                    ->options([
-                        'setup' => 'Setup',
-                        'evaluating' => 'Evaluating',
-                        'completed' => 'Completed',
-                    ])
-                    ->default('setup')
-                    ->required(),
-            ]);
+            ->schema(static::projectFormComponents());
+    }
+
+    public static function projectFormComponents(
+        ?Closure $semesterOptions = null,
+        ?Closure $courseOptions = null,
+        ?Closure $phaseTemplateOptions = null,
+        ?Closure $specializationOptions = null,
+        ?Closure $supervisorOptions = null,
+        ?Closure $projectOptions = null,
+        mixed $semesterDefault = null,
+        mixed $phaseTemplateDefault = null,
+        bool|Closure $lockSemester = false,
+        bool|Closure $lockPhaseTemplate = false,
+    ): array {
+        $resolveDefault = fn (mixed $default): mixed => $default instanceof Closure ? $default() : $default;
+
+        return [
+            Forms\Components\TextInput::make('title')
+                ->required()
+                ->maxLength(255),
+            Forms\Components\Select::make('semester_id')
+                ->options($semesterOptions ?? fn (): array => FilamentLookupCache::semesterOptions())
+                ->default(fn (): mixed => $resolveDefault($semesterDefault))
+                ->disabled($lockSemester)
+                ->dehydrated()
+                ->searchable()
+                ->preload()
+                ->required(),
+            Forms\Components\Select::make('course_id')
+                ->options($courseOptions ?? fn (): array => FilamentLookupCache::courseOptions())
+                ->searchable()
+                ->preload()
+                ->required(),
+            Forms\Components\Select::make('phase_template_id')
+                ->options($phaseTemplateOptions ?? fn (): array => FilamentLookupCache::phaseTemplateOptions())
+                ->default(fn (): mixed => $resolveDefault($phaseTemplateDefault))
+                ->disabled($lockPhaseTemplate)
+                ->dehydrated()
+                ->searchable()
+                ->preload()
+                ->required(),
+            Forms\Components\Select::make('specialization_id')
+                ->options($specializationOptions ?? fn (): array => FilamentLookupCache::specializationOptions())
+                ->searchable()
+                ->preload()
+                ->required(),
+            Forms\Components\Select::make('supervisor_id')
+                ->label('Supervisor')
+                ->options($supervisorOptions ?? fn (): array => FilamentLookupCache::supervisorOptions())
+                ->searchable()
+                ->required(),
+            Forms\Components\Select::make('previous_phase_project_id')
+                ->label('Previous Phase Project')
+                ->options($projectOptions ?? fn (): array => FilamentLookupCache::projectOptions())
+                ->searchable()
+                ->nullable(),
+            Forms\Components\Select::make('status')
+                ->options([
+                    'setup' => 'Setup',
+                    'evaluating' => 'Evaluating',
+                    'completed' => 'Completed',
+                ])
+                ->default('setup')
+                ->required(),
+        ];
     }
 
     public static function table(Table $table): Table
@@ -158,9 +182,9 @@ class ProjectResource extends Resource
                         ->form([
                             Forms\Components\Select::make('status')
                                 ->options([
-                                    'setup'      => 'Setup',
+                                    'setup' => 'Setup',
                                     'evaluating' => 'Evaluating',
-                                    'completed'  => 'Completed',
+                                    'completed' => 'Completed',
                                 ])
                                 ->required(),
                         ])

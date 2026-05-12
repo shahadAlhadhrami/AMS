@@ -28,6 +28,7 @@ class StudentPanelProvider extends PanelProvider
             ->id('student')
             ->path('student')
             ->spa()
+            ->topNavigation()
             ->login()
             ->passwordReset()
             ->profile()

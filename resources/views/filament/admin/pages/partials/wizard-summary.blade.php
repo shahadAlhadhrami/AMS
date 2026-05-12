@@ -3,7 +3,7 @@
     @php $semester = $this->getSemesterSummary(); @endphp
     @if ($semester)
         <x-filament::section>
-            <x-slot name="heading">Semester Created</x-slot>
+            <x-slot name="heading">Semester</x-slot>
             <div class="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
                 <div>
                     <span class="text-gray-500 dark:text-gray-400">Name</span>
@@ -21,20 +21,41 @@
                     <span class="text-gray-500 dark:text-gray-400">End Date</span>
                     <p class="font-medium text-gray-900 dark:text-white">{{ $semester['end_date'] ?? 'Not set' }}</p>
                 </div>
+                <div>
+                    <span class="text-gray-500 dark:text-gray-400">Source</span>
+                    <p class="font-medium text-gray-900 dark:text-white">{{ $semester['source'] }}</p>
+                </div>
+                <div>
+                    <span class="text-gray-500 dark:text-gray-400">Projects in Semester</span>
+                    <p class="font-medium text-gray-900 dark:text-white">{{ $semester['project_count'] }}</p>
+                </div>
             </div>
         </x-filament::section>
     @endif
 
-    {{-- Phase Templates --}}
-    @php $phaseTemplates = $this->getSelectedPhaseTemplateNames(); @endphp
-    @if (count($phaseTemplates) > 0)
+    {{-- Phase Template --}}
+    @php $phaseTemplate = $this->getSelectedPhaseTemplateSummary(); @endphp
+    @if ($phaseTemplate)
         <x-filament::section>
-            <x-slot name="heading">Phase Templates Selected ({{ count($phaseTemplates) }})</x-slot>
-            <ul class="list-inside list-disc space-y-1 text-sm text-gray-700 dark:text-gray-300">
-                @foreach ($phaseTemplates as $name)
-                    <li>{{ $name }}</li>
-                @endforeach
-            </ul>
+            <x-slot name="heading">Phase Template</x-slot>
+            <div class="grid grid-cols-2 gap-4 text-sm md:grid-cols-5">
+                <div class="md:col-span-2">
+                    <span class="text-gray-500 dark:text-gray-400">Selected Template</span>
+                    <p class="font-medium text-gray-900 dark:text-white">{{ $phaseTemplate['name'] }}</p>
+                </div>
+                <div>
+                    <span class="text-gray-500 dark:text-gray-400">Marks</span>
+                    <p class="font-medium text-gray-900 dark:text-white">{{ $phaseTemplate['total_phase_marks'] }}</p>
+                </div>
+                <div>
+                    <span class="text-gray-500 dark:text-gray-400">Rubric Rules</span>
+                    <p class="font-medium text-gray-900 dark:text-white">{{ $phaseTemplate['rubric_rules_count'] }}</p>
+                </div>
+                <div>
+                    <span class="text-gray-500 dark:text-gray-400">Reviewers / Externals</span>
+                    <p class="font-medium text-gray-900 dark:text-white">{{ $phaseTemplate['reviewers_count'] }} / {{ $phaseTemplate['externals_count'] }}</p>
+                </div>
+            </div>
         </x-filament::section>
     @endif
 
@@ -51,6 +72,7 @@
                             <th class="px-4 py-3 text-gray-500 dark:text-gray-400">Course</th>
                             <th class="px-4 py-3 text-gray-500 dark:text-gray-400">Phase Template</th>
                             <th class="px-4 py-3 text-gray-500 dark:text-gray-400">Supervisor</th>
+                            <th class="px-4 py-3 text-gray-500 dark:text-gray-400">Status</th>
                             <th class="px-4 py-3 text-gray-500 dark:text-gray-400">Students</th>
                             <th class="px-4 py-3 text-gray-500 dark:text-gray-400">Reviewers</th>
                         </tr>
@@ -62,8 +84,9 @@
                                 <td class="px-4 py-3 text-gray-700 dark:text-gray-300">{{ $project['course'] }}</td>
                                 <td class="px-4 py-3 text-gray-700 dark:text-gray-300">{{ $project['phase_template'] }}</td>
                                 <td class="px-4 py-3 text-gray-700 dark:text-gray-300">{{ $project['supervisor'] }}</td>
-                                <td class="px-4 py-3 text-gray-700 dark:text-gray-300">{{ $project['students'] ?: '--' }}</td>
-                                <td class="px-4 py-3 text-gray-700 dark:text-gray-300">{{ $project['reviewers'] ?: '--' }}</td>
+                                <td class="px-4 py-3 text-gray-700 dark:text-gray-300">{{ $project['status'] }}</td>
+                                <td class="px-4 py-3 text-gray-700 dark:text-gray-300">{{ $project['students'] ?: '-' }}</td>
+                                <td class="px-4 py-3 text-gray-700 dark:text-gray-300">{{ $project['reviewers'] ?: '-' }}</td>
                             </tr>
                         @endforeach
                     </tbody>

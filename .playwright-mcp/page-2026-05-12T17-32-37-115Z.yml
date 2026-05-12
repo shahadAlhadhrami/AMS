@@ -1,0 +1,31 @@
+- generic [ref=e1]:
+  - main [ref=e4]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - generic [ref=e9]: AMS
+        - heading "Sign in" [level=1] [ref=e10]
+      - generic [ref=e14]:
+        - generic [ref=e18]:
+          - generic [ref=e21]:
+            - generic [ref=e25]:
+              - text: Email address
+              - superscript [ref=e26]: "*"
+            - textbox "Email address*" [active] [ref=e30]
+          - generic [ref=e33]:
+            - generic [ref=e35]:
+              - generic [ref=e37]:
+                - text: Password
+                - superscript [ref=e38]: "*"
+              - link "Forgot password?" [ref=e43] [cursor=pointer]:
+                - /url: https://ams.test/student/password-reset/request
+            - generic [ref=e45]:
+              - textbox "Password*" [ref=e47]
+              - button "Show password" [ref=e50] [cursor=pointer]:
+                - img [ref=e51]
+          - generic [ref=e59]:
+            - checkbox "Remember me" [ref=e60]
+            - generic [ref=e61]: Remember me
+        - button "Sign in" [ref=e67] [cursor=pointer]:
+          - generic [ref=e68]: Sign in
+  - generic:
+    - status

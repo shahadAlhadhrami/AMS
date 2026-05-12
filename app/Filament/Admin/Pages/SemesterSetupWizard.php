@@ -3,23 +3,25 @@
 namespace App\Filament\Admin\Pages;
 
 use App\Filament\Admin\Concerns\HidesDuringMasterDataSetup;
+use App\Filament\Admin\Resources\ProjectResource;
 use App\Filament\Admin\Resources\SemesterResource;
-use App\Models\Course;
 use App\Models\PhaseTemplate;
 use App\Models\Project;
 use App\Models\Semester;
-use App\Models\Specialization;
-use App\Models\User;
-use App\Support\StudentProjectReassignment;
+use App\Services\BulkImport\ProjectsBulkImporter;
+use App\Services\BulkImport\SpreadsheetReader;
+use App\Support\FilamentLookupCache;
+use Filament\Actions\Action;
 use Filament\Forms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Actions as SchemaActions;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Wizard;
 use Filament\Schemas\Schema;
+use Filament\Support\Exceptions\Halt;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\HtmlString;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -27,9 +29,9 @@ class SemesterSetupWizard extends Page
 {
     use HidesDuringMasterDataSetup;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-sparkles';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-sparkles';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Academic Setup';
+    protected static string|\UnitEnum|null $navigationGroup = 'Academic Setup';
 
     protected static ?string $navigationLabel = 'Semester Setup Wizard';
 
@@ -41,21 +43,39 @@ class SemesterSetupWizard extends Page
 
     public ?array $data = [];
 
-    // Cross-step state
-    public ?int $createdSemesterId = null;
+    public ?int $semesterId = null;
 
-    public array $selectedPhaseTemplateIds = [];
+    public bool $semesterWasCreated = false;
+
+    public ?int $selectedPhaseTemplateId = null;
 
     public array $createdProjectIds = [];
 
-    // CSV import state (Step 3)
-    public array $csvPreviewData = [];
+    public array $projectImportUploadedFiles = [];
 
-    public array $csvValidationErrors = [];
+    public array $projectImportHeaders = [];
 
-    public bool $csvHasErrors = false;
+    public array $projectImportColumnMapping = [];
 
-    public bool $csvValidated = false;
+    public array $projectImportPreviewData = [];
+
+    public array $projectImportPreviewColumns = [];
+
+    public array $projectImportValidationErrors = [];
+
+    public array $projectImportValidationWarnings = [];
+
+    public bool $projectImportHasErrors = false;
+
+    public bool $projectImportHasWarnings = false;
+
+    public bool $projectImportShowMapping = false;
+
+    public bool $projectImportCompleted = false;
+
+    public int $projectImportImportedCount = 0;
+
+    public ?string $projectImportConfirmedWarningSignature = null;
 
     public static function canAccess(): bool
     {
@@ -67,7 +87,14 @@ class SemesterSetupWizard extends Page
     public function mount(): void
     {
         abort_unless(static::canAccess(), 403);
-        $this->form->fill();
+
+        $existingSemesterId = Semester::query()->orderByDesc('id')->value('id');
+
+        $this->form->fill([
+            'semester_mode' => $existingSemesterId ? 'existing' : 'create',
+            'semester_id' => $existingSemesterId,
+            'project_entry_method' => 'manual',
+        ]);
     }
 
     public function form(Schema $form): Schema
@@ -94,67 +121,103 @@ class SemesterSetupWizard extends Page
 
     protected function getStep1CreateSemester(): Wizard\Step
     {
-        return Wizard\Step::make('Create Semester')
+        return Wizard\Step::make('Semester')
             ->icon('heroicon-o-academic-cap')
             ->completedIcon('heroicon-s-academic-cap')
-            ->description('Define the new semester')
+            ->description('Select an existing semester or create one')
             ->schema([
-                Forms\Components\TextInput::make('semester_name')
-                    ->label('Semester Name')
+                Forms\Components\Radio::make('semester_mode')
+                    ->label('Semester')
+                    ->options([
+                        'existing' => 'Use an existing semester',
+                        'create' => 'Create a new semester',
+                    ])
+                    ->descriptions([
+                        'existing' => 'Choose from semesters already available in the system.',
+                        'create' => 'Add a semester only when the required semester does not already exist.',
+                    ])
+                    ->default(fn (): string => Semester::query()->exists() ? 'existing' : 'create')
+                    ->live()
                     ->required()
-                    ->maxLength(255)
-                    ->placeholder('e.g., Fall 2026'),
+                    ->columnSpanFull(),
 
-                Forms\Components\TextInput::make('academic_year')
-                    ->label('Academic Year')
-                    ->required()
-                    ->maxLength(9)
-                    ->placeholder('e.g., 2025-2026'),
+                Forms\Components\Select::make('semester_id')
+                    ->label('Available Semester')
+                    ->options(fn (): array => $this->semesterOptions())
+                    ->helperText('Select the semester this setup should work on.')
+                    ->searchable()
+                    ->preload()
+                    ->required(fn (Get $get): bool => $get('semester_mode') === 'existing')
+                    ->visible(fn (Get $get): bool => $get('semester_mode') === 'existing')
+                    ->columnSpanFull(),
 
-                Forms\Components\DatePicker::make('start_date')
-                    ->label('Start Date')
-                    ->nullable(),
+                Forms\Components\Placeholder::make('selected_semester_details')
+                    ->label('Selected semester details')
+                    ->content(fn (Get $get): HtmlString => $this->semesterDetailsHtml((int) ($get('semester_id') ?? 0)))
+                    ->visible(fn (Get $get): bool => $get('semester_mode') === 'existing' && filled($get('semester_id')))
+                    ->columnSpanFull(),
 
-                Forms\Components\DatePicker::make('end_date')
-                    ->label('End Date')
-                    ->nullable()
-                    ->afterOrEqual('start_date'),
+                Section::make('New Semester Details')
+                    ->visible(fn (Get $get): bool => $get('semester_mode') === 'create')
+                    ->schema([
+                        Forms\Components\TextInput::make('semester_name')
+                            ->label('Semester Name')
+                            ->required(fn (Get $get): bool => $get('semester_mode') === 'create')
+                            ->maxLength(255)
+                            ->placeholder('e.g., Fall 2026'),
+
+                        Forms\Components\TextInput::make('academic_year')
+                            ->label('Academic Year')
+                            ->required(fn (Get $get): bool => $get('semester_mode') === 'create')
+                            ->maxLength(9)
+                            ->placeholder('e.g., 2025-2026'),
+
+                        Forms\Components\DatePicker::make('start_date')
+                            ->label('Start Date')
+                            ->nullable(),
+
+                        Forms\Components\DatePicker::make('end_date')
+                            ->label('End Date')
+                            ->nullable()
+                            ->afterOrEqual('start_date'),
+                    ])
+                    ->columns(2)
+                    ->columnSpanFull(),
             ])
             ->columns(2)
             ->afterValidation(function () {
                 $state = $this->data;
 
-                if ($this->createdSemesterId) {
-                    $semester = Semester::find($this->createdSemesterId);
-                    if ($semester) {
-                        $semester->update([
-                            'name' => $state['semester_name'],
-                            'academic_year' => $state['academic_year'],
-                            'start_date' => $state['start_date'] ?? null,
-                            'end_date' => $state['end_date'] ?? null,
-                        ]);
-                    }
+                if (($state['semester_mode'] ?? null) === 'existing') {
+                    $semester = Semester::findOrFail($state['semester_id']);
+                    $this->semesterId = $semester->id;
+                    $this->semesterWasCreated = false;
                 } else {
-                    $semester = Semester::create([
+                    $payload = [
                         'name' => $state['semester_name'],
                         'academic_year' => $state['academic_year'],
                         'start_date' => $state['start_date'] ?? null,
                         'end_date' => $state['end_date'] ?? null,
                         'is_active' => true,
                         'is_closed' => false,
-                    ]);
+                    ];
 
-                    $this->createdSemesterId = $semester->id;
-
-                    // Auto-assign current coordinator
-                    $user = auth()->user();
-                    if ($user->hasRole('Coordinator')) {
-                        $semester->coordinators()->syncWithoutDetaching([$user->id]);
+                    if ($this->semesterWasCreated && $this->semesterId) {
+                        $semester = Semester::find($this->semesterId);
+                        $semester?->update($payload);
+                    } else {
+                        $semester = Semester::create($payload);
+                        $this->semesterId = $semester->id;
+                        $this->semesterWasCreated = true;
                     }
                 }
 
-                Log::info('Reached afterValidation!'); Notification::make()
-                    ->title('Semester saved successfully.')
+                $this->data['semester_id'] = $this->semesterId;
+                $this->syncCurrentCoordinatorToSemester();
+                $this->syncManualProjectContextDefaults();
+
+                Notification::make()
+                    ->title($this->semesterWasCreated ? 'Semester created.' : 'Semester selected.')
                     ->success()
                     ->send();
             });
@@ -162,39 +225,33 @@ class SemesterSetupWizard extends Page
 
     protected function getStep2SelectPhaseTemplates(): Wizard\Step
     {
-        return Wizard\Step::make('Select Phase Templates')
+        return Wizard\Step::make('Select Phase Template')
             ->icon('heroicon-o-rectangle-stack')
             ->completedIcon('heroicon-s-rectangle-stack')
-            ->description('Choose templates for projects')
+            ->description('Choose the one plan for this project set')
             ->schema([
                 Forms\Components\Placeholder::make('phase_template_info')
-                    ->content('Select one or more phase templates from the pool. These will be available as options when creating projects in the next step.')
+                    ->content('Choose one phase template only. This template is the plan used by the projects created in this setup.')
                     ->columnSpanFull(),
 
-                Forms\Components\CheckboxList::make('phase_template_ids')
-                    ->label('Phase Templates')
-                    ->options(function () {
-                        return PhaseTemplate::query()
-                            ->orderBy('name')
-                            ->get()
-                            ->mapWithKeys(fn (PhaseTemplate $pt) => [
-                                $pt->id => "{$pt->name} ({$pt->total_phase_marks} marks)",
-                            ]);
-                    })
+                Forms\Components\Radio::make('phase_template_id')
+                    ->label('Phase Template')
+                    ->options(fn (): array => $this->phaseTemplateOptions())
+                    ->descriptions(fn (): array => $this->phaseTemplateDescriptions())
                     ->required()
-                    ->columns(2)
-                    ->searchable()
-                    ->bulkToggleable(),
+                    ->columns(1)
+                    ->columnSpanFull(),
             ])
             ->afterValidation(function () {
                 $state = $this->data;
-                $this->selectedPhaseTemplateIds = $state['phase_template_ids'] ?? [];
+                $this->selectedPhaseTemplateId = (int) ($state['phase_template_id'] ?? 0) ?: null;
+                $this->syncManualProjectContextDefaults();
             });
     }
 
     protected function getStep3ImportProjects(): Wizard\Step
     {
-        return Wizard\Step::make('Import/Create Projects')
+        return Wizard\Step::make('Projects')
             ->icon('heroicon-o-briefcase')
             ->completedIcon('heroicon-s-briefcase')
             ->description('Add projects to the semester')
@@ -207,148 +264,94 @@ class SemesterSetupWizard extends Page
                         'skip' => 'Skip — add projects later',
                     ])
                     ->default('manual')
+                    ->descriptions([
+                        'manual' => 'Create projects with the same fields used in the Projects page.',
+                        'csv' => 'Use the project bulk-import workflow with column mapping, preview, and overwrite warnings.',
+                        'skip' => 'Finish semester setup now and add projects from the Projects page later.',
+                    ])
                     ->live()
                     ->required()
                     ->columnSpanFull(),
 
-                // === MANUAL ENTRY SECTION ===
-                Section::make('Manual Project Entry')
+                Section::make('Manual Project Creation')
                     ->visible(fn (Get $get) => $get('project_entry_method') === 'manual')
+                    ->description('Semester and phase template are locked to the selections from the previous steps.')
                     ->schema([
                         Forms\Components\Repeater::make('manual_projects')
                             ->label('Projects')
-                            ->schema([
-                                Forms\Components\TextInput::make('title')
-                                    ->required()
-                                    ->maxLength(255)
-                                    ->columnSpan(2),
-
-                                Forms\Components\Select::make('course_id')
-                                    ->label('Course')
-                                    ->options(function () {
-                                        return Course::query()
-                                            ->orderBy('code')
-                                            ->get()
-                                            ->mapWithKeys(fn ($c) => [
-                                                $c->id => "{$c->code} - {$c->title}",
-                                            ]);
-                                    })
-                                    ->searchable()
-                                    ->required(),
-
-                                Forms\Components\Select::make('phase_template_id')
-                                    ->label('Phase Template')
-                                    ->options(function () {
-                                        if (empty($this->selectedPhaseTemplateIds)) {
-                                            return PhaseTemplate::query()
-                                                ->orderBy('name')
-                                                ->get()
-                                                ->mapWithKeys(fn ($pt) => [$pt->id => $pt->name]);
-                                        }
-
-                                        return PhaseTemplate::query()
-                                            ->whereIn('id', $this->selectedPhaseTemplateIds)
-                                            ->orderBy('name')
-                                            ->get()
-                                            ->mapWithKeys(fn ($pt) => [$pt->id => $pt->name]);
-                                    })
-                                    ->searchable()
-                                    ->required(),
-
-                                Forms\Components\Select::make('specialization_id')
-                                    ->label('Specialization')
-                                    ->options(function () {
-                                        return Specialization::query()
-                                            ->orderBy('name')
-                                            ->get()
-                                            ->mapWithKeys(fn ($s) => [$s->id => $s->name]);
-                                    })
-                                    ->searchable()
-                                    ->required(),
-
-                                Forms\Components\Select::make('supervisor_id')
-                                    ->label('Supervisor')
-                                    ->options(function () {
-                                        try {
-                                            return User::role('Supervisor')
-                                                ->orderBy('name')
-                                                ->get()
-                                                ->mapWithKeys(fn ($u) => [
-                                                    $u->id => "{$u->name} ({$u->university_id})",
-                                                ]);
-                                        } catch (\Spatie\Permission\Exceptions\RoleDoesNotExist $e) {
-                                            return [];
-                                        }
-                                    })
-                                    ->searchable()
-                                    ->required(),
-
-                                Forms\Components\Select::make('student_ids')
-                                    ->label('Students')
-                                    ->multiple()
-                                    ->options(function () {
-                                        try {
-                                            return User::role('Student')
-                                                ->orderBy('name')
-                                                ->get()
-                                                ->mapWithKeys(fn ($u) => [
-                                                    $u->id => "{$u->name} ({$u->university_id})",
-                                                ]);
-                                        } catch (\Spatie\Permission\Exceptions\RoleDoesNotExist $e) {
-                                            return [];
-                                        }
-                                    })
-                                    ->searchable(),
-
-                                Forms\Components\Select::make('reviewer_ids')
-                                    ->label('Reviewers')
-                                    ->multiple()
-                                    ->options(function () {
-                                        try {
-                                            return User::role('Reviewer')
-                                                ->orderBy('name')
-                                                ->get()
-                                                ->mapWithKeys(fn ($u) => [
-                                                    $u->id => "{$u->name} ({$u->university_id})",
-                                                ]);
-                                        } catch (\Spatie\Permission\Exceptions\RoleDoesNotExist $e) {
-                                            return [];
-                                        }
-                                    })
-                                    ->searchable(),
-                            ])
+                            ->schema(ProjectResource::projectFormComponents(
+                                semesterOptions: fn (): array => $this->selectedSemesterOption(),
+                                phaseTemplateOptions: fn (): array => $this->selectedPhaseTemplateOption(),
+                                semesterDefault: fn (): ?int => $this->semesterId,
+                                phaseTemplateDefault: fn (): ?int => $this->selectedPhaseTemplateId,
+                                lockSemester: true,
+                                lockPhaseTemplate: true,
+                            ))
                             ->columns(2)
                             ->collapsible()
                             ->itemLabel(fn (array $state): ?string => $state['title'] ?? 'New Project')
+                            ->minItems(1)
                             ->defaultItems(1)
                             ->addActionLabel('Add Another Project')
                             ->columnSpanFull(),
                     ]),
 
-                // === CSV IMPORT SECTION ===
-                Section::make('CSV Import')
+                Section::make('Bulk Project Import')
                     ->visible(fn (Get $get) => $get('project_entry_method') === 'csv')
+                    ->description(fn (): string => $this->projectImporter()->description())
                     ->schema([
-                        Forms\Components\Placeholder::make('csv_instructions')
-                            ->content(new HtmlString(
-                                '<strong>CSV Columns:</strong> <code>title, course_code, phase_template_name, '
-                                . 'specialization_name, supervisor_university_id, '
-                                . 'student_university_ids, reviewer_university_ids</code>'
-                                . '<br><br>Separate multiple student/reviewer IDs with <code>|</code> (pipe). '
-                                . 'The semester is automatically set from Step 1.'
-                            ))
+                        Forms\Components\Placeholder::make('project_import_context')
+                            ->label('Applied setup context')
+                            ->content(fn (): HtmlString => $this->projectImportContextHtml())
                             ->columnSpanFull(),
 
-                        Forms\Components\FileUpload::make('projects_csv')
-                            ->label('CSV File')
+                        Forms\Components\Select::make('project_import_course_id')
+                            ->label('Course')
+                            ->options(fn (): array => FilamentLookupCache::courseOptions())
+                            ->searchable()
+                            ->preload()
+                            ->required(fn (Get $get): bool => $get('project_entry_method') === 'csv'),
+
+                        Forms\Components\Select::make('project_import_specialization_id')
+                            ->label('Specialization')
+                            ->options(fn (): array => FilamentLookupCache::specializationOptions())
+                            ->searchable()
+                            ->preload()
+                            ->required(fn (Get $get): bool => $get('project_entry_method') === 'csv'),
+
+                        Forms\Components\FileUpload::make('project_import_file')
+                            ->key('wizard-project-import-file')
+                            ->label('CSV / Excel File')
+                            ->helperText('Accepts .csv, .xlsx, or .ods. Use the template if you want merged project cells and column mapping support.')
                             ->acceptedFileTypes([
                                 'text/csv',
                                 'text/plain',
                                 'application/vnd.ms-excel',
+                                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                                'application/vnd.oasis.opendocument.spreadsheet',
                             ])
                             ->disk('local')
                             ->directory('csv-imports')
                             ->visibility('private')
+                            ->columnSpanFull(),
+
+                        SchemaActions::make([
+                            Action::make('downloadProjectImportTemplate')
+                                ->label('Download Project Import Template')
+                                ->icon('heroicon-o-arrow-down-tray')
+                                ->color('gray')
+                                ->action(fn (): StreamedResponse => $this->downloadProjectImportTemplate()),
+                            Action::make('uploadAndMapProjectImport')
+                                ->label('Upload & Map Columns')
+                                ->icon('heroicon-o-eye')
+                                ->action(function (): void {
+                                    $this->uploadAndMapProjectImport();
+                                }),
+                        ])
+                            ->columnSpanFull(),
+
+                        Forms\Components\ViewField::make('project_import_workflow')
+                            ->view('filament.admin.pages.partials.project-import-workflow')
                             ->columnSpanFull(),
                     ]),
             ])
@@ -356,12 +359,28 @@ class SemesterSetupWizard extends Page
                 $state = $this->data;
                 $method = $state['project_entry_method'] ?? 'manual';
 
+                if (! $this->semesterId || ! $this->selectedPhaseTemplateId) {
+                    Notification::make()
+                        ->title('Complete the semester and phase template steps before adding projects.')
+                        ->danger()
+                        ->send();
+
+                    throw new Halt;
+                }
+
                 if ($method === 'manual') {
                     $this->createProjectsManually($state);
                 } elseif ($method === 'csv') {
-                    $this->createProjectsFromCsv();
+                    if (! $this->projectImportCompleted) {
+                        Notification::make()
+                            ->title('Import the projects before continuing to the summary.')
+                            ->body('Upload the file, map the columns, preview it, then click Import Projects.')
+                            ->danger()
+                            ->send();
+
+                        throw new Halt;
+                    }
                 }
-                // 'skip' does nothing
             });
     }
 
@@ -378,245 +397,227 @@ class SemesterSetupWizard extends Page
             ]);
     }
 
-    // ──────────────────────────────────────────────────
-    // CSV Preview & Validation
-    // ──────────────────────────────────────────────────
-
-    public function previewCsv(): void
+    public function uploadAndMapProjectImport(): void
     {
-        $state = $this->data;
-        $csvPath = $state['projects_csv'] ?? null;
+        $this->projectImportUploadedFiles = [];
+        $this->projectImportHeaders = [];
+        $this->projectImportColumnMapping = [];
+        $this->resetProjectImportPreviewState();
 
-        $this->csvPreviewData = [];
-        $this->csvValidationErrors = [];
-        $this->csvHasErrors = false;
-        $this->csvValidated = false;
+        $files = $this->normalizeUploadedFiles($this->data['project_import_file'] ?? null);
 
-        if (! $csvPath) {
-            Log::info('Reached afterValidation!'); Notification::make()->title('No CSV file uploaded.')->danger()->send();
-
-            return;
-        }
-
-        $filePath = storage_path('app/private/' . $csvPath);
-        if (! file_exists($filePath)) {
-            $filePath = storage_path('app/' . $csvPath);
-        }
-
-        if (! file_exists($filePath)) {
-            Log::info('Reached afterValidation!'); Notification::make()->title('CSV file not found.')->danger()->send();
+        if (empty($files)) {
+            Notification::make()->title('Upload a CSV or Excel file first.')->danger()->send();
 
             return;
         }
 
-        $handle = fopen($filePath, 'r');
-        if (! $handle) {
-            Log::info('Reached afterValidation!'); Notification::make()->title('Unable to read the CSV file.')->danger()->send();
+        $this->projectImportUploadedFiles = $files;
+
+        $filePath = $this->resolveProjectImportFilePath($files[0]);
+        if (! $filePath) {
+            Notification::make()->title('Spreadsheet file not found. Please re-upload.')->danger()->send();
 
             return;
         }
 
-        $headers = fgetcsv($handle, length: 0, escape: '');
-        if (! $headers) {
-            fclose($handle);
-            Log::info('Reached afterValidation!'); Notification::make()->title('CSV file is empty or has no headers.')->danger()->send();
+        try {
+            $parsed = SpreadsheetReader::read($filePath);
+        } catch (\Throwable $e) {
+            Notification::make()->title('Unable to read the spreadsheet: '.$e->getMessage())->danger()->send();
 
             return;
         }
 
-        $headers = array_map('trim', array_map('strtolower', $headers));
-        $requiredHeaders = [
-            'title', 'course_code', 'phase_template_name',
-            'specialization_name', 'supervisor_university_id',
-            'student_university_ids', 'reviewer_university_ids',
-        ];
-        $missingHeaders = array_diff($requiredHeaders, $headers);
+        if (empty($parsed['headers'])) {
+            Notification::make()->title('Spreadsheet is empty or has no headers.')->danger()->send();
 
-        if (! empty($missingHeaders)) {
-            fclose($handle);
-            Log::info('Reached afterValidation!'); Notification::make()
-                ->title('Missing required columns: ' . implode(', ', $missingHeaders))
+            return;
+        }
+
+        $this->projectImportHeaders = $parsed['headers'];
+        $normalisedHeaders = array_map('strtolower', $this->projectImportHeaders);
+        $this->projectImportColumnMapping = [];
+
+        foreach ($this->projectImporter()->systemFields() as $field) {
+            $index = array_search($field, $normalisedHeaders, true);
+            $this->projectImportColumnMapping[$field] = $index !== false ? $this->projectImportHeaders[$index] : '';
+        }
+
+        $this->projectImportShowMapping = true;
+    }
+
+    public function confirmProjectImportMapping(): void
+    {
+        $unmapped = array_filter($this->projectImportColumnMapping, fn ($value) => blank($value));
+
+        if (! empty($unmapped)) {
+            Notification::make()
+                ->title('Map all required columns: '.implode(', ', array_keys($unmapped)))
                 ->danger()
                 ->send();
 
             return;
         }
 
-        $rows = [];
-        $rowNumber = 1;
-        while (($row = fgetcsv($handle, length: 0, escape: '')) !== false) {
-            $rowNumber++;
-            $rowData = array_combine($headers, array_pad($row, count($headers), ''));
-            $rowData['_row'] = $rowNumber;
-            $rows[] = $rowData;
-        }
-        fclose($handle);
+        $result = $this->projectImporter()->validateRows(
+            $this->projectImportUploadedFiles,
+            $this->projectImportColumnMapping,
+            [],
+        );
 
-        if (empty($rows)) {
-            Log::info('Reached afterValidation!'); Notification::make()->title('CSV contains no data rows.')->warning()->send();
+        $this->projectImportPreviewData = $result['previewData'] ?? [];
+        $this->projectImportPreviewColumns = $result['previewColumns'] ?? [];
+        $this->projectImportValidationErrors = $result['errors'] ?? [];
+        $this->projectImportValidationWarnings = $result['warnings'] ?? [];
+        $this->projectImportHasErrors = $result['hasErrors'] ?? false;
+        $this->projectImportHasWarnings = $result['hasWarnings'] ?? ! empty($this->projectImportValidationWarnings);
+        $this->projectImportConfirmedWarningSignature = null;
+        $this->projectImportShowMapping = false;
+
+        if (empty($this->projectImportPreviewData) && empty($this->projectImportValidationErrors)) {
+            Notification::make()->title('Spreadsheet contains no data rows.')->warning()->send();
+        }
+    }
+
+    public function importProjectImport(): void
+    {
+        if ($this->projectImportHasErrors || empty($this->projectImportPreviewData)) {
+            Notification::make()
+                ->title('Cannot import: fix validation errors first.')
+                ->danger()
+                ->send();
 
             return;
         }
 
-        $this->validateCsvRows($rows);
-        $this->csvValidated = true;
-    }
+        $context = $this->projectImportContext();
+        $missingContext = array_keys(array_filter($context, fn ($value) => blank($value)));
 
-    protected function validateCsvRows(array $rows): void
-    {
-        $studentSemesterTracker = [];
-        $semesterId = $this->createdSemesterId;
+        if (! empty($missingContext)) {
+            Notification::make()
+                ->title('Select the required import context before importing.')
+                ->danger()
+                ->send();
 
-        foreach ($rows as $row) {
-            $rowNum = $row['_row'];
-            $rowErrors = [];
+            return;
+        }
 
-            $title = trim($row['title'] ?? '');
-            if (empty($title)) {
-                $rowErrors[] = 'title is required';
+        $contextResult = $this->projectImporter()->validateContext($this->projectImportPreviewData, $context);
+        $this->projectImportValidationErrors = array_map(fn ($error) => "[Context] {$error}", $contextResult['errors'] ?? []);
+        $this->projectImportValidationWarnings = array_map(fn ($warning) => "[Context] {$warning}", $contextResult['warnings'] ?? []);
+        $this->projectImportHasErrors = ! empty($this->projectImportValidationErrors);
+        $this->projectImportHasWarnings = ! empty($this->projectImportValidationWarnings);
+
+        if ($this->projectImportHasErrors) {
+            Notification::make()
+                ->title('Context validation failed.')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
+        if ($this->projectImportHasWarnings) {
+            $warningSignature = md5(json_encode([
+                'context' => $context,
+                'warnings' => $this->projectImportValidationWarnings,
+            ]));
+
+            if ($this->projectImportConfirmedWarningSignature !== $warningSignature) {
+                $this->projectImportConfirmedWarningSignature = $warningSignature;
+
+                Notification::make()
+                    ->title('Assignment warnings found. Review them, then click import again to overwrite existing assignments.')
+                    ->warning()
+                    ->send();
+
+                return;
             }
+        }
 
-            $courseCode = trim($row['course_code'] ?? '');
-            $course = $courseCode ? Course::where('code', $courseCode)->first() : null;
-            if (! $course) {
-                $rowErrors[] = "Course '{$courseCode}' not found";
-            }
+        DB::beginTransaction();
+        try {
+            $result = $this->projectImporter()->import($this->projectImportPreviewData, $context);
+            DB::commit();
 
-            $ptName = trim($row['phase_template_name'] ?? '');
-            $phaseTemplate = $ptName ? PhaseTemplate::where('name', $ptName)->first() : null;
-            if (! $phaseTemplate) {
-                $rowErrors[] = "Phase template '{$ptName}' not found";
-            } elseif (! empty($this->selectedPhaseTemplateIds) && ! in_array($phaseTemplate->id, $this->selectedPhaseTemplateIds)) {
-                $rowErrors[] = "Phase template '{$ptName}' was not selected in Step 2";
-            }
+            $this->projectImportCompleted = true;
+            $this->projectImportImportedCount = $result['count'] ?? 0;
+            $this->createdProjectIds = array_values(array_unique(array_merge(
+                $this->createdProjectIds,
+                $result['project_ids'] ?? [],
+            )));
+            $this->projectImportValidationWarnings = [];
+            $this->projectImportHasWarnings = false;
+            $this->projectImportConfirmedWarningSignature = null;
 
-            $specName = trim($row['specialization_name'] ?? '');
-            $spec = $specName ? Specialization::where('name', $specName)->first() : null;
-            if (! $spec) {
-                $rowErrors[] = "Specialization '{$specName}' not found";
-            }
+            Notification::make()
+                ->title("Successfully imported {$this->projectImportImportedCount} projects.")
+                ->success()
+                ->send();
+        } catch (\Throwable $e) {
+            DB::rollBack();
 
-            $supervisorUid = trim($row['supervisor_university_id'] ?? '');
-            $supervisor = $supervisorUid ? User::where('university_id', $supervisorUid)->first() : null;
-            if (! $supervisor) {
-                $rowErrors[] = "Supervisor '{$supervisorUid}' not found";
-            } elseif (! $supervisor->hasRole('Supervisor')) {
-                $rowErrors[] = "User '{$supervisorUid}' does not have the Supervisor role";
-            }
-
-            $studentUids = array_filter(array_map('trim', explode('|', $row['student_university_ids'] ?? '')));
-            $studentIds = [];
-            foreach ($studentUids as $uid) {
-                if (empty($uid)) {
-                    continue;
-                }
-                $student = User::where('university_id', $uid)->first();
-                if (! $student) {
-                    $rowErrors[] = "Student '{$uid}' not found";
-                } elseif (! $student->hasRole('Student')) {
-                    $rowErrors[] = "User '{$uid}' does not have the Student role";
-                } else {
-                    $studentIds[] = $student->id;
-
-                    if ($semesterId) {
-                        $existsInDb = Project::where('semester_id', $semesterId)
-                            ->whereHas('students', fn ($q) => $q->where('users.id', $student->id))
-                            ->exists();
-                        if ($existsInDb) {
-                            $rowErrors[] = "Student '{$uid}' is already in another project this semester";
-                        }
-
-                        $trackKey = $semesterId . '-' . $student->id;
-                        if (isset($studentSemesterTracker[$trackKey])) {
-                            $rowErrors[] = "Student '{$uid}' appears in multiple projects in this CSV";
-                        }
-                        $studentSemesterTracker[$trackKey] = $rowNum;
-                    }
-                }
-            }
-
-            $reviewerUids = array_filter(array_map('trim', explode('|', $row['reviewer_university_ids'] ?? '')));
-            $reviewerIds = [];
-            foreach ($reviewerUids as $uid) {
-                if (empty($uid)) {
-                    continue;
-                }
-                $reviewer = User::where('university_id', $uid)->first();
-                if (! $reviewer) {
-                    $rowErrors[] = "Reviewer '{$uid}' not found";
-                } elseif (! $reviewer->hasRole('Reviewer')) {
-                    $rowErrors[] = "User '{$uid}' does not have the Reviewer role";
-                } else {
-                    $reviewerIds[] = $reviewer->id;
-
-                    if ($supervisor && $reviewer->id === $supervisor->id) {
-                        $rowErrors[] = "Supervisor '{$supervisorUid}' cannot also be a reviewer";
-                    }
-                }
-            }
-
-            $status = empty($rowErrors) ? 'valid' : 'error';
-
-            $this->csvPreviewData[] = [
-                'row' => $rowNum,
-                'title' => $title,
-                'course_code' => $courseCode,
-                'phase_template_name' => $ptName,
-                'supervisor' => $supervisorUid,
-                'student_count' => count($studentIds),
-                'reviewer_count' => count($reviewerIds),
-                'status' => $status,
-                'errors' => $rowErrors,
-                'resolved' => [
-                    'course_id' => $course?->id,
-                    'phase_template_id' => $phaseTemplate?->id,
-                    'specialization_id' => $spec?->id,
-                    'supervisor_id' => $supervisor?->id,
-                    'student_ids' => $studentIds,
-                    'reviewer_ids' => $reviewerIds,
-                ],
-            ];
-
-            if (! empty($rowErrors)) {
-                $this->csvHasErrors = true;
-                foreach ($rowErrors as $error) {
-                    $this->csvValidationErrors[] = "Row {$rowNum}: {$error}";
-                }
-            }
+            Notification::make()
+                ->title('Import failed: '.$e->getMessage())
+                ->danger()
+                ->send();
         }
     }
 
-    // ──────────────────────────────────────────────────
-    // Project Creation
-    // ──────────────────────────────────────────────────
+    public function resetProjectImport(): void
+    {
+        $this->projectImportUploadedFiles = [];
+        $this->projectImportHeaders = [];
+        $this->projectImportColumnMapping = [];
+        $this->resetProjectImportPreviewState();
+        $this->data['project_import_file'] = null;
+    }
+
+    protected function resetProjectImportPreviewState(): void
+    {
+        $this->projectImportPreviewData = [];
+        $this->projectImportPreviewColumns = [];
+        $this->projectImportValidationErrors = [];
+        $this->projectImportValidationWarnings = [];
+        $this->projectImportHasErrors = false;
+        $this->projectImportHasWarnings = false;
+        $this->projectImportShowMapping = false;
+        $this->projectImportCompleted = false;
+        $this->projectImportImportedCount = 0;
+        $this->projectImportConfirmedWarningSignature = null;
+    }
 
     protected function createProjectsManually(array $state): void
     {
         $projects = $state['manual_projects'] ?? [];
 
-        if (empty($projects)) {
+        if (empty($projects) || ! empty($this->createdProjectIds)) {
             return;
         }
 
         DB::beginTransaction();
         try {
+            $reviewerIds = PhaseTemplate::with('reviewers:id')
+                ->find($this->selectedPhaseTemplateId)
+                ?->reviewers
+                ?->pluck('id')
+                ->all() ?? [];
+
             foreach ($projects as $projectData) {
                 $project = Project::create([
                     'title' => $projectData['title'],
-                    'semester_id' => $this->createdSemesterId,
+                    'semester_id' => $projectData['semester_id'] ?? $this->semesterId,
                     'course_id' => $projectData['course_id'],
-                    'phase_template_id' => $projectData['phase_template_id'],
+                    'phase_template_id' => $projectData['phase_template_id'] ?? $this->selectedPhaseTemplateId,
                     'specialization_id' => $projectData['specialization_id'],
                     'supervisor_id' => $projectData['supervisor_id'],
-                    'status' => 'setup',
+                    'previous_phase_project_id' => $projectData['previous_phase_project_id'] ?? null,
+                    'status' => $projectData['status'] ?? 'setup',
                 ]);
 
-                if (! empty($projectData['student_ids'])) {
-                    StudentProjectReassignment::detachFromSemester($projectData['student_ids'], (int) $this->createdSemesterId);
-                    $project->students()->attach($projectData['student_ids']);
-                }
-                if (! empty($projectData['reviewer_ids'])) {
-                    $project->reviewers()->attach($projectData['reviewer_ids']);
+                if (! empty($reviewerIds)) {
+                    $project->reviewers()->syncWithoutDetaching($reviewerIds);
                 }
 
                 $this->createdProjectIds[] = $project->id;
@@ -624,75 +625,188 @@ class SemesterSetupWizard extends Page
 
             DB::commit();
 
-            Log::info('Reached afterValidation!'); Notification::make()
-                ->title(count($projects) . ' project(s) created successfully.')
+            Notification::make()
+                ->title(count($projects).' project(s) created successfully.')
                 ->success()
                 ->send();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
 
-            Log::info('Reached afterValidation!'); Notification::make()
-                ->title('Failed to create projects: ' . $e->getMessage())
+            Notification::make()
+                ->title('Failed to create projects: '.$e->getMessage())
                 ->danger()
                 ->send();
 
-            throw new \Filament\Support\Exceptions\Halt;
+            throw new Halt;
         }
     }
 
-    protected function createProjectsFromCsv(): void
+    protected function projectImporter(): ProjectsBulkImporter
     {
-        if ($this->csvHasErrors || empty($this->csvPreviewData)) {
-            Log::info('Reached afterValidation!'); Notification::make()
-                ->title('Cannot import: fix validation errors or preview CSV first.')
-                ->danger()
-                ->send();
+        return app(ProjectsBulkImporter::class);
+    }
 
-            throw new \Filament\Support\Exceptions\Halt;
+    public function getProjectImportFieldLabels(): array
+    {
+        return $this->projectImporter()->systemFieldLabels();
+    }
+
+    protected function semesterOptions(): array
+    {
+        return Semester::query()
+            ->orderByDesc('id')
+            ->get()
+            ->mapWithKeys(fn (Semester $semester): array => [
+                $semester->id => $this->formatSemesterOption($semester),
+            ])
+            ->all();
+    }
+
+    protected function selectedSemesterOption(): array
+    {
+        if (! $this->semesterId) {
+            return [];
         }
 
-        DB::beginTransaction();
-        try {
-            foreach ($this->csvPreviewData as $row) {
-                $resolved = $row['resolved'];
+        $semester = Semester::find($this->semesterId);
 
-                $project = Project::create([
-                    'title' => $row['title'],
-                    'semester_id' => $this->createdSemesterId,
-                    'course_id' => $resolved['course_id'],
-                    'phase_template_id' => $resolved['phase_template_id'],
-                    'specialization_id' => $resolved['specialization_id'],
-                    'supervisor_id' => $resolved['supervisor_id'],
-                    'status' => 'setup',
-                ]);
+        return $semester ? [$semester->id => $this->formatSemesterOption($semester)] : [];
+    }
 
-                if (! empty($resolved['student_ids'])) {
-                    StudentProjectReassignment::detachFromSemester($resolved['student_ids'], (int) $this->createdSemesterId);
-                    $project->students()->attach($resolved['student_ids']);
-                }
-                if (! empty($resolved['reviewer_ids'])) {
-                    $project->reviewers()->attach($resolved['reviewer_ids']);
-                }
+    protected function selectedPhaseTemplateOption(): array
+    {
+        if (! $this->selectedPhaseTemplateId) {
+            return [];
+        }
 
-                $this->createdProjectIds[] = $project->id;
+        $phaseTemplate = PhaseTemplate::find($this->selectedPhaseTemplateId);
+
+        return $phaseTemplate ? [$phaseTemplate->id => $phaseTemplate->name] : [];
+    }
+
+    protected function phaseTemplateOptions(): array
+    {
+        return PhaseTemplate::query()
+            ->orderBy('name')
+            ->pluck('name', 'id')
+            ->all();
+    }
+
+    protected function phaseTemplateDescriptions(): array
+    {
+        return PhaseTemplate::query()
+            ->withCount(['phaseRubricRules', 'reviewers', 'externals'])
+            ->orderBy('name')
+            ->get()
+            ->mapWithKeys(fn (PhaseTemplate $phaseTemplate): array => [
+                $phaseTemplate->id => number_format((float) $phaseTemplate->total_phase_marks, 2).' marks'
+                    .' | '.$phaseTemplate->phase_rubric_rules_count.' rubric rules'
+                    .' | '.$phaseTemplate->reviewers_count.' reviewers'
+                    .' | '.$phaseTemplate->externals_count.' externals',
+            ])
+            ->all();
+    }
+
+    protected function semesterDetailsHtml(int $semesterId): HtmlString
+    {
+        $semester = $semesterId ? Semester::withCount('projects')->find($semesterId) : null;
+
+        if (! $semester) {
+            return new HtmlString('<span class="text-sm text-gray-500 dark:text-gray-400">No semester selected.</span>');
+        }
+
+        $dates = trim(($semester->start_date?->format('Y-m-d') ?? 'No start date').' to '.($semester->end_date?->format('Y-m-d') ?? 'No end date'));
+        $status = ($semester->is_active ? 'Active' : 'Inactive').' / '.($semester->is_closed ? 'Closed' : 'Open');
+
+        return new HtmlString(
+            '<div class="space-y-1 text-sm text-gray-700 dark:text-gray-300">'
+            .'<p><strong>'.e($semester->name).'</strong> | '.e($semester->academic_year).'</p>'
+            .'<p>'.e($dates).'</p>'
+            .'<p>'.e($status).' | '.e((string) $semester->projects_count).' existing projects</p>'
+            .'</div>'
+        );
+    }
+
+    protected function projectImportContextHtml(): HtmlString
+    {
+        $semester = $this->semesterId ? Semester::find($this->semesterId) : null;
+        $phaseTemplate = $this->selectedPhaseTemplateId ? PhaseTemplate::find($this->selectedPhaseTemplateId) : null;
+
+        return new HtmlString(
+            '<div class="grid gap-3 text-sm text-gray-700 dark:text-gray-300 md:grid-cols-2">'
+            .'<div><span class="text-gray-500 dark:text-gray-400">Semester</span><p class="font-medium">'.e($semester?->name ?? 'Select a semester first').'</p></div>'
+            .'<div><span class="text-gray-500 dark:text-gray-400">Phase Template</span><p class="font-medium">'.e($phaseTemplate?->name ?? 'Select a phase template first').'</p></div>'
+            .'</div>'
+        );
+    }
+
+    protected function formatSemesterOption(Semester $semester): string
+    {
+        $status = $semester->is_closed ? 'Closed' : 'Open';
+
+        return "{$semester->name} ({$semester->academic_year}) - {$status}";
+    }
+
+    protected function syncCurrentCoordinatorToSemester(): void
+    {
+        $user = auth()->user();
+
+        if (! $user?->hasRole('Coordinator') || ! $this->semesterId) {
+            return;
+        }
+
+        Semester::find($this->semesterId)?->coordinators()->syncWithoutDetaching([$user->id]);
+    }
+
+    protected function syncManualProjectContextDefaults(): void
+    {
+        if (empty($this->data['manual_projects']) || ! is_array($this->data['manual_projects'])) {
+            return;
+        }
+
+        $this->data['manual_projects'] = array_map(function (array $project): array {
+            if ($this->semesterId) {
+                $project['semester_id'] = $this->semesterId;
             }
 
-            DB::commit();
+            if ($this->selectedPhaseTemplateId) {
+                $project['phase_template_id'] = $this->selectedPhaseTemplateId;
+            }
 
-            Log::info('Reached afterValidation!'); Notification::make()
-                ->title(count($this->csvPreviewData) . ' project(s) imported successfully.')
-                ->success()
-                ->send();
-        } catch (\Exception $e) {
-            DB::rollBack();
+            $project['status'] ??= 'setup';
 
-            Log::info('Reached afterValidation!'); Notification::make()
-                ->title('Import failed: ' . $e->getMessage())
-                ->danger()
-                ->send();
+            return $project;
+        }, $this->data['manual_projects']);
+    }
 
-            throw new \Filament\Support\Exceptions\Halt;
+    protected function projectImportContext(): array
+    {
+        return [
+            'semester_id' => $this->semesterId,
+            'course_id' => $this->data['project_import_course_id'] ?? null,
+            'phase_template_id' => $this->selectedPhaseTemplateId,
+            'specialization_id' => $this->data['project_import_specialization_id'] ?? null,
+        ];
+    }
+
+    protected function normalizeUploadedFiles(mixed $value): array
+    {
+        if (is_array($value)) {
+            return array_values(array_filter($value, fn ($path) => filled($path)));
         }
+
+        return filled($value) ? [$value] : [];
+    }
+
+    protected function resolveProjectImportFilePath(string $path): ?string
+    {
+        $filePath = storage_path('app/private/'.$path);
+
+        if (! file_exists($filePath)) {
+            $filePath = storage_path('app/'.$path);
+        }
+
+        return file_exists($filePath) ? $filePath : null;
     }
 
     // ──────────────────────────────────────────────────
@@ -701,25 +815,39 @@ class SemesterSetupWizard extends Page
 
     public function getSemesterSummary(): ?array
     {
-        if (! $this->createdSemesterId) {
+        if (! $this->semesterId) {
             return null;
         }
 
-        $semester = Semester::find($this->createdSemesterId);
+        $semester = Semester::find($this->semesterId);
 
         return $semester ? [
             'name' => $semester->name,
             'academic_year' => $semester->academic_year,
             'start_date' => $semester->start_date?->format('Y-m-d'),
             'end_date' => $semester->end_date?->format('Y-m-d'),
+            'source' => $this->semesterWasCreated ? 'Created in this setup' : 'Existing semester selected',
+            'project_count' => $semester->projects()->count(),
         ] : null;
     }
 
-    public function getSelectedPhaseTemplateNames(): array
+    public function getSelectedPhaseTemplateSummary(): ?array
     {
-        return PhaseTemplate::whereIn('id', $this->selectedPhaseTemplateIds)
-            ->pluck('name')
-            ->toArray();
+        if (! $this->selectedPhaseTemplateId) {
+            return null;
+        }
+
+        $phaseTemplate = PhaseTemplate::query()
+            ->withCount(['phaseRubricRules', 'reviewers', 'externals'])
+            ->find($this->selectedPhaseTemplateId);
+
+        return $phaseTemplate ? [
+            'name' => $phaseTemplate->name,
+            'total_phase_marks' => number_format((float) $phaseTemplate->total_phase_marks, 2),
+            'rubric_rules_count' => $phaseTemplate->phase_rubric_rules_count,
+            'reviewers_count' => $phaseTemplate->reviewers_count,
+            'externals_count' => $phaseTemplate->externals_count,
+        ] : null;
     }
 
     public function getProjectsSummary(): array
@@ -733,9 +861,10 @@ class SemesterSetupWizard extends Page
             ->get()
             ->map(fn (Project $p) => [
                 'title' => $p->title,
-                'course' => $p->course->code . ' - ' . $p->course->title,
-                'phase_template' => $p->phaseTemplate->name,
-                'supervisor' => $p->supervisor->name,
+                'course' => $p->course ? $p->course->code.' - '.$p->course->title : '-',
+                'phase_template' => $p->phaseTemplate?->name ?? '-',
+                'supervisor' => $p->supervisor?->name ?? '-',
+                'status' => ucfirst($p->status),
                 'students' => $p->students->pluck('name')->join(', '),
                 'reviewers' => $p->reviewers->pluck('name')->join(', '),
             ])
@@ -748,34 +877,32 @@ class SemesterSetupWizard extends Page
 
     public function finishSetup(): void
     {
-        Log::info('Reached afterValidation!'); Notification::make()
+        Notification::make()
             ->title('Semester setup complete!')
-            ->body('The semester and all projects have been created successfully.')
+            ->body('The selected semester, phase template, and project setup choices have been saved.')
             ->success()
             ->send();
 
+        if (! $this->semesterId) {
+            $this->redirect(SemesterResource::getUrl());
+
+            return;
+        }
+
         $this->redirect(
             SemesterResource::getUrl('edit', [
-                'record' => $this->createdSemesterId,
+                'record' => $this->semesterId,
             ])
         );
     }
 
+    public function downloadProjectImportTemplate(): StreamedResponse
+    {
+        return $this->projectImporter()->downloadTemplate();
+    }
+
     public function downloadProjectCsvTemplate(): StreamedResponse
     {
-        return response()->streamDownload(function () {
-            $file = fopen('php://output', 'w');
-            fputcsv($file, [
-                'title', 'course_code', 'phase_template_name',
-                'specialization_name', 'supervisor_university_id',
-                'student_university_ids', 'reviewer_university_ids',
-            ]);
-            fputcsv($file, [
-                'Smart Campus App', 'CS101', 'Phase 1 Template',
-                'Software Engineering', 'SUP001',
-                'STU001|STU002|STU003', 'REV001|REV002',
-            ]);
-            fclose($file);
-        }, 'wizard_projects_template.csv');
+        return $this->downloadProjectImportTemplate();
     }
 }
