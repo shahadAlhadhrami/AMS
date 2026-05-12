@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources;
 
+use App\Filament\Admin\Concerns\HidesDuringMasterDataSetup;
 use App\Filament\Admin\Resources\PhaseTemplateResource\Pages;
 use App\Filament\Admin\Resources\PhaseTemplateResource\RelationManagers;
 use App\Models\PhaseTemplate;
@@ -16,6 +17,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class PhaseTemplateResource extends Resource
 {
+    use HidesDuringMasterDataSetup;
+
     protected static ?string $model = PhaseTemplate::class;
 
     protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-rectangle-stack';

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources;
 
+use App\Filament\Admin\Concerns\HidesDuringMasterDataSetup;
 use App\Filament\Admin\Resources\DepartmentResource\Pages;
 use App\Filament\Admin\Resources\DepartmentResource\RelationManagers;
 use App\Models\Department;
@@ -15,6 +16,8 @@ use Filament\Tables\Table;
 
 class DepartmentResource extends Resource
 {
+    use HidesDuringMasterDataSetup;
+
     protected static ?string $model = Department::class;
 
     protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-building-office';

@@ -8,8 +8,8 @@ use App\Models\Project;
 use App\Models\Semester;
 use App\Models\Specialization;
 use App\Models\User;
+use App\Support\StudentProjectReassignment;
 use Filament\Forms;
-use Illuminate\Database\Eloquent\Builder;
 use OpenSpout\Common\Entity\Row;
 use OpenSpout\Common\Entity\Style\Style;
 use OpenSpout\Writer\XLSX\Options as XlsxOptions;
@@ -326,7 +326,7 @@ class ProjectsBulkImporter implements BulkImporter
                 $groupErrors[] = "Project '{$title}' has inconsistent supervisor IDs across rows: " . implode(', ', $distinctSupervisors);
             }
 
-            // Students: collect distinct, enforce max 4 per project, detect duplicates within the CSV.
+            // Students: collect distinct and detect duplicates within the CSV.
             $seenInGroup = [];
             $studentUserIds = [];
             foreach ($groupRows as $output) {
@@ -354,10 +354,6 @@ class ProjectsBulkImporter implements BulkImporter
 
             $studentUserIds = array_values(array_unique($studentUserIds));
             $studentCount = count($seenInGroup);
-
-            if ($studentCount > 4) {
-                $groupErrors[] = "Project '{$title}' has {$studentCount} students (maximum 4)";
-            }
 
             // Pick the first non-empty supervisor as canonical (validation already flagged conflicts).
             $supervisorUid = $distinctSupervisors[0] ?? '';
@@ -402,14 +398,12 @@ class ProjectsBulkImporter implements BulkImporter
     public function validateContext(array $previewData, array $context): array
     {
         $errors = [];
+        $warnings = [];
 
         $semesterId = $context['semester_id'] ?? null;
         if (! $semesterId) {
-            return ['errors' => $errors, 'hasErrors' => false];
+            return ['errors' => $errors, 'hasErrors' => false, 'warnings' => $warnings, 'hasWarnings' => false];
         }
-
-        $semester = Semester::find($semesterId);
-        $semesterName = $semester?->name ?? "id {$semesterId}";
 
         // Collect all student IDs from the preview, then a single query to check existing
         // memberships in this semester. Avoids N+1.
@@ -422,34 +416,42 @@ class ProjectsBulkImporter implements BulkImporter
             ->all();
 
         if (empty($allStudentIds)) {
-            return ['errors' => $errors, 'hasErrors' => false];
+            return ['errors' => $errors, 'hasErrors' => false, 'warnings' => $warnings, 'hasWarnings' => false];
         }
 
-        $clashes = User::query()
-            ->whereIn('id', $allStudentIds)
-            ->whereHas(
-                'studentProjects',
-                fn (Builder $q) => $q->where('semester_id', $semesterId),
-            )
-            ->pluck('university_id', 'id')
-            ->toArray();
+        $assignments = StudentProjectReassignment::existingAssignmentsForSemester($allStudentIds, (int) $semesterId);
 
-        if (empty($clashes)) {
-            return ['errors' => $errors, 'hasErrors' => false];
+        if (empty($assignments)) {
+            return ['errors' => $errors, 'hasErrors' => false, 'warnings' => $warnings, 'hasWarnings' => false];
         }
+
+        $studentsById = User::query()
+            ->whereIn('id', array_keys($assignments))
+            ->get(['id', 'university_id', 'name'])
+            ->keyBy('id');
 
         // Map each clashing student to the project it appears in for this CSV.
         foreach ($previewData as $row) {
             $studentIds = $row['_resolved']['student_ids'] ?? [];
             foreach ($studentIds as $sid) {
-                if (isset($clashes[$sid])) {
-                    $uid = $clashes[$sid];
-                    $errors[] = "Project '{$row['title']}': student '{$uid}' is already in another project in semester '{$semesterName}'";
+                foreach ($assignments[$sid] ?? [] as $existingProject) {
+                    $student = $studentsById[$sid] ?? null;
+                    if (! $student) {
+                        continue;
+                    }
+
+                    $warnings[] = "Project '{$row['title']}': "
+                        . StudentProjectReassignment::warningMessage($student, $existingProject, $row['title']);
                 }
             }
         }
 
-        return ['errors' => $errors, 'hasErrors' => ! empty($errors)];
+        return [
+            'errors' => $errors,
+            'hasErrors' => ! empty($errors),
+            'warnings' => $warnings,
+            'hasWarnings' => ! empty($warnings),
+        ];
     }
 
     public function import(array $previewData, array $context): array
@@ -471,6 +473,11 @@ class ProjectsBulkImporter implements BulkImporter
         $count = 0;
         foreach ($previewData as $row) {
             $resolved = $row['_resolved'];
+            $studentIds = $resolved['student_ids'] ?? [];
+
+            if ($semesterId && ! empty($studentIds)) {
+                StudentProjectReassignment::detachFromSemester($studentIds, (int) $semesterId);
+            }
 
             $project = Project::create([
                 'title' => $resolved['title'],
@@ -482,8 +489,8 @@ class ProjectsBulkImporter implements BulkImporter
                 'status' => 'setup',
             ]);
 
-            if (! empty($resolved['student_ids'])) {
-                $project->students()->attach($resolved['student_ids']);
+            if (! empty($studentIds)) {
+                $project->students()->attach($studentIds);
             }
 
             if (! empty($reviewerIds)) {

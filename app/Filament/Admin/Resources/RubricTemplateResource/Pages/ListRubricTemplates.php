@@ -44,7 +44,7 @@ class ListRubricTemplates extends ListRecords
         return RubricFolder::find($this->currentFolderId);
     }
 
-    public function getBreadcrumbs(): array
+    public function getFolderBreadcrumbs(): array
     {
         if ($this->currentFolderId === null) {
             return [];

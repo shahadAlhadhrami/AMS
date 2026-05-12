@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources;
 
+use App\Filament\Admin\Concerns\HidesDuringMasterDataSetup;
 use App\Filament\Admin\Resources\RubricTemplateResource\Pages;
 use App\Filament\Admin\Resources\RubricTemplateResource\RelationManagers;
 use App\Models\RubricFolder;
@@ -18,6 +19,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class RubricTemplateResource extends Resource
 {
+    use HidesDuringMasterDataSetup;
+
     protected static ?string $model = RubricTemplate::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-list';

@@ -4,12 +4,16 @@ namespace App\Filament\Admin\Resources\ProjectResource\RelationManagers;
 
 use App\Models\Project;
 use App\Models\User;
+use App\Support\StudentProjectReassignment;
 use Filament\Actions;
+use Filament\Forms;
 use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\HtmlString;
 
 class StudentsRelationManager extends RelationManager
 {
@@ -36,34 +40,29 @@ class StudentsRelationManager extends RelationManager
                     ->preloadRecordSelect()
                     ->form(fn (Actions\AttachAction $action): array => [
                         $action->getRecordSelect()
-                            ->rules([
-                                function () {
-                                    return function (string $attribute, $value, \Closure $fail) {
-                                        $project = $this->ownerRecord;
+                            ->live(),
+                        Forms\Components\Placeholder::make('assignment_warning')
+                            ->label('Assignment warning')
+                            ->content(fn (Get $get): HtmlString => $this->assignmentWarning((int) ($get('recordId') ?? 0)))
+                            ->visible(fn (Get $get): bool => $this->hasAssignmentWarning((int) ($get('recordId') ?? 0))),
+                    ])
+                    ->modalSubmitActionLabel('Attach / Move Student')
+                    ->before(function (array $data): void {
+                        $studentId = (int) ($data['recordId'] ?? 0);
 
-                                        // D3: Max 4 students per project
-                                        if ($project->students()->count() >= 4) {
-                                            $fail('This project already has 4 students (maximum).');
+                        if (! $studentId) {
+                            return;
+                        }
 
-                                            return;
-                                        }
+                        /** @var Project $project */
+                        $project = $this->ownerRecord;
 
-                                        // D3: Student not in another project this semester
-                                        $existsInSemester = Project::where('semester_id', $project->semester_id)
-                                            ->where('id', '!=', $project->id)
-                                            ->whereHas('students', function ($q) use ($value) {
-                                                $q->where('users.id', $value);
-                                            })
-                                            ->exists();
-
-                                        if ($existsInSemester) {
-                                            $studentName = User::find($value)?->name ?? 'Student';
-                                            $fail("{$studentName} is already assigned to another project in this semester.");
-                                        }
-                                    };
-                                },
-                            ]),
-                    ]),
+                        StudentProjectReassignment::detachFromSemester(
+                            [$studentId],
+                            (int) $project->semester_id,
+                            (int) $project->id,
+                        );
+                    }),
             ])
             ->actions([
                 Actions\DetachAction::make(),
@@ -71,5 +70,47 @@ class StudentsRelationManager extends RelationManager
             ->bulkActions([
                 Actions\DetachBulkAction::make(),
             ]);
+    }
+
+    protected function assignmentWarning(int $studentId): HtmlString
+    {
+        if (! $studentId) {
+            return new HtmlString('');
+        }
+
+        /** @var Project $project */
+        $project = $this->ownerRecord;
+        $existingProject = StudentProjectReassignment::firstExistingAssignmentForSemester(
+            $studentId,
+            (int) $project->semester_id,
+            (int) $project->id,
+        );
+        $student = User::find($studentId);
+
+        if (! $existingProject || ! $student) {
+            return new HtmlString('');
+        }
+
+        return new HtmlString(
+            '<div class="rounded-lg border border-warning-300 bg-warning-50 p-3 text-sm text-warning-700 dark:border-warning-600 dark:bg-warning-950/20 dark:text-warning-300">'
+            . e(StudentProjectReassignment::warningMessage($student, $existingProject, $project->title))
+            . '</div>'
+        );
+    }
+
+    protected function hasAssignmentWarning(int $studentId): bool
+    {
+        if (! $studentId) {
+            return false;
+        }
+
+        /** @var Project $project */
+        $project = $this->ownerRecord;
+
+        return StudentProjectReassignment::firstExistingAssignmentForSemester(
+            $studentId,
+            (int) $project->semester_id,
+            (int) $project->id,
+        ) !== null;
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources;
 
+use App\Filament\Admin\Concerns\HidesDuringMasterDataSetup;
 use App\Filament\Admin\Resources\ProjectResource\Pages;
 use App\Filament\Admin\Resources\ProjectResource\RelationManagers;
 use App\Models\Project;
@@ -17,6 +18,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class ProjectResource extends Resource
 {
+    use HidesDuringMasterDataSetup;
+
     protected static ?string $model = Project::class;
 
     protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-briefcase';

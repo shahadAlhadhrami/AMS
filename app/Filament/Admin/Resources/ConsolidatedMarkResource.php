@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources;
 
+use App\Filament\Admin\Concerns\HidesDuringMasterDataSetup;
 use App\Filament\Admin\Resources\ConsolidatedMarkResource\Pages;
 use App\Models\ConsolidatedMark;
 use App\Models\GradingScale;
@@ -20,6 +21,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class ConsolidatedMarkResource extends Resource
 {
+    use HidesDuringMasterDataSetup;
+
     protected static ?string $model = ConsolidatedMark::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-calculator';

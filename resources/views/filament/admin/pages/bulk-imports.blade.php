@@ -105,6 +105,20 @@
         </div>
     @endif
 
+    {{-- Validation Warnings --}}
+    @if (count($validationWarnings) > 0)
+        <div class="mt-6 rounded-lg border border-warning-300 bg-warning-50 p-4 dark:border-warning-600 dark:bg-warning-950/20">
+            <h3 class="text-sm font-medium text-warning-800 dark:text-warning-200">
+                Validation Warnings ({{ count($validationWarnings) }})
+            </h3>
+            <ul class="mt-2 list-inside list-disc space-y-1 text-sm text-warning-700 dark:text-warning-300">
+                @foreach ($validationWarnings as $warning)
+                    <li>{{ $warning }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     {{-- Preview Table --}}
     @if (count($previewData) > 0 && ! $imported && ! $showContextStep)
         <div class="mt-6">
@@ -194,10 +208,14 @@
             <div class="mt-6 flex gap-3">
                 <x-filament::button
                     wire:click="confirmContextAndImport"
-                    color="success"
-                    icon="heroicon-o-check-circle"
+                    :color="$hasWarnings ? 'warning' : 'success'"
+                    :icon="$hasWarnings ? 'heroicon-o-exclamation-triangle' : 'heroicon-o-check-circle'"
                 >
-                    Import {{ count($previewData) }} {{ $importer->label() }}
+                    @if ($hasWarnings)
+                        Proceed & Overwrite Assignments
+                    @else
+                        Import {{ count($previewData) }} {{ $importer->label() }}
+                    @endif
                 </x-filament::button>
                 <x-filament::button wire:click="resetImport" color="gray" icon="heroicon-o-arrow-path">
                     Cancel

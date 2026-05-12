@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Pages;
 
+use App\Filament\Admin\Concerns\HidesDuringMasterDataSetup;
 use App\Filament\Admin\Resources\SemesterResource;
 use App\Models\Course;
 use App\Models\PhaseTemplate;
@@ -9,6 +10,7 @@ use App\Models\Project;
 use App\Models\Semester;
 use App\Models\Specialization;
 use App\Models\User;
+use App\Support\StudentProjectReassignment;
 use Filament\Forms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -23,6 +25,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SemesterSetupWizard extends Page
 {
+    use HidesDuringMasterDataSetup;
+
     protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-sparkles';
 
     protected static string | \UnitEnum | null $navigationGroup = 'Academic Setup';
@@ -294,8 +298,7 @@ class SemesterSetupWizard extends Page
                                             return [];
                                         }
                                     })
-                                    ->searchable()
-                                    ->maxItems(4),
+                                    ->searchable(),
 
                                 Forms\Components\Select::make('reviewer_ids')
                                     ->label('Reviewers')
@@ -532,10 +535,6 @@ class SemesterSetupWizard extends Page
                 }
             }
 
-            if (count($studentIds) > 4) {
-                $rowErrors[] = 'Maximum 4 students per project (found ' . count($studentIds) . ')';
-            }
-
             $reviewerUids = array_filter(array_map('trim', explode('|', $row['reviewer_university_ids'] ?? '')));
             $reviewerIds = [];
             foreach ($reviewerUids as $uid) {
@@ -613,6 +612,7 @@ class SemesterSetupWizard extends Page
                 ]);
 
                 if (! empty($projectData['student_ids'])) {
+                    StudentProjectReassignment::detachFromSemester($projectData['student_ids'], (int) $this->createdSemesterId);
                     $project->students()->attach($projectData['student_ids']);
                 }
                 if (! empty($projectData['reviewer_ids'])) {
@@ -667,6 +667,7 @@ class SemesterSetupWizard extends Page
                 ]);
 
                 if (! empty($resolved['student_ids'])) {
+                    StudentProjectReassignment::detachFromSemester($resolved['student_ids'], (int) $this->createdSemesterId);
                     $project->students()->attach($resolved['student_ids']);
                 }
                 if (! empty($resolved['reviewer_ids'])) {

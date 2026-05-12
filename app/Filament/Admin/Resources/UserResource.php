@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources;
 
+use App\Filament\Admin\Concerns\HidesDuringMasterDataSetup;
 use App\Filament\Admin\Resources\UserResource\Pages;
 use App\Models\User;
 use App\Support\FilamentLookupCache;
@@ -18,6 +19,8 @@ use Livewire\Component;
 
 class UserResource extends Resource
 {
+    use HidesDuringMasterDataSetup;
+
     protected static ?string $model = User::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-users';

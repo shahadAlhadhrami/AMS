@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources;
 
+use App\Filament\Admin\Concerns\HidesDuringMasterDataSetup;
 use App\Filament\Admin\Resources\EvaluationResource\Pages;
 use App\Models\Evaluation;
 use App\Notifications\EvaluationUnlockedNotification;
@@ -18,6 +19,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class EvaluationResource extends Resource
 {
+    use HidesDuringMasterDataSetup;
+
     protected static ?string $model = Evaluation::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-check';

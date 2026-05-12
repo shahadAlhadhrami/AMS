@@ -50,6 +50,11 @@ class RubricTemplatesBulkImporter implements BulkImporter
 
     public function extraFormFields(): array
     {
+        return [];
+    }
+
+    public function contextFormFields(): array
+    {
         return [
             Forms\Components\Select::make('rubric_folder_id')
                 ->label('Save to Folder')
@@ -58,11 +63,6 @@ class RubricTemplatesBulkImporter implements BulkImporter
                 ->nullable()
                 ->placeholder('— No folder (root) —'),
         ];
-    }
-
-    public function contextFormFields(): array
-    {
-        return [];
     }
 
     public function validateContext(array $previewData, array $context): array
@@ -143,9 +143,9 @@ class RubricTemplatesBulkImporter implements BulkImporter
             ['',                 '',   '',                       '',                                                        '',  '',      'Very Poor',    '0.25', 'Did not complete the assigned tasks.'],
         ];
 
-        $tmpPath = tempnam(sys_get_temp_dir(), 'ams_tpl_') . '.xlsx';
+        $tmpPath = tempnam(sys_get_temp_dir(), 'ams_tpl_').'.xlsx';
 
-        $options = new XlsxOptions();
+        $options = new XlsxOptions;
         $options->setColumnWidth(22, 1);
         $options->setColumnWidth(22, 2);
         $options->setColumnWidth(25, 3);
@@ -172,7 +172,7 @@ class RubricTemplatesBulkImporter implements BulkImporter
         $writer = new XlsxWriter($options);
         $writer->openToFile($tmpPath);
 
-        $headerStyle = (new Style())->setFontBold();
+        $headerStyle = (new Style)->setFontBold();
         $writer->addRow(Row::fromValues([
             'deliverable_title', 'deliverable_max_marks',
             'criterion_title', 'criterion_description', 'max_score', 'is_individual',
@@ -198,6 +198,7 @@ class RubricTemplatesBulkImporter implements BulkImporter
         $previewData = [];
         $errors = [];
         $hasErrors = false;
+        $originalFileNames = $this->normalizeOriginalFileNames($context['csvOriginalNames'] ?? []);
 
         if (empty($files)) {
             return [
@@ -209,7 +210,10 @@ class RubricTemplatesBulkImporter implements BulkImporter
         }
 
         foreach ($files as $index => $csvPath) {
-            $rubricName = $this->extractRubricName($csvPath);
+            $rubricName = $this->extractRubricName(
+                $csvPath,
+                $this->originalFileNameFor($csvPath, $originalFileNames, $index),
+            );
             $filePath = $this->resolveCsvFilePath($csvPath);
 
             $row = [
@@ -229,6 +233,7 @@ class RubricTemplatesBulkImporter implements BulkImporter
                 $previewData[] = $row;
                 $errors[] = "{$rubricName}: file not found.";
                 $hasErrors = true;
+
                 continue;
             }
 
@@ -239,6 +244,7 @@ class RubricTemplatesBulkImporter implements BulkImporter
                 $previewData[] = $row;
                 $errors[] = "{$rubricName}: {$parseResult['error']}";
                 $hasErrors = true;
+
                 continue;
             }
 
@@ -309,7 +315,8 @@ class RubricTemplatesBulkImporter implements BulkImporter
                     $isIndividual = filter_var($firstCriterionRow['is_individual'] ?? false, FILTER_VALIDATE_BOOLEAN);
                     $description = trim($firstCriterionRow['criterion_description'] ?? '');
 
-                    $criterion = $deliverable->criteria()->create([
+                    // The importer computes total marks once per template; avoid the Criterion observer recalculating it per row.
+                    $criterion = $deliverable->criteria()->createQuietly([
                         'rubric_template_id' => $rubricTemplate->id,
                         'title' => $criterionTitle,
                         'description' => $description ?: null,
@@ -377,14 +384,35 @@ class RubricTemplatesBulkImporter implements BulkImporter
         ];
     }
 
-    protected function extractRubricName(string $csvPath): string
+    protected function extractRubricName(string $csvPath, ?string $originalFileName = null): string
     {
-        $name = pathinfo($csvPath, PATHINFO_FILENAME);
-        // Strip Livewire temp prefix if present (e.g. "tmp-1234-filename" -> "filename")
-        if (preg_match('/^[a-z0-9]+-\d+-(.+)$/', $name, $m)) {
+        $name = trim(pathinfo($originalFileName ?: $csvPath, PATHINFO_FILENAME));
+
+        // Strip Livewire temp prefix if present (e.g. "tmp-1234-filename" -> "filename").
+        if ($originalFileName === null && preg_match('/^[a-z0-9]+-\d+-(.+)$/', $name, $m)) {
             $name = $m[1];
         }
-        return $name;
+
+        return $name !== '' ? $name : pathinfo($csvPath, PATHINFO_FILENAME);
+    }
+
+    protected function originalFileNameFor(string $csvPath, array $originalFileNames, int $index): ?string
+    {
+        $fileName = $originalFileNames[$csvPath] ?? $originalFileNames[$index] ?? null;
+
+        return is_string($fileName) && trim($fileName) !== '' ? $fileName : null;
+    }
+
+    protected function normalizeOriginalFileNames(mixed $fileNames): array
+    {
+        if (! is_array($fileNames)) {
+            return [];
+        }
+
+        return array_filter(
+            $fileNames,
+            fn ($fileName) => is_string($fileName) && trim($fileName) !== '',
+        );
     }
 
     /**
@@ -395,7 +423,7 @@ class RubricTemplatesBulkImporter implements BulkImporter
         try {
             $parsed = SpreadsheetReader::read($filePath);
         } catch (\Throwable $e) {
-            return ['error' => 'Unable to read file: ' . $e->getMessage()];
+            return ['error' => 'Unable to read file: '.$e->getMessage()];
         }
 
         if (empty($parsed['headers'])) {
@@ -405,7 +433,7 @@ class RubricTemplatesBulkImporter implements BulkImporter
         $headers = array_map('strtolower', $parsed['headers']);
         $missingHeaders = array_diff($this->requiredHeaders, $headers);
         if (! empty($missingHeaders)) {
-            return ['error' => 'Missing columns: ' . implode(', ', $missingHeaders)];
+            return ['error' => 'Missing columns: '.implode(', ', $missingHeaders)];
         }
 
         $rows = [];

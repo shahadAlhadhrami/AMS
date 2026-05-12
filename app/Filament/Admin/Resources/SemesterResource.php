@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources;
 
+use App\Filament\Admin\Concerns\HidesDuringMasterDataSetup;
 use App\Filament\Admin\Resources\SemesterResource\Pages;
 use App\Filament\Admin\Resources\SemesterResource\RelationManagers;
 use App\Models\Semester;
@@ -17,6 +18,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class SemesterResource extends Resource
 {
+    use HidesDuringMasterDataSetup;
+
     protected static ?string $model = Semester::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-academic-cap';

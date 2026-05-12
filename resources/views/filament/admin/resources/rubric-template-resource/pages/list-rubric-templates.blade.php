@@ -9,7 +9,7 @@
             <span>All Templates</span>
         </button>
 
-        @foreach ($this->getBreadcrumbs() as $crumb)
+        @foreach ($this->getFolderBreadcrumbs() as $crumb)
             <x-heroicon-o-chevron-right class="w-3 h-3 text-gray-400" />
             <button
                 wire:click="navigateToFolder({{ $crumb['id'] }})"

@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Filament\Admin\Pages\MasterDataSetupWizard;
+use App\Support\MasterDataSetup;
 use Closure;
 use Filament\Facades\Filament;
 use Illuminate\Http\Request;
@@ -34,6 +36,15 @@ class EnsurePanelAccess
             }
 
             return redirect($panel->getLoginUrl());
+        }
+
+        if (
+            $panel->getId() === 'admin'
+            && MasterDataSetup::shouldFocusNavigation($user)
+            && ! $request->is('admin/master-data-setup*')
+            && ! $request->is('admin/logout*')
+        ) {
+            return redirect(MasterDataSetupWizard::getUrl());
         }
 
         return $next($request);

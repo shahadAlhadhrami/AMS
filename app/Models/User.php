@@ -45,6 +45,7 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_approved' => 'boolean',
+            'master_data_setup_progress' => 'array',
         ];
     }
 

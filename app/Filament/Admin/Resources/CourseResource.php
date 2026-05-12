@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources;
 
+use App\Filament\Admin\Concerns\HidesDuringMasterDataSetup;
 use App\Filament\Admin\Resources\CourseResource\Pages;
 use App\Models\Course;
 use Filament\Forms;
@@ -14,6 +15,8 @@ use Filament\Tables\Table;
 
 class CourseResource extends Resource
 {
+    use HidesDuringMasterDataSetup;
+
     protected static ?string $model = Course::class;
 
     protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-book-open';

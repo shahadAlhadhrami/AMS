@@ -33,8 +33,7 @@ interface BulkImporter
     public function supportsMultiFile(): bool;
 
     /**
-     * Filament form components to render in the upload form alongside the file input
-     * (e.g. a RubricFolder picker for Rubric Templates).
+     * Filament form components to render in the upload form alongside the file input.
      *
      * @return array<int, \Filament\Schemas\Components\Component>
      */
@@ -65,7 +64,7 @@ interface BulkImporter
      * Stage 2: validate the mapped/parsed rows. Receives:
      *  - $files: array of relative storage paths under the local disk (always an array, even for single-file importers).
      *  - $columnMapping: ['system_field' => 'csv_header', ...] (empty for fixed-schema importers).
-     *  - $context: extra form values from the upload step (e.g. ['rubric_folder_id' => 42]).
+     *  - $context: extra form values from the upload step.
      *
      * Returns:
      *  [
@@ -83,7 +82,8 @@ interface BulkImporter
      * will then jump straight from preview to import.
      *
      * Example use: Projects asks for Semester / Course / Phase Template / Specialization
-     * here so those values aren't duplicated on every CSV row.
+     * here so those values aren't duplicated on every CSV row. Rubric Templates asks for
+     * the destination folder here after the file contents are validated.
      *
      * @return array<int, \Filament\Schemas\Components\Component>
      */
@@ -96,9 +96,10 @@ interface BulkImporter
      * (e.g. "is this student already in another project for the chosen semester?").
      *
      * Returns the same shape as validateRows() (sans previewColumns) so the page can merge
-     * errors into the existing list.
+     * errors into the existing list. Importers may also return warnings/hasWarnings for
+     * non-blocking issues that require an explicit second confirmation.
      *
-     * @return array{errors: array<int, string>, hasErrors: bool}
+     * @return array{errors: array<int, string>, hasErrors: bool, warnings?: array<int, string>, hasWarnings?: bool}
      */
     public function validateContext(array $previewData, array $context): array;
 

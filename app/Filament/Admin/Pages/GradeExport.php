@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Pages;
 
+use App\Filament\Admin\Concerns\HidesDuringMasterDataSetup;
 use App\Models\ConsolidatedMark;
 use App\Models\Course;
 use App\Models\GradingScale;
@@ -15,6 +16,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class GradeExport extends Page
 {
+    use HidesDuringMasterDataSetup;
+
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-document-arrow-down';
 
     protected static string|\UnitEnum|null $navigationGroup = 'Reports & Export';

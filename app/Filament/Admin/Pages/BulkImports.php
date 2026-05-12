@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Pages;
 
+use App\Filament\Admin\Concerns\HidesDuringMasterDataSetup;
 use App\Services\BulkImport\BulkImporter;
 use App\Services\BulkImport\BulkImporterRegistry;
 use App\Services\BulkImport\SpreadsheetReader;
@@ -15,9 +16,11 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class BulkImports extends Page
 {
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-arrow-up-tray';
+    use HidesDuringMasterDataSetup;
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Tools';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-arrow-up-tray';
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Tools';
 
     protected static ?string $navigationLabel = 'Bulk Imports';
 
@@ -32,24 +35,40 @@ class BulkImports extends Page
 
     // Stage 1 → 2: column mapping state
     public bool $showMapping = false;
+
     public array $uploadedFiles = [];
+
     public array $extraContext = [];
+
     public array $csvHeaders = [];
+
     public array $columnMapping = [];
 
     // Stage 2 → 3: preview & import state
     public array $previewData = [];
+
     public array $previewColumns = [];
+
     public array $validationErrors = [];
+
+    public array $validationWarnings = [];
+
     public bool $hasErrors = false;
+
+    public bool $hasWarnings = false;
 
     // Stage 3 → 4: optional context step (semester/course/phase/specialization for projects, etc.)
     public bool $showContextStep = false;
+
     public array $contextData = [];
+
+    public ?string $confirmedWarningSignature = null;
 
     // Post-import state
     public bool $imported = false;
+
     public int $importedCount = 0;
+
     public array $importResults = [];
 
     public function mount(): void
@@ -77,6 +96,7 @@ class BulkImports extends Page
         $importer = $this->importer();
 
         $fileField = Forms\Components\FileUpload::make('csvPath')
+            ->key("csvPath-{$importer->key()}")
             ->label($importer->supportsMultiFile() ? 'CSV / Excel File(s)' : 'CSV / Excel File')
             ->helperText('Accepts .csv, .xlsx, or .ods. Merged cells in Excel are read correctly — values flow down through following rows.')
             ->acceptedFileTypes([
@@ -89,10 +109,14 @@ class BulkImports extends Page
             ->required()
             ->disk('local')
             ->directory('csv-imports')
+            ->storeFileNamesIn('csvOriginalNames')
             ->visibility('private');
 
         if ($importer->supportsMultiFile()) {
-            $fileField = $fileField->multiple();
+            $fileField = $fileField
+                ->multiple()
+                ->appendFiles()
+                ->maxParallelUploads(6);
         }
 
         $extraFields = $importer->extraFormFields();
@@ -162,13 +186,17 @@ class BulkImports extends Page
         $this->importResults = [];
         $this->previewData = [];
         $this->validationErrors = [];
+        $this->validationWarnings = [];
         $this->hasErrors = false;
+        $this->hasWarnings = false;
+        $this->confirmedWarningSignature = null;
         $this->showMapping = false;
 
         $files = $this->normalizeUploadedFiles($formState['csvPath'] ?? null);
 
         if (empty($files)) {
             Notification::make()->title('No CSV file uploaded.')->danger()->send();
+
             return;
         }
 
@@ -178,6 +206,7 @@ class BulkImports extends Page
         if (! $importer->requiresColumnMapping()) {
             // Fixed-schema importers go straight to validation.
             $this->runValidation();
+
             return;
         }
 
@@ -185,18 +214,21 @@ class BulkImports extends Page
         $firstFilePath = $this->resolveFilePath($files[0]);
         if (! $firstFilePath) {
             Notification::make()->title('Spreadsheet file not found.')->danger()->send();
+
             return;
         }
 
         try {
             $parsed = SpreadsheetReader::read($firstFilePath);
         } catch (\Throwable $e) {
-            Notification::make()->title('Unable to read the spreadsheet: ' . $e->getMessage())->danger()->send();
+            Notification::make()->title('Unable to read the spreadsheet: '.$e->getMessage())->danger()->send();
+
             return;
         }
 
         if (empty($parsed['headers'])) {
             Notification::make()->title('Spreadsheet is empty or has no headers.')->danger()->send();
+
             return;
         }
 
@@ -223,9 +255,10 @@ class BulkImports extends Page
         $unmapped = array_filter($this->columnMapping, fn ($v) => empty($v));
         if (! empty($unmapped)) {
             Notification::make()
-                ->title('Please map all required columns: ' . implode(', ', array_keys($unmapped)))
+                ->title('Please map all required columns: '.implode(', ', array_keys($unmapped)))
                 ->danger()
                 ->send();
+
             return;
         }
 
@@ -241,7 +274,10 @@ class BulkImports extends Page
         $this->previewData = $result['previewData'] ?? [];
         $this->previewColumns = $result['previewColumns'] ?? [];
         $this->validationErrors = $result['errors'] ?? [];
+        $this->validationWarnings = $result['warnings'] ?? [];
         $this->hasErrors = $result['hasErrors'] ?? false;
+        $this->hasWarnings = $result['hasWarnings'] ?? ! empty($this->validationWarnings);
+        $this->confirmedWarningSignature = null;
 
         if (empty($this->previewData) && empty($this->validationErrors)) {
             Notification::make()->title('CSV file contains no data rows.')->warning()->send();
@@ -258,11 +294,13 @@ class BulkImports extends Page
                 ->title('Cannot continue: fix validation errors first.')
                 ->danger()
                 ->send();
+
             return;
         }
 
         if (! $this->importerNeedsContextStep()) {
             $this->runImport();
+
             return;
         }
 
@@ -277,6 +315,7 @@ class BulkImports extends Page
     {
         if (! $this->importerNeedsContextStep()) {
             $this->runImport();
+
             return;
         }
 
@@ -292,8 +331,21 @@ class BulkImports extends Page
             $this->validationErrors,
             fn ($e) => ! str_starts_with($e, '[Context] '),
         ));
+        $this->validationWarnings = array_values(array_filter(
+            $this->validationWarnings,
+            fn ($e) => ! str_starts_with($e, '[Context] '),
+        ));
+        $this->hasErrors = ! empty($this->validationErrors);
 
         $newErrors = array_map(fn ($e) => "[Context] {$e}", $contextErrors['errors'] ?? []);
+        $newWarnings = array_map(fn ($e) => "[Context] {$e}", $contextErrors['warnings'] ?? []);
+
+        if (! empty($newWarnings)) {
+            $this->validationWarnings = array_merge($this->validationWarnings, $newWarnings);
+        }
+
+        $this->hasWarnings = ! empty($this->validationWarnings);
+
         if (! empty($newErrors)) {
             $this->validationErrors = array_merge($this->validationErrors, $newErrors);
             $this->hasErrors = true;
@@ -301,7 +353,28 @@ class BulkImports extends Page
                 ->title('Context validation failed — review errors and adjust your selections.')
                 ->danger()
                 ->send();
+
             return;
+        }
+
+        if (! empty($newWarnings)) {
+            $warningSignature = md5(json_encode([
+                'context' => $this->contextData,
+                'warnings' => $newWarnings,
+            ]));
+
+            if ($this->confirmedWarningSignature !== $warningSignature) {
+                $this->confirmedWarningSignature = $warningSignature;
+
+                Notification::make()
+                    ->title('Assignment warnings found. Review them, then click import again to overwrite existing assignments.')
+                    ->warning()
+                    ->send();
+
+                return;
+            }
+        } else {
+            $this->confirmedWarningSignature = null;
         }
 
         $this->runImport();
@@ -314,6 +387,7 @@ class BulkImports extends Page
                 ->title('Cannot import: fix validation errors first.')
                 ->danger()
                 ->send();
+
             return;
         }
 
@@ -328,6 +402,9 @@ class BulkImports extends Page
             $this->imported = true;
             $this->importedCount = $result['count'] ?? 0;
             $this->importResults = $result['results'] ?? [];
+            $this->validationWarnings = [];
+            $this->hasWarnings = false;
+            $this->confirmedWarningSignature = null;
 
             Notification::make()
                 ->title("Successfully imported {$this->importedCount} {$importer->label()}.")
@@ -337,7 +414,7 @@ class BulkImports extends Page
             DB::rollBack();
 
             Notification::make()
-                ->title('Import failed: ' . $e->getMessage())
+                ->title('Import failed: '.$e->getMessage())
                 ->danger()
                 ->send();
         }
@@ -375,10 +452,13 @@ class BulkImports extends Page
         $this->previewData = [];
         $this->previewColumns = [];
         $this->validationErrors = [];
+        $this->validationWarnings = [];
         $this->hasErrors = false;
+        $this->hasWarnings = false;
 
         $this->showContextStep = false;
         $this->contextData = [];
+        $this->confirmedWarningSignature = null;
 
         $this->imported = false;
         $this->importedCount = 0;
@@ -400,15 +480,17 @@ class BulkImports extends Page
     protected function extractExtraContext(array $formState): array
     {
         unset($formState['csvPath']);
+
         return $formState;
     }
 
     protected function resolveFilePath(string $csvPath): ?string
     {
-        $filePath = storage_path('app/private/' . $csvPath);
+        $filePath = storage_path('app/private/'.$csvPath);
         if (! file_exists($filePath)) {
-            $filePath = storage_path('app/' . $csvPath);
+            $filePath = storage_path('app/'.$csvPath);
         }
+
         return file_exists($filePath) ? $filePath : null;
     }
 }
