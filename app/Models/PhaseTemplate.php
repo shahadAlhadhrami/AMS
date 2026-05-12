@@ -36,6 +36,12 @@ class PhaseTemplate extends Model
         return $this->hasMany(Project::class);
     }
 
+    public function externals(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'phase_template_external')
+                    ->withTimestamps();
+    }
+
     public function reviewers(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'phase_template_reviewer')

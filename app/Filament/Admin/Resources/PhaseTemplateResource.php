@@ -8,6 +8,8 @@ use App\Filament\Admin\Resources\PhaseTemplateResource\RelationManagers;
 use App\Models\PhaseTemplate;
 use Filament\Forms;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Actions;
 use Filament\Tables;
@@ -45,21 +47,44 @@ class PhaseTemplateResource extends Resource
                     ->numeric()
                     ->minValue(0)
                     ->label('Total Phase Marks'),
-                Forms\Components\Select::make('reviewers')
-                    ->label('Reviewers')
-                    ->helperText('Users assigned here are copied onto every project that uses this Phase Template during bulk import.')
-                    ->relationship(
-                        name: 'reviewers',
-                        titleAttribute: 'name',
-                        modifyQueryUsing: fn (Builder $query) => $query->whereHas(
-                            'roles',
-                            fn (Builder $q) => $q->where('name', 'Reviewer/Supervisor'),
-                        ),
-                    )
-                    ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->name} ({$record->university_id})")
-                    ->multiple()
-                    ->preload()
-                    ->searchable(),
+                Grid::make(2)
+                    ->columnSpanFull()
+                    ->schema([
+                        Forms\Components\Select::make('reviewers')
+                            ->label('Reviewers')
+                            ->relationship(
+                                name: 'reviewers',
+                                titleAttribute: 'name',
+                                modifyQueryUsing: fn (Builder $query, Get $get) => $query
+                                    ->whereHas('roles', fn (Builder $q) => $q->where('name', 'Reviewer/Supervisor'))
+                                    ->when(
+                                        $get('externals'),
+                                        fn (Builder $q, $ids) => $q->whereNotIn('users.id', (array) $ids),
+                                    ),
+                            )
+                            ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->name} ({$record->university_id})")
+                            ->multiple()
+                            ->live()
+                            ->searchable()
+                            ->preload(),
+                        Forms\Components\Select::make('externals')
+                            ->label('Externals')
+                            ->relationship(
+                                name: 'externals',
+                                titleAttribute: 'name',
+                                modifyQueryUsing: fn (Builder $query, Get $get) => $query
+                                    ->whereHas('roles', fn (Builder $q) => $q->where('name', 'Reviewer/Supervisor'))
+                                    ->when(
+                                        $get('reviewers'),
+                                        fn (Builder $q, $ids) => $q->whereNotIn('users.id', (array) $ids),
+                                    ),
+                            )
+                            ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->name} ({$record->university_id})")
+                            ->multiple()
+                            ->live()
+                            ->searchable()
+                            ->preload(),
+                    ]),
             ]);
     }
 

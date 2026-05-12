@@ -125,7 +125,7 @@ class ProjectsBulkImporter implements BulkImporter
                 ->searchable(),
             Forms\Components\Select::make('course_id')
                 ->label('Course')
-                ->options(fn () => Course::orderBy('code')->get()->mapWithKeys(fn ($c) => [$c->id => "{$c->code} — {$c->name}"])->toArray())
+                ->options(fn () => Course::orderBy('code')->get()->mapWithKeys(fn ($c) => [$c->id => "{$c->code} — {$c->title}"])->toArray())
                 ->required()
                 ->searchable(),
             Forms\Components\Select::make('phase_template_id')

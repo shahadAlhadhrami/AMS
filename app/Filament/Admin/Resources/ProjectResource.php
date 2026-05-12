@@ -152,6 +152,22 @@ class ProjectResource extends Resource
             ])
             ->bulkActions([
                 Actions\BulkActionGroup::make([
+                    Actions\BulkAction::make('changeStatus')
+                        ->label('Change Status')
+                        ->icon('heroicon-o-arrow-path')
+                        ->form([
+                            Forms\Components\Select::make('status')
+                                ->options([
+                                    'setup'      => 'Setup',
+                                    'evaluating' => 'Evaluating',
+                                    'completed'  => 'Completed',
+                                ])
+                                ->required(),
+                        ])
+                        ->action(function (\Illuminate\Support\Collection $records, array $data): void {
+                            $records->each(fn (Project $record) => $record->update(['status' => $data['status']]));
+                        })
+                        ->deselectRecordsAfterCompletion(),
                     Actions\DeleteBulkAction::make(),
                 ]),
             ]);

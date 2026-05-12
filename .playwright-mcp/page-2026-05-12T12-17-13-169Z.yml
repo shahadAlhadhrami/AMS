@@ -1,0 +1,37 @@
+- generic [active] [ref=e1]:
+  - main [ref=e4]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - generic [ref=e9]: AMS
+        - heading "Sign in" [level=1] [ref=e10]
+        - paragraph [ref=e11]:
+          - text: or
+          - link "sign up for an account" [ref=e12] [cursor=pointer]:
+            - /url: https://ams.test/admin/register
+      - generic [ref=e16]:
+        - generic [ref=e20]:
+          - generic [ref=e23]:
+            - generic [ref=e27]:
+              - text: Email address
+              - superscript [ref=e28]: "*"
+            - generic [ref=e29]:
+              - textbox "Email address*" [ref=e32]: admin@ams.test
+              - paragraph [ref=e71]: These credentials do not match our records.
+          - generic [ref=e35]:
+            - generic [ref=e37]:
+              - generic [ref=e39]:
+                - text: Password
+                - superscript [ref=e40]: "*"
+              - link "Forgot password?" [ref=e45] [cursor=pointer]:
+                - /url: https://ams.test/admin/password-reset/request
+            - generic [ref=e47]:
+              - textbox "Password*" [ref=e49]: password
+              - button "Show password" [ref=e52] [cursor=pointer]:
+                - img [ref=e53]
+          - generic [ref=e61]:
+            - checkbox "Remember me" [ref=e62]
+            - generic [ref=e63]: Remember me
+        - button "Sign in" [ref=e69] [cursor=pointer]:
+          - generic [ref=e70]: Sign in
+  - generic:
+    - status
