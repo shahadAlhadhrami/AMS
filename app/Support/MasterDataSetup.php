@@ -67,19 +67,24 @@ class MasterDataSetup
      */
     public static function gradingScaleRows(): array
     {
-        static::ensureDefaultGradingScales();
-
-        return GradingScale::query()
+        $rows = GradingScale::query()
             ->orderByDesc('min_score')
-            ->get(['id', 'letter_grade', 'min_score', 'max_score', 'gpa_equivalent'])
-            ->map(fn (GradingScale $scale): array => [
-                'id' => $scale->id,
-                'letter_grade' => $scale->letter_grade,
-                'min_score' => (float) $scale->min_score,
-                'max_score' => (float) $scale->max_score,
-                'gpa_equivalent' => (float) $scale->gpa_equivalent,
-            ])
-            ->all();
+            ->get(['id', 'letter_grade', 'min_score', 'max_score', 'gpa_equivalent']);
+
+        if ($rows->isEmpty()) {
+            return array_map(
+                fn (array $scale): array => array_merge(['id' => null], $scale),
+                static::DEFAULT_GRADING_SCALES
+            );
+        }
+
+        return $rows->map(fn (GradingScale $scale): array => [
+            'id' => $scale->id,
+            'letter_grade' => $scale->letter_grade,
+            'min_score' => (float) $scale->min_score,
+            'max_score' => (float) $scale->max_score,
+            'gpa_equivalent' => (float) $scale->gpa_equivalent,
+        ])->all();
     }
 
     /**

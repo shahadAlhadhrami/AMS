@@ -61,8 +61,6 @@ class MasterDataSetupWizard extends Page
     {
         abort_unless(static::canAccess(), 403);
 
-        MasterDataSetup::ensureDefaultGradingScales();
-
         $progress = $this->savedProgress();
         $progressData = is_array($progress['data'] ?? null) ? $progress['data'] : [];
 
