@@ -5,6 +5,10 @@ namespace App\Services\BulkImport;
 use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use OpenSpout\Common\Entity\Row;
+use OpenSpout\Common\Entity\Style\Style;
+use OpenSpout\Writer\XLSX\Options as XlsxOptions;
+use OpenSpout\Writer\XLSX\Writer as XlsxWriter;
 use Spatie\Permission\Models\Role;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -69,16 +73,40 @@ class UsersBulkImporter implements BulkImporter
 
     public function downloadTemplate(): StreamedResponse
     {
-        return response()->streamDownload(function () {
-            $file = fopen('php://output', 'w');
-            fputcsv($file, ['university_id', 'name', 'email', 'role']);
-            fputcsv($file, ['26s2020', 'Hamed Al-Balushi', '26s2020@utas.edu.om', 'Student']);
-            fputcsv($file, ['26j2174', 'Aisha Al-Harthi', '26j2174@utas.edu.om', 'Student']);
-            fputcsv($file, ['e4382', 'Ahmed Al-Balushi', 'ahmed.al-balushi@utas.edu.om', 'Supervisor']);
-            fputcsv($file, ['e7051', 'Nawal Al-Kharusi', 'nawal.al-kharusi@utas.edu.om', 'Reviewer']);
-            fputcsv($file, ['e1926', 'Salim Al-Harthy', 'salim.al-harthy@utas.edu.om', 'Reviewer/Supervisor']);
-            fclose($file);
-        }, 'users_import_template.csv');
+        $dataRows = [
+            ['26s2020', 'Hamed Al-Balushi',  '26s2020@utas.edu.om',          'Student'],
+            ['26j2174', 'Aisha Al-Harthi',   '26j2174@utas.edu.om',          'Student'],
+            ['e4382',   'Ahmed Al-Balushi',  'ahmed.al-balushi@utas.edu.om', 'Supervisor'],
+            ['e7051',   'Nawal Al-Kharusi',  'nawal.al-kharusi@utas.edu.om', 'Reviewer'],
+            ['e1926',   'Salim Al-Harthy',   'salim.al-harthy@utas.edu.om',  'Reviewer/Supervisor'],
+        ];
+
+        $tmpPath = tempnam(sys_get_temp_dir(), 'ams_tpl_') . '.xlsx';
+
+        $options = new XlsxOptions();
+        $options->setColumnWidth(16, 1);
+        $options->setColumnWidth(28, 2);
+        $options->setColumnWidth(35, 3);
+        $options->setColumnWidth(22, 4);
+
+        $writer = new XlsxWriter($options);
+        $writer->openToFile($tmpPath);
+
+        $headerStyle = (new Style())->setFontBold();
+        $writer->addRow(Row::fromValues(['university_id', 'name', 'email', 'role'], $headerStyle));
+
+        foreach ($dataRows as $rowData) {
+            $writer->addRow(Row::fromValues($rowData));
+        }
+
+        $writer->close();
+
+        return response()->streamDownload(function () use ($tmpPath) {
+            readfile($tmpPath);
+            @unlink($tmpPath);
+        }, 'users_import_template.xlsx', [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
     }
 
     public function validateRows(array $files, array $columnMapping, array $context): array

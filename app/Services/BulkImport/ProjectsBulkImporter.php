@@ -10,6 +10,10 @@ use App\Models\Specialization;
 use App\Models\User;
 use Filament\Forms;
 use Illuminate\Database\Eloquent\Builder;
+use OpenSpout\Common\Entity\Row;
+use OpenSpout\Common\Entity\Style\Style;
+use OpenSpout\Writer\XLSX\Options as XlsxOptions;
+use OpenSpout\Writer\XLSX\Writer as XlsxWriter;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ProjectsBulkImporter implements BulkImporter
@@ -66,16 +70,49 @@ class ProjectsBulkImporter implements BulkImporter
 
     public function downloadTemplate(): StreamedResponse
     {
-        return response()->streamDownload(function () {
-            $file = fopen('php://output', 'w');
-            fputcsv($file, ['project_title', 'supervisor_id', 'student_id']);
-            fputcsv($file, ['Smart Campus Companion App', 'e9173', '26s3614']);
-            fputcsv($file, ['Smart Campus Companion App', 'e9173', '26j3729']);
-            fputcsv($file, ['Smart Campus Companion App', 'e9173', '26s3846']);
-            fputcsv($file, ['AI-Powered Assessment Dashboard', 'e6248', '26j3952']);
-            fputcsv($file, ['AI-Powered Assessment Dashboard', 'e6248', '26s4078']);
-            fclose($file);
-        }, 'projects_import_template.csv');
+        $dataRows = [
+            ['Smart Campus Companion App',        'e9173', '26s3614'],
+            ['',                                  '',      '26j3729'],
+            ['',                                  '',      '26s3846'],
+            ['AI-Powered Assessment Dashboard',   'e6248', '26j3952'],
+            ['',                                  '',      '26s4078'],
+            ['',                                  '',      '26j4185'],
+            ['IoT-Based Smart Greenhouse',        'e3706', '26s4297'],
+            ['',                                  '',      '26j4363'],
+            ['',                                  '',      '26s4489'],
+        ];
+
+        $tmpPath = tempnam(sys_get_temp_dir(), 'ams_tpl_') . '.xlsx';
+
+        $options = new XlsxOptions();
+        $options->setColumnWidth(38, 1);
+        $options->setColumnWidth(16, 2);
+        $options->setColumnWidth(16, 3);
+        // Merge project_title (col 0) and supervisor_id (col 1) for each 3-row group.
+        // Columns are 0-indexed, rows are 1-indexed; header occupies row 1.
+        foreach ([[2, 4], [5, 7], [8, 10]] as [$start, $end]) {
+            $options->mergeCells(0, $start, 0, $end);
+            $options->mergeCells(1, $start, 1, $end);
+        }
+
+        $writer = new XlsxWriter($options);
+        $writer->openToFile($tmpPath);
+
+        $headerStyle = (new Style())->setFontBold();
+        $writer->addRow(Row::fromValues(['project_title', 'supervisor_id', 'student_id'], $headerStyle));
+
+        foreach ($dataRows as $rowData) {
+            $writer->addRow(Row::fromValues($rowData));
+        }
+
+        $writer->close();
+
+        return response()->streamDownload(function () use ($tmpPath) {
+            readfile($tmpPath);
+            @unlink($tmpPath);
+        }, 'projects_import_template.xlsx', [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
     }
 
     public function contextFormFields(): array

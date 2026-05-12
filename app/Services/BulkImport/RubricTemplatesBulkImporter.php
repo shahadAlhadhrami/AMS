@@ -5,6 +5,10 @@ namespace App\Services\BulkImport;
 use App\Filament\Admin\Resources\RubricTemplateResource;
 use App\Models\RubricTemplate;
 use Filament\Forms;
+use OpenSpout\Common\Entity\Row;
+use OpenSpout\Common\Entity\Style\Style;
+use OpenSpout\Writer\XLSX\Options as XlsxOptions;
+use OpenSpout\Writer\XLSX\Writer as XlsxWriter;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class RubricTemplatesBulkImporter implements BulkImporter
@@ -98,21 +102,95 @@ class RubricTemplatesBulkImporter implements BulkImporter
 
     public function downloadTemplate(): StreamedResponse
     {
-        return response()->streamDownload(function () {
-            $file = fopen('php://output', 'w');
-            fputcsv($file, [
-                'deliverable_title', 'deliverable_max_marks',
-                'criterion_title', 'criterion_description', 'max_score', 'is_individual',
-                'level_label', 'level_score', 'level_description',
-            ]);
-            fputcsv($file, ['Project Analysis', '10', 'Literature Review', 'Quality of literature review', '5', 'false', 'Excellent', '5', 'Outstanding']);
-            fputcsv($file, ['Project Analysis', '10', 'Literature Review', 'Quality of literature review', '5', 'false', 'Good', '3', 'Meets expectations']);
-            fputcsv($file, ['Project Analysis', '10', 'Problem Statement', 'Clarity of problem statement', '5', 'false', 'Excellent', '5', 'Very clear']);
-            fputcsv($file, ['Project Analysis', '10', 'Problem Statement', 'Clarity of problem statement', '5', 'false', 'Good', '3', 'Acceptable']);
-            fputcsv($file, ['Presentation', '5', 'Oral Delivery', '', '5', 'true', 'Excellent', '5', '']);
-            fputcsv($file, ['Presentation', '5', 'Oral Delivery', '', '5', 'true', 'Good', '3', '']);
-            fclose($file);
-        }, 'rubric_import_template.csv');
+        // Real rubrics always have 6 score levels per criterion.
+        // Values go in the top-left cell of each merged region only; other cells are empty.
+        //
+        // Row layout (header = row 1):
+        //   Deliverable 1 "Project Analysis"  → rows 2–13  (2 criteria × 6 levels)
+        //     Criterion 1 "Problem Statement" → rows 2–7
+        //     Criterion 2 "Literature Study"  → rows 8–13
+        //   Deliverable 2 "Presentation"      → rows 14–25 (2 criteria × 6 levels)
+        //     Criterion 1 "Oral Presentation" → rows 14–19
+        //     Criterion 2 "Individual Contribution" → rows 20–25  (is_individual = true)
+        $dataRows = [
+            // D1 C1
+            ['Project Analysis', '10', 'Problem Statement',      'Clarity of problem definition, objectives, and scope',   '5', 'false', 'Excellent',    '5',    'Problem statement is exceptionally clear, well-defined, and comprehensive.'],
+            ['',                 '',   '',                       '',                                                        '',  '',      'Very Good',    '4',    'Problem statement is clear and well-defined with minor gaps.'],
+            ['',                 '',   '',                       '',                                                        '',  '',      'Good',         '3',    'Problem statement is mostly clear with some gaps.'],
+            ['',                 '',   '',                       '',                                                        '',  '',      'Satisfactory', '2',    'Problem statement is partially clear with notable gaps.'],
+            ['',                 '',   '',                       '',                                                        '',  '',      'Poor',         '1',    'Problem statement is unclear and poorly defined.'],
+            ['',                 '',   '',                       '',                                                        '',  '',      'Very Poor',    '0.25', 'Problem statement is missing or incomprehensible.'],
+            // D1 C2
+            ['',                 '',   'Literature Study',       'Quality and relevance of reviewed literature',           '5', 'false', 'Excellent',    '5',    'Literature is comprehensive, relevant, and critically analysed.'],
+            ['',                 '',   '',                       '',                                                        '',  '',      'Very Good',    '4',    'Literature is mostly comprehensive and relevant.'],
+            ['',                 '',   '',                       '',                                                        '',  '',      'Good',         '3',    'Literature review is adequate with some gaps.'],
+            ['',                 '',   '',                       '',                                                        '',  '',      'Satisfactory', '2',    'Literature review is minimal and partially relevant.'],
+            ['',                 '',   '',                       '',                                                        '',  '',      'Poor',         '1',    'Literature review is very limited.'],
+            ['',                 '',   '',                       '',                                                        '',  '',      'Very Poor',    '0.25', 'No meaningful literature review present.'],
+            // D2 C1
+            ['Presentation',     '10', 'Oral Presentation',      'Clarity and effectiveness of oral delivery',             '5', 'false', 'Excellent',    '5',    'Presentation is exceptionally clear, engaging, and well-delivered.'],
+            ['',                 '',   '',                       '',                                                        '',  '',      'Very Good',    '4',    'Presentation is clear and mostly engaging.'],
+            ['',                 '',   '',                       '',                                                        '',  '',      'Good',         '3',    'Presentation is reasonably clear with minor issues.'],
+            ['',                 '',   '',                       '',                                                        '',  '',      'Satisfactory', '2',    'Presentation is partially clear with some issues.'],
+            ['',                 '',   '',                       '',                                                        '',  '',      'Poor',         '1',    'Presentation is unclear and poorly delivered.'],
+            ['',                 '',   '',                       '',                                                        '',  '',      'Very Poor',    '0.25', 'Presentation is incomprehensible or absent.'],
+            // D2 C2 — individual criterion: each group member is scored separately
+            ['',                 '',   'Individual Contribution', 'Student\'s personal contribution to the project',       '5', 'true',  'Excellent',    '5',    'Effectively completed all assigned tasks.'],
+            ['',                 '',   '',                       '',                                                        '',  '',      'Very Good',    '4',    'Most of the assigned tasks were completed.'],
+            ['',                 '',   '',                       '',                                                        '',  '',      'Good',         '3',    'Partially completed the assigned tasks.'],
+            ['',                 '',   '',                       '',                                                        '',  '',      'Satisfactory', '2',    'Minimally completed the assigned tasks.'],
+            ['',                 '',   '',                       '',                                                        '',  '',      'Poor',         '1',    'Poorly completed the assigned tasks.'],
+            ['',                 '',   '',                       '',                                                        '',  '',      'Very Poor',    '0.25', 'Did not complete the assigned tasks.'],
+        ];
+
+        $tmpPath = tempnam(sys_get_temp_dir(), 'ams_tpl_') . '.xlsx';
+
+        $options = new XlsxOptions();
+        $options->setColumnWidth(22, 1);
+        $options->setColumnWidth(22, 2);
+        $options->setColumnWidth(25, 3);
+        $options->setColumnWidth(32, 4);
+        $options->setColumnWidth(12, 5);
+        $options->setColumnWidth(15, 6);
+        $options->setColumnWidth(15, 7);
+        $options->setColumnWidth(12, 8);
+        $options->setColumnWidth(40, 9);
+
+        // Deliverable-level merges (cols 0–1, 0-indexed)
+        $options->mergeCells(0, 2, 0, 13);
+        $options->mergeCells(1, 2, 1, 13);
+        $options->mergeCells(0, 14, 0, 25);
+        $options->mergeCells(1, 14, 1, 25);
+
+        // Criterion-level merges (cols 2–5): each criterion spans 6 level rows
+        foreach ([[2, 7], [8, 13], [14, 19], [20, 25]] as [$start, $end]) {
+            for ($col = 2; $col <= 5; $col++) {
+                $options->mergeCells($col, $start, $col, $end);
+            }
+        }
+
+        $writer = new XlsxWriter($options);
+        $writer->openToFile($tmpPath);
+
+        $headerStyle = (new Style())->setFontBold();
+        $writer->addRow(Row::fromValues([
+            'deliverable_title', 'deliverable_max_marks',
+            'criterion_title', 'criterion_description', 'max_score', 'is_individual',
+            'level_label', 'level_score', 'level_description',
+        ], $headerStyle));
+
+        foreach ($dataRows as $rowData) {
+            $writer->addRow(Row::fromValues($rowData));
+        }
+
+        $writer->close();
+
+        return response()->streamDownload(function () use ($tmpPath) {
+            readfile($tmpPath);
+            @unlink($tmpPath);
+        }, 'rubric_import_template.xlsx', [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
     }
 
     public function validateRows(array $files, array $columnMapping, array $context): array
