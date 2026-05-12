@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Models\RubricTemplate;
 use App\Models\Semester;
+use App\Models\User;
 use Tests\TestCase;
 
 class BooleanScopeSqlTest extends TestCase
@@ -60,5 +61,23 @@ class BooleanScopeSqlTest extends TestCase
         $this->assertStringContainsString('is_locked', $query->toSql());
         $this->assertStringContainsString('false', $query->toSql());
         $this->assertSame([], $query->getBindings());
+    }
+
+    public function test_user_approved_scope_uses_bound_boolean(): void
+    {
+        $query = User::approved();
+
+        $this->assertStringContainsString('is_approved', $query->toSql());
+        $this->assertStringNotContainsString('"is_approved" = true', $query->toSql());
+        $this->assertSame([true], $query->getBindings());
+    }
+
+    public function test_user_unapproved_scope_uses_bound_boolean(): void
+    {
+        $query = User::unapproved();
+
+        $this->assertStringContainsString('is_approved', $query->toSql());
+        $this->assertStringNotContainsString('"is_approved" = false', $query->toSql());
+        $this->assertSame([false], $query->getBindings());
     }
 }

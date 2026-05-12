@@ -51,12 +51,12 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
 
     public function scopeApproved($query): void
     {
-        $query->whereRaw('"is_approved" = true');
+        $query->where('is_approved', true);
     }
 
     public function scopeUnapproved($query): void
     {
-        $query->whereRaw('"is_approved" = false');
+        $query->where('is_approved', false);
     }
 
     public function canAccessPanel(Panel $panel): bool
