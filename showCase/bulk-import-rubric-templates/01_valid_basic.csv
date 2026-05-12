@@ -1,3 +1,7 @@
 deliverable_title,deliverable_max_marks,criterion_title,criterion_description,max_score,is_individual,level_label,level_score,level_description
-Final Report,10,Clarity,Quality of writing,10,false,Excellent,10,Outstanding clarity
-Final Report,10,Clarity,Quality of writing,10,false,Good,6,Acceptable clarity
+Final Report,5,Report Structure,Adherence to the specified report structure and writing quality,5,false,Excellent,5,Report strictly follows the specified structure and is clear and well written.
+Final Report,5,Report Structure,Adherence to the specified report structure and writing quality,5,false,Very Good,4,Report closely follows the specified structure and is mostly well written.
+Final Report,5,Report Structure,Adherence to the specified report structure and writing quality,5,false,Good,3,Report partially follows the specified structure and is reasonably written.
+Final Report,5,Report Structure,Adherence to the specified report structure and writing quality,5,false,Satisfactory,2,Report minimally follows the specified structure with notable issues.
+Final Report,5,Report Structure,Adherence to the specified report structure and writing quality,5,false,Poor,1,Report poorly follows the specified structure and is poorly written.
+Final Report,5,Report Structure,Adherence to the specified report structure and writing quality,5,false,Very Poor,0.25,Report does not follow the specified format and is very poorly written.

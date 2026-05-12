@@ -1,5 +1,13 @@
 criterion_title,criterion_description,max_score,is_individual,level_label,level_score,level_description
-Clarity,Quality of writing,10,false,Excellent,10,Outstanding
-Clarity,Quality of writing,10,false,Good,6,Acceptable
-Originality,Novelty,5,false,Excellent,5,Highly original
-Originality,Novelty,5,false,Good,3,Some original ideas
+Clarity,Quality and clarity of written expression,5,false,Excellent,5,Writing is exceptionally clear precise and well-structured.
+Clarity,Quality and clarity of written expression,5,false,Very Good,4,Writing is clear and well-structured with minor issues.
+Clarity,Quality and clarity of written expression,5,false,Good,3,Writing is mostly clear with some ambiguity.
+Clarity,Quality and clarity of written expression,5,false,Satisfactory,2,Writing is partially clear with notable issues.
+Clarity,Quality and clarity of written expression,5,false,Poor,1,Writing is unclear and difficult to follow.
+Clarity,Quality and clarity of written expression,5,false,Very Poor,0.25,Writing is incomprehensible.
+Originality,Novelty and creativity of the proposed solution,5,false,Excellent,5,Solution is highly original and demonstrates exceptional creativity.
+Originality,Novelty and creativity of the proposed solution,5,false,Very Good,4,Solution shows strong originality with some familiar elements.
+Originality,Novelty and creativity of the proposed solution,5,false,Good,3,Solution shows some original ideas.
+Originality,Novelty and creativity of the proposed solution,5,false,Satisfactory,2,Solution is largely conventional with minimal originality.
+Originality,Novelty and creativity of the proposed solution,5,false,Poor,1,Solution lacks originality.
+Originality,Novelty and creativity of the proposed solution,5,false,Very Poor,0.25,No originality evident.

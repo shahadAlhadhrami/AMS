@@ -1,7 +1,25 @@
 deliverable_title,deliverable_max_marks,criterion_title,criterion_description,max_score,is_individual,level_label,level_score,level_description
-Project Analysis,10,Literature Review,Quality of literature review,5,false,Excellent,5,Outstanding
-Project Analysis,10,Literature Review,Quality of literature review,5,false,Good,3,Meets expectations
-Project Analysis,10,Problem Statement,Clarity of problem statement,5,false,Excellent,5,Very clear
-Project Analysis,10,Problem Statement,Clarity of problem statement,5,false,Good,3,Acceptable
-Presentation,5,Oral Delivery,,5,true,Excellent,5,
-Presentation,5,Oral Delivery,,5,true,Good,3,
+Project Analysis,10,Problem Statement,Clarity of problem definition objectives and scope,5,false,Excellent,5,Problem statement is exceptionally clear well-defined and comprehensive.
+Project Analysis,10,Problem Statement,Clarity of problem definition objectives and scope,5,false,Very Good,4,Problem statement is clear and well-defined with minor gaps.
+Project Analysis,10,Problem Statement,Clarity of problem definition objectives and scope,5,false,Good,3,Problem statement is mostly clear with some gaps.
+Project Analysis,10,Problem Statement,Clarity of problem definition objectives and scope,5,false,Satisfactory,2,Problem statement is partially clear with notable gaps.
+Project Analysis,10,Problem Statement,Clarity of problem definition objectives and scope,5,false,Poor,1,Problem statement is unclear and poorly defined.
+Project Analysis,10,Problem Statement,Clarity of problem definition objectives and scope,5,false,Very Poor,0.25,Problem statement is missing or incomprehensible.
+Project Analysis,10,Literature Study,Quality and relevance of reviewed literature,5,false,Excellent,5,Literature is comprehensive relevant and critically analysed.
+Project Analysis,10,Literature Study,Quality and relevance of reviewed literature,5,false,Very Good,4,Literature is mostly comprehensive and relevant.
+Project Analysis,10,Literature Study,Quality and relevance of reviewed literature,5,false,Good,3,Literature review is adequate with some gaps.
+Project Analysis,10,Literature Study,Quality and relevance of reviewed literature,5,false,Satisfactory,2,Literature review is minimal and partially relevant.
+Project Analysis,10,Literature Study,Quality and relevance of reviewed literature,5,false,Poor,1,Literature review is very limited.
+Project Analysis,10,Literature Study,Quality and relevance of reviewed literature,5,false,Very Poor,0.25,No meaningful literature review present.
+Presentation,10,Oral Presentation,Clarity and effectiveness of oral delivery,5,false,Excellent,5,Presentation is exceptionally clear engaging and well-delivered.
+Presentation,10,Oral Presentation,Clarity and effectiveness of oral delivery,5,false,Very Good,4,Presentation is clear and mostly engaging.
+Presentation,10,Oral Presentation,Clarity and effectiveness of oral delivery,5,false,Good,3,Presentation is reasonably clear with minor issues.
+Presentation,10,Oral Presentation,Clarity and effectiveness of oral delivery,5,false,Satisfactory,2,Presentation is partially clear with some issues.
+Presentation,10,Oral Presentation,Clarity and effectiveness of oral delivery,5,false,Poor,1,Presentation is unclear and poorly delivered.
+Presentation,10,Oral Presentation,Clarity and effectiveness of oral delivery,5,false,Very Poor,0.25,Presentation is incomprehensible or absent.
+Presentation,10,Individual Contribution,Student's personal contribution to the project,5,true,Excellent,5,Effectively completed all assigned tasks.
+Presentation,10,Individual Contribution,Student's personal contribution to the project,5,true,Very Good,4,Most of the assigned tasks were completed.
+Presentation,10,Individual Contribution,Student's personal contribution to the project,5,true,Good,3,Partially completed the assigned tasks.
+Presentation,10,Individual Contribution,Student's personal contribution to the project,5,true,Satisfactory,2,Minimally completed the assigned tasks.
+Presentation,10,Individual Contribution,Student's personal contribution to the project,5,true,Poor,1,Poorly completed the assigned tasks.
+Presentation,10,Individual Contribution,Student's personal contribution to the project,5,true,Very Poor,0.25,Did not complete the assigned tasks.
