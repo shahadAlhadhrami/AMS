@@ -28,6 +28,7 @@ class StaffPanelProvider extends PanelProvider
             ->id('staff')
             ->path('staff')
             ->spa()
+            ->topNavigation()
             ->login()
             ->passwordReset()
             ->profile()

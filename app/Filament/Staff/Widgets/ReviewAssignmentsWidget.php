@@ -2,7 +2,11 @@
 
 namespace App\Filament\Staff\Widgets;
 
+use App\Filament\Staff\Pages\EvaluationForm;
+use App\Filament\Staff\Pages\ProjectDetail;
 use App\Models\Evaluation;
+use App\Services\EvaluationService;
+use Filament\Actions;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;
@@ -25,25 +29,59 @@ class ReviewAssignmentsWidget extends TableWidget
                 Evaluation::query()
                     ->where('evaluator_id', auth()->id())
                     ->where('evaluator_role', 'Reviewer')
-                    ->with(['project.semester', 'rubricTemplate'])
+                    ->with(['project.semester', 'project.phaseTemplate.phaseRubricRules', 'rubricTemplate'])
             )
             ->columns([
                 Tables\Columns\TextColumn::make('project.title')
                     ->label('Project')
+                    ->searchable()
+                    ->sortable()
                     ->limit(40),
                 Tables\Columns\TextColumn::make('project.semester.name')
                     ->label('Semester'),
                 Tables\Columns\TextColumn::make('rubricTemplate.name')
                     ->label('Rubric'),
+                Tables\Columns\TextColumn::make('fill_order')
+                    ->label('Fill Order')
+                    ->getStateUsing(fn (Evaluation $record) => $this->getFillOrder($record)),
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'pending' => 'warning',
-                        'draft' => 'info',
+                        'pending'   => 'warning',
+                        'draft'     => 'info',
                         'submitted' => 'success',
-                        default => 'gray',
+                        default     => 'gray',
                     }),
             ])
+            ->actions([
+                Actions\Action::make('fillAssessment')
+                    ->label('Fill Assessment')
+                    ->icon('heroicon-o-pencil-square')
+                    ->color('primary')
+                    ->url(fn (Evaluation $record) => EvaluationForm::getUrl(['evaluation' => $record->id]))
+                    ->visible(fn (Evaluation $record) => in_array($record->status, ['pending', 'draft'])
+                        && app(EvaluationService::class)->isFillOrderMet($record)
+                    ),
+                Actions\Action::make('viewAssessment')
+                    ->label('View')
+                    ->icon('heroicon-o-eye')
+                    ->url(fn (Evaluation $record) => EvaluationForm::getUrl(['evaluation' => $record->id]))
+                    ->visible(fn (Evaluation $record) => $record->status === 'submitted'),
+                Actions\Action::make('viewProject')
+                    ->label('Project Detail')
+                    ->icon('heroicon-o-document-text')
+                    ->url(fn (Evaluation $record) => ProjectDetail::getUrl(['project' => $record->project_id])),
+            ])
             ->paginated(false);
+    }
+
+    protected function getFillOrder(Evaluation $evaluation): ?int
+    {
+        return $evaluation->project->phaseTemplate
+            ?->phaseRubricRules
+            ->where('rubric_template_id', $evaluation->rubric_template_id)
+            ->where('evaluator_role', $evaluation->evaluator_role)
+            ->first()
+            ?->fill_order;
     }
 }

@@ -6,11 +6,7 @@ use Filament\Pages\Page;
 
 class Dashboard extends Page
 {
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-home';
-
-    protected static ?string $navigationLabel = 'Dashboard';
-
-    protected static ?int $navigationSort = -2;
+    protected static bool $shouldRegisterNavigation = false;
 
     protected string $view = 'filament.staff.pages.dashboard';
 
