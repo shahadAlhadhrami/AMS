@@ -119,35 +119,62 @@ class ProjectsBulkImporter implements BulkImporter
             ];
         }
 
-        $handle = fopen($filePath, 'r');
-        if (! $handle) {
+        try {
+            $parsed = SpreadsheetReader::read($filePath);
+        } catch (\Throwable $e) {
+            @unlink($filePath);
             return [
                 'previewData' => [],
                 'previewColumns' => $this->previewColumns(),
-                'errors' => ['Unable to read the CSV file.'],
+                'errors' => ['Unable to read the spreadsheet: ' . $e->getMessage()],
                 'hasErrors' => true,
             ];
         }
 
-        $rawHeaders = fgetcsv($handle, length: 0, escape: '');
-        $rawHeaders = array_map('trim', $rawHeaders ?? []);
+        @unlink($filePath);
 
+        $rawHeaders = $parsed['headers'];
         $rows = [];
+        // Header row is row 1; data rows start at row 2 in spreadsheet terms.
         $rowNumber = 1;
-        while (($row = fgetcsv($handle, length: 0, escape: '')) !== false) {
+
+        // Fill-down state: when a row leaves project_title or supervisor_id empty
+        // (because the source xlsx used merged cells, or because the human just left them
+        // blank under the previous value), inherit from the most recent non-empty value.
+        $lastTitle = '';
+        $lastSupervisor = '';
+
+        foreach ($parsed['rows'] as $rawCells) {
             $rowNumber++;
-            $rawRow = array_combine($rawHeaders, array_pad($row, count($rawHeaders), ''));
+            $rawRow = array_combine($rawHeaders, $rawCells);
+
+            $title = trim($rawRow[$columnMapping['project_title']] ?? '');
+            $supervisor = trim($rawRow[$columnMapping['supervisor_id']] ?? '');
+            $student = trim($rawRow[$columnMapping['student_id']] ?? '');
+
+            if ($title === '') {
+                $title = $lastTitle;
+            } else {
+                $lastTitle = $title;
+                // A new project starts → reset supervisor fill-down so a missing
+                // supervisor on the first row of a new project is flagged, not
+                // silently inherited from the previous project.
+                $lastSupervisor = '';
+            }
+
+            if ($supervisor === '') {
+                $supervisor = $lastSupervisor;
+            } else {
+                $lastSupervisor = $supervisor;
+            }
 
             $rows[] = [
-                'project_title' => trim($rawRow[$columnMapping['project_title']] ?? ''),
-                'supervisor_id' => trim($rawRow[$columnMapping['supervisor_id']] ?? ''),
-                'student_id' => trim($rawRow[$columnMapping['student_id']] ?? ''),
+                'project_title' => $title,
+                'supervisor_id' => $supervisor,
+                'student_id' => $student,
                 '_row' => $rowNumber,
             ];
         }
-        fclose($handle);
-
-        @unlink($filePath);
 
         // Drop fully blank rows (a trailing blank line in a spreadsheet shouldn't error).
         $rows = array_values(array_filter(

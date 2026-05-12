@@ -4,6 +4,7 @@ namespace App\Filament\Admin\Pages;
 
 use App\Services\BulkImport\BulkImporter;
 use App\Services\BulkImport\BulkImporterRegistry;
+use App\Services\BulkImport\SpreadsheetReader;
 use Filament\Forms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -76,8 +77,15 @@ class BulkImports extends Page
         $importer = $this->importer();
 
         $fileField = Forms\Components\FileUpload::make('csvPath')
-            ->label($importer->supportsMultiFile() ? 'CSV File(s)' : 'CSV File')
-            ->acceptedFileTypes(['text/csv', 'text/plain', 'application/vnd.ms-excel'])
+            ->label($importer->supportsMultiFile() ? 'CSV / Excel File(s)' : 'CSV / Excel File')
+            ->helperText('Accepts .csv, .xlsx, or .ods. Merged cells in Excel are read correctly — values flow down through following rows.')
+            ->acceptedFileTypes([
+                'text/csv',
+                'text/plain',
+                'application/vnd.ms-excel',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'application/vnd.oasis.opendocument.spreadsheet',
+            ])
             ->required()
             ->disk('local')
             ->directory('csv-imports')
@@ -176,25 +184,23 @@ class BulkImports extends Page
         // Mapping importers: read headers from the first file.
         $firstFilePath = $this->resolveFilePath($files[0]);
         if (! $firstFilePath) {
-            Notification::make()->title('CSV file not found.')->danger()->send();
+            Notification::make()->title('Spreadsheet file not found.')->danger()->send();
             return;
         }
 
-        $handle = fopen($firstFilePath, 'r');
-        if (! $handle) {
-            Notification::make()->title('Unable to read the CSV file.')->danger()->send();
+        try {
+            $parsed = SpreadsheetReader::read($firstFilePath);
+        } catch (\Throwable $e) {
+            Notification::make()->title('Unable to read the spreadsheet: ' . $e->getMessage())->danger()->send();
             return;
         }
 
-        $headers = fgetcsv($handle, length: 0, escape: '');
-        fclose($handle);
-
-        if (! $headers) {
-            Notification::make()->title('CSV file is empty or has no headers.')->danger()->send();
+        if (empty($parsed['headers'])) {
+            Notification::make()->title('Spreadsheet is empty or has no headers.')->danger()->send();
             return;
         }
 
-        $this->csvHeaders = array_map('trim', $headers);
+        $this->csvHeaders = $parsed['headers'];
 
         // Auto-map system fields whose names already appear in the CSV (case-insensitive).
         $normalised = array_map('strtolower', $this->csvHeaders);

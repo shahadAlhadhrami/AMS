@@ -314,32 +314,29 @@ class RubricTemplatesBulkImporter implements BulkImporter
      */
     protected function parseSingleFile(string $filePath): array
     {
-        $handle = fopen($filePath, 'r');
-        if (! $handle) {
-            return ['error' => 'Unable to read file.'];
+        try {
+            $parsed = SpreadsheetReader::read($filePath);
+        } catch (\Throwable $e) {
+            return ['error' => 'Unable to read file: ' . $e->getMessage()];
         }
 
-        $headers = fgetcsv($handle, length: 0, escape: '');
-        if (! $headers) {
-            fclose($handle);
-            return ['error' => 'CSV is empty or has no headers.'];
+        if (empty($parsed['headers'])) {
+            return ['error' => 'Spreadsheet is empty or has no headers.'];
         }
 
-        $headers = array_map('trim', array_map('strtolower', $headers));
+        $headers = array_map('strtolower', $parsed['headers']);
         $missingHeaders = array_diff($this->requiredHeaders, $headers);
         if (! empty($missingHeaders)) {
-            fclose($handle);
             return ['error' => 'Missing columns: ' . implode(', ', $missingHeaders)];
         }
 
         $rows = [];
-        while (($row = fgetcsv($handle, length: 0, escape: '')) !== false) {
-            $rows[] = array_combine($headers, array_pad($row, count($headers), ''));
+        foreach ($parsed['rows'] as $rawCells) {
+            $rows[] = array_combine($headers, array_pad($rawCells, count($headers), ''));
         }
-        fclose($handle);
 
         if (empty($rows)) {
-            return ['error' => 'CSV contains no data rows.'];
+            return ['error' => 'Spreadsheet contains no data rows.'];
         }
 
         $hasDeliverableCol = in_array('deliverable_title', $headers, true);

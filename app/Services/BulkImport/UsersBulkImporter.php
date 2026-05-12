@@ -98,24 +98,26 @@ class UsersBulkImporter implements BulkImporter
             ];
         }
 
-        $handle = fopen($filePath, 'r');
-        if (! $handle) {
+        try {
+            $parsed = SpreadsheetReader::read($filePath);
+        } catch (\Throwable $e) {
+            @unlink($filePath);
             return [
                 'previewData' => [],
                 'previewColumns' => $this->previewColumns(),
-                'errors' => ['Unable to read the CSV file.'],
+                'errors' => ['Unable to read the spreadsheet: ' . $e->getMessage()],
                 'hasErrors' => true,
             ];
         }
 
-        $rawHeaders = fgetcsv($handle, length: 0, escape: '');
-        $rawHeaders = array_map('trim', $rawHeaders ?? []);
+        @unlink($filePath);
 
+        $rawHeaders = $parsed['headers'];
         $rows = [];
-        $rowNumber = 1;
-        while (($row = fgetcsv($handle, length: 0, escape: '')) !== false) {
+        $rowNumber = 1; // header is row 1
+        foreach ($parsed['rows'] as $rawCells) {
             $rowNumber++;
-            $rawRow = array_combine($rawHeaders, array_pad($row, count($rawHeaders), ''));
+            $rawRow = array_combine($rawHeaders, $rawCells);
 
             $rows[] = [
                 'university_id' => trim($rawRow[$columnMapping['university_id']] ?? ''),
@@ -125,9 +127,6 @@ class UsersBulkImporter implements BulkImporter
                 '_row'          => $rowNumber,
             ];
         }
-        fclose($handle);
-
-        @unlink($filePath);
 
         if (empty($rows)) {
             return [
