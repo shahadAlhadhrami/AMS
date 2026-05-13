@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Staff\Pages\Dashboard;
 use App\Http\Middleware\EnsurePanelAccess;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Illuminate\Support\HtmlString;
@@ -9,7 +10,6 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
@@ -27,6 +27,7 @@ class StaffPanelProvider extends PanelProvider
         return $panel
             ->id('staff')
             ->path('staff')
+            ->homeUrl(fn (): string => Dashboard::getUrl())
             ->spa()
             ->topNavigation()
             ->login()
