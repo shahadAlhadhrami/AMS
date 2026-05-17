@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Admin\Auth\Pages\Login as AdminLogin;
 use App\Filament\Admin\Pages\CoordinatorRegistration;
 use App\Http\Middleware\EnsurePanelAccess;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
@@ -31,7 +32,7 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->spa()
             ->viteTheme('resources/css/filament/admin/theme.css')
-            ->login()
+            ->login(AdminLogin::class)
             ->registration(CoordinatorRegistration::class)
             ->passwordReset()
             ->profile()
