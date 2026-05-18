@@ -136,11 +136,36 @@ class RubricTemplateResource extends Resource
                     })
                     ->hidden(fn (RubricTemplate $record): bool => $record->is_locked || $record->created_by !== auth()->id()),
                 Actions\DeleteAction::make()
-                    ->hidden(fn (RubricTemplate $record): bool => $record->is_locked || $record->created_by !== auth()->id()),
+                    ->hidden(fn (RubricTemplate $record): bool => $record->is_locked || $record->created_by !== auth()->id())
+                    ->before(function (RubricTemplate $record, Actions\DeleteAction $action): void {
+                        if ($record->evaluations()->exists()) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('Cannot delete: template is in use')
+                                ->body('This rubric template is currently used by one or more active projects and cannot be deleted.')
+                                ->danger()
+                                ->send();
+                            $action->cancel();
+                        }
+                    }),
             ])
             ->bulkActions([
                 Actions\BulkActionGroup::make([
-                    Actions\DeleteBulkAction::make(),
+                    Actions\DeleteBulkAction::make()
+                        ->using(function (\Illuminate\Database\Eloquent\Collection $records): void {
+                            $protected = $records->filter(
+                                fn (RubricTemplate $r): bool => $r->is_locked || $r->evaluations()->exists()
+                            );
+
+                            if ($protected->isNotEmpty()) {
+                                \Filament\Notifications\Notification::make()
+                                    ->title($protected->count().' template(s) could not be deleted')
+                                    ->body('Templates that are locked or currently in use by active projects cannot be deleted.')
+                                    ->warning()
+                                    ->send();
+                            }
+
+                            $records->diff($protected)->each->delete();
+                        }),
                 ]),
             ]);
     }

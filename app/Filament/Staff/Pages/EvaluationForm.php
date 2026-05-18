@@ -51,6 +51,10 @@ class EvaluationForm extends Page implements HasForms
             'evaluationScores',
         ]);
 
+        if ($this->evaluation->rubricTemplate === null) {
+            abort(500, 'The rubric template for this assessment no longer exists. Please contact your coordinator.');
+        }
+
         // Auto-upgrade from pending to draft on first open
         if ($this->evaluation->status === 'pending') {
             $this->evaluation->update(['status' => 'draft']);

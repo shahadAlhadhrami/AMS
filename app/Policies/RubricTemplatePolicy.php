@@ -37,6 +37,10 @@ class RubricTemplatePolicy
             return false;
         }
 
+        if ($rubricTemplate->evaluations()->exists()) {
+            return false;
+        }
+
         return $user->id === $rubricTemplate->created_by;
     }
 
