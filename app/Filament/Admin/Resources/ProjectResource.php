@@ -32,17 +32,16 @@ class ProjectResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery()
-            ->with(['semester', 'course', 'specialization', 'supervisor']);
+            ->with(['semester', 'course', 'specialization', 'supervisor', 'coordinator']);
         $user = auth()->user();
 
         if ($user && $user->hasRole('Coordinator') && ! $user->hasRole('Super Admin')) {
-            $query->whereHas('semester.coordinators', function (Builder $q) use ($user) {
-                $q->where('users.id', $user->id);
-            });
+            $query->where('coordinator_id', $user->id);
         }
 
         return $query;
     }
+
 
     public static function form(Schema $form): Schema
     {
@@ -99,6 +98,14 @@ class ProjectResource extends Resource
                 ->options($supervisorOptions ?? fn (): array => FilamentLookupCache::supervisorOptions())
                 ->searchable()
                 ->required(),
+            Forms\Components\Select::make('coordinator_id')
+                ->label('Coordinator')
+                ->helperText('Defaults to you. Pick a different coordinator if you want them to manage this project.')
+                ->options(fn (): array => FilamentLookupCache::coordinatorOptions())
+                ->default(fn (): ?int => auth()->user()?->hasRole('Coordinator') ? auth()->id() : null)
+                ->searchable()
+                ->required(fn (): bool => (bool) auth()->user()?->hasRole('Coordinator') && ! auth()->user()->hasRole('Super Admin'))
+                ->visible(fn (): bool => (bool) auth()->user()?->hasAnyRole(['Super Admin', 'Coordinator'])),
             Forms\Components\Select::make('previous_phase_project_id')
                 ->label('Previous Phase Project')
                 ->options($projectOptions ?? fn (): array => FilamentLookupCache::projectOptions())
@@ -132,6 +139,11 @@ class ProjectResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('supervisor.name')
                     ->sortable(),
+                Tables\Columns\TextColumn::make('coordinator.name')
+                    ->label('Coordinator')
+                    ->placeholder('—')
+                    ->toggleable()
+                    ->visible(fn (): bool => (bool) auth()->user()?->hasRole('Super Admin')),
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
@@ -192,6 +204,31 @@ class ProjectResource extends Resource
                             $records->each(fn (Project $record) => $record->update(['status' => $data['status']]));
                         })
                         ->deselectRecordsAfterCompletion(),
+                    Actions\BulkAction::make('changeCoordinator')
+                        ->label('Transfer to Coordinator')
+                        ->icon('heroicon-o-user-group')
+                        ->color('warning')
+                        ->modalHeading('Transfer Selected Projects')
+                        ->modalDescription('Reassign ownership of the selected projects to another coordinator. They will appear in that coordinator\'s list and disappear from yours.')
+                        ->modalSubmitActionLabel('Transfer')
+                        ->form([
+                            Forms\Components\Select::make('coordinator_id')
+                                ->label('New Coordinator')
+                                ->options(fn (): array => FilamentLookupCache::coordinatorOptions())
+                                ->searchable()
+                                ->required(),
+                        ])
+                        ->action(function (\Illuminate\Support\Collection $records, array $data): void {
+                            $records->each(fn (Project $record) => $record->update(['coordinator_id' => $data['coordinator_id']]));
+
+                            \Filament\Notifications\Notification::make()
+                                ->title('Projects transferred')
+                                ->body($records->count().' project(s) reassigned.')
+                                ->success()
+                                ->send();
+                        })
+                        ->deselectRecordsAfterCompletion()
+                        ->visible(fn (): bool => (bool) auth()->user()?->hasAnyRole(['Super Admin', 'Coordinator'])),
                     Actions\DeleteBulkAction::make(),
                 ]),
             ]);

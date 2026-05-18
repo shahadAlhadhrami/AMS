@@ -18,8 +18,7 @@ class ProjectPolicy
             return true;
         }
 
-        return $project->semester->coordinators()
-            ->where('users.id', $user->id)->exists();
+        return $project->coordinator_id === $user->id;
     }
 
     public function create(User $user): bool
@@ -37,8 +36,7 @@ class ProjectPolicy
             return true;
         }
 
-        return $project->semester->coordinators()
-            ->where('users.id', $user->id)->exists();
+        return $project->coordinator_id === $user->id;
     }
 
     public function delete(User $user, Project $project): bool
@@ -51,8 +49,7 @@ class ProjectPolicy
             return true;
         }
 
-        return $project->semester->coordinators()
-            ->where('users.id', $user->id)->exists();
+        return $project->coordinator_id === $user->id;
     }
 
     public function deleteAny(User $user): bool

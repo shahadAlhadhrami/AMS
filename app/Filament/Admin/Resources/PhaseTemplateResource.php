@@ -42,11 +42,6 @@ class PhaseTemplateResource extends Resource
                 Forms\Components\TextInput::make('name')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\TextInput::make('total_phase_marks')
-                    ->required()
-                    ->numeric()
-                    ->minValue(0)
-                    ->label('Total Phase Marks'),
                 Grid::make(2)
                     ->columnSpanFull()
                     ->schema([

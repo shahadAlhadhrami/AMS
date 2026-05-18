@@ -219,6 +219,7 @@ class UserResource extends Resource
     protected static function refreshPendingApprovalBadges(Component $livewire): void
     {
         FilamentLookupCache::forgetPendingCoordinatorApprovals();
+        FilamentLookupCache::forgetCoordinators();
 
         if ($livewire instanceof Pages\ListUsers) {
             $livewire->refreshPendingApprovalTabs();

@@ -44,8 +44,8 @@ class GradeExport extends Page
 
         $user = auth()->user();
         if ($user->hasRole('Coordinator') && ! $user->hasRole('Super Admin')) {
-            $query->whereHas('coordinators', function (Builder $q) use ($user) {
-                $q->where('users.id', $user->id);
+            $query->whereHas('projects', function (Builder $q) use ($user) {
+                $q->where('coordinator_id', $user->id);
             });
         }
 
@@ -82,8 +82,8 @@ class GradeExport extends Page
         // Coordinator scoping
         $user = auth()->user();
         if ($user->hasRole('Coordinator') && ! $user->hasRole('Super Admin')) {
-            $query->whereHas('project.semester.coordinators', function (Builder $q) use ($user) {
-                $q->where('users.id', $user->id);
+            $query->whereHas('project', function (Builder $q) use ($user) {
+                $q->where('coordinator_id', $user->id);
             });
         }
 

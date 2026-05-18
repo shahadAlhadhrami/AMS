@@ -27,6 +27,14 @@ class PhaseRubricRule extends Model
         ];
     }
 
+    protected static function booted(): void
+    {
+        $sync = fn (self $rule) => $rule->phaseTemplate?->syncTotalMarks();
+
+        static::saved($sync);
+        static::deleted($sync);
+    }
+
     public function phaseTemplate(): BelongsTo
     {
         return $this->belongsTo(PhaseTemplate::class);

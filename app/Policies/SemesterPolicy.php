@@ -9,16 +9,12 @@ class SemesterPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyRole(['Super Admin', 'Coordinator']);
+        return $user->hasRole('Super Admin');
     }
 
     public function view(User $user, Semester $semester): bool
     {
-        if ($user->hasRole('Super Admin')) {
-            return true;
-        }
-
-        return $semester->coordinators()->where('users.id', $user->id)->exists();
+        return $user->hasRole('Super Admin');
     }
 
     public function create(User $user): bool
@@ -32,11 +28,7 @@ class SemesterPolicy
             return false;
         }
 
-        if ($user->hasRole('Super Admin')) {
-            return true;
-        }
-
-        return $semester->coordinators()->where('users.id', $user->id)->exists();
+        return $user->hasRole('Super Admin');
     }
 
     public function delete(User $user, Semester $semester): bool

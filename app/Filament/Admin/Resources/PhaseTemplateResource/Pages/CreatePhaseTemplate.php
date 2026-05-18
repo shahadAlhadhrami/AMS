@@ -12,6 +12,7 @@ class CreatePhaseTemplate extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $data['created_by'] = auth()->id();
+        $data['total_phase_marks'] = 0;
 
         return $data;
     }

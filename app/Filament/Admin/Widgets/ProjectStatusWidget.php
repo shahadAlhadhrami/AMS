@@ -25,9 +25,7 @@ class ProjectStatusWidget extends ChartWidget
 
         $user = auth()->user();
         if ($user->hasRole('Coordinator') && ! $user->hasRole('Super Admin')) {
-            $query->whereHas('semester.coordinators', function (Builder $q) use ($user) {
-                $q->where('users.id', $user->id);
-            });
+            $query->where('coordinator_id', $user->id);
         }
 
         $counts = (clone $query)

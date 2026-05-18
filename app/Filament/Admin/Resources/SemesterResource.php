@@ -134,7 +134,6 @@ class SemesterResource extends Resource
     public static function getRelations(): array
     {
         return [
-            RelationManagers\CoordinatorsRelationManager::class,
             RelationManagers\ProjectsRelationManager::class,
         ];
     }

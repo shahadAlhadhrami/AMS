@@ -14,6 +14,11 @@ class PhaseTemplate extends Model
 
     protected $fillable = ['name', 'total_phase_marks', 'created_by'];
 
+    public function syncTotalMarks(): void
+    {
+        $this->update(['total_phase_marks' => $this->phaseRubricRules()->sum('max_marks')]);
+    }
+
     protected function casts(): array
     {
         return [

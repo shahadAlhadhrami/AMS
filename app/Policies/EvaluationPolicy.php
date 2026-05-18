@@ -19,9 +19,7 @@ class EvaluationPolicy
         }
 
         return $user->hasRole('Coordinator')
-            && $evaluation->project->semester->coordinators()
-                ->where('users.id', $user->id)
-                ->exists();
+            && $evaluation->project->coordinator_id === $user->id;
     }
 
     public function create(User $user): bool

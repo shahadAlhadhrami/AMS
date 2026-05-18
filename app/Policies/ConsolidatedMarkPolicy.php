@@ -19,9 +19,7 @@ class ConsolidatedMarkPolicy
         }
 
         return $user->hasRole('Coordinator')
-            && $consolidatedMark->project->semester->coordinators()
-                ->where('users.id', $user->id)
-                ->exists();
+            && $consolidatedMark->project->coordinator_id === $user->id;
     }
 
     public function create(User $user): bool

@@ -156,10 +156,10 @@ class EvaluationService
         if ($allSubmitted) {
             app(GradeConsolidationService::class)->consolidate($project);
 
-            // Notify coordinators that all evaluations are submitted
-            $project->load('semester.coordinators');
-            foreach ($project->semester->coordinators as $coordinator) {
-                $coordinator->notify(new AllEvaluationsSubmittedNotification($project));
+            // Notify the coordinator that all evaluations are submitted
+            $project->load('coordinator');
+            if ($project->coordinator) {
+                $project->coordinator->notify(new AllEvaluationsSubmittedNotification($project));
             }
         }
 

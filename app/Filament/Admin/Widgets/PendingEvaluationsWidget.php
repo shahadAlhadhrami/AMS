@@ -19,8 +19,8 @@ class PendingEvaluationsWidget extends StatsOverviewWidget
         // Scope to coordinator's semesters if not Super Admin
         $user = auth()->user();
         if ($user->hasRole('Coordinator') && ! $user->hasRole('Super Admin')) {
-            $baseQuery->whereHas('project.semester.coordinators', function (Builder $q) use ($user) {
-                $q->where('users.id', $user->id);
+            $baseQuery->whereHas('project', function (Builder $q) use ($user) {
+                $q->where('coordinator_id', $user->id);
             });
         }
 

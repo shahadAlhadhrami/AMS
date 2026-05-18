@@ -11,6 +11,7 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationGroup;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -43,6 +44,16 @@ class AdminPanelProvider extends PanelProvider
             ->brandLogo(new HtmlString('<style>@import url("https://fonts.googleapis.com/css2?family=Anta&display=swap");</style><div style="width:100%; text-align:center;"><span style="font-family: \'Anta\', sans-serif; font-weight:400; letter-spacing:0.08em; font-size:2.5rem; line-height:1; color:#2563eb;">AMS</span></div>'))
             ->colors([
                 'primary' => Color::Blue,
+            ])
+            ->navigationGroups([
+                NavigationGroup::make('User Management'),
+                NavigationGroup::make('Master Data'),
+                NavigationGroup::make('Template Pool'),
+                NavigationGroup::make('Academic Setup'),
+                NavigationGroup::make('Assessment Monitoring'),
+                NavigationGroup::make('Grade Consolidation'),
+                NavigationGroup::make('Reports & Export'),
+                NavigationGroup::make('Tools'),
             ])
             ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\\Filament\\Admin\\Resources')
             ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\\Filament\\Admin\\Pages')

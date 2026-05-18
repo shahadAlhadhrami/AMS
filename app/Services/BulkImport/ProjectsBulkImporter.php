@@ -473,6 +473,16 @@ class ProjectsBulkImporter implements BulkImporter
                 ->all() ?? [];
         }
 
+        $templateHasRules = $phaseTemplateId
+            && PhaseTemplate::where('id', $phaseTemplateId)
+                ->whereHas('phaseRubricRules')
+                ->exists();
+
+        $user = auth()->user();
+        $coordinatorId = ($user && $user->hasRole('Coordinator') && ! $user->hasRole('Super Admin'))
+            ? $user->id
+            : null;
+
         $count = 0;
         $projectIds = [];
         foreach ($previewData as $row) {
@@ -490,6 +500,7 @@ class ProjectsBulkImporter implements BulkImporter
                 'phase_template_id' => $phaseTemplateId,
                 'specialization_id' => $specializationId,
                 'supervisor_id' => $resolved['supervisor_id'],
+                'coordinator_id' => $coordinatorId,
                 'status' => 'setup',
             ]);
 
@@ -499,6 +510,10 @@ class ProjectsBulkImporter implements BulkImporter
 
             if (! empty($reviewerIds)) {
                 $project->reviewers()->attach($reviewerIds);
+            }
+
+            if ($templateHasRules && ! is_null($project->supervisor_id)) {
+                $project->update(['status' => 'evaluating']);
             }
 
             $count++;

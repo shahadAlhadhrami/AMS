@@ -26,7 +26,7 @@ class CoordinatorProjectsWidget extends BaseWidget
                     ->whereHas('semester', fn (Builder $q) => $q->active())
                     ->when(
                         $user->hasRole('Coordinator') && ! $user->hasRole('Super Admin'),
-                        fn (Builder $q) => $q->whereHas('semester.coordinators', fn (Builder $inner) => $inner->where('users.id', $user->id))
+                        fn (Builder $q) => $q->where('coordinator_id', $user->id)
                     )
                     ->withCount(['evaluations', 'students'])
                     ->withCount(['evaluations as submitted_evaluations_count' => fn (Builder $q) => $q->where('status', 'submitted')])

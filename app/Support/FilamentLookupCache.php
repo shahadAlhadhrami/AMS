@@ -28,6 +28,11 @@ class FilamentLookupCache
         Cache::forget(self::key('pending_coordinator_approvals'));
     }
 
+    public static function forgetCoordinators(): void
+    {
+        Cache::forget(self::key('coordinators'));
+    }
+
     /**
      * @return array<int, string>
      */
@@ -121,6 +126,21 @@ class FilamentLookupCache
     public static function supervisorOptions(): array
     {
         return self::remember('supervisors', fn (): array => User::role('Reviewer/Supervisor')
+            ->orderBy('name')
+            ->get(['id', 'name', 'university_id'])
+            ->mapWithKeys(fn (User $user): array => [
+                $user->id => "{$user->name} ({$user->university_id})",
+            ])
+            ->all());
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public static function coordinatorOptions(): array
+    {
+        return self::remember('coordinators', fn (): array => User::role('Coordinator')
+            ->approved()
             ->orderBy('name')
             ->get(['id', 'name', 'university_id'])
             ->mapWithKeys(fn (User $user): array => [

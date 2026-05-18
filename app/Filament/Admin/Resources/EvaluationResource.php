@@ -36,8 +36,8 @@ class EvaluationResource extends Resource
         $user = auth()->user();
 
         if ($user && $user->hasRole('Coordinator') && ! $user->hasRole('Super Admin')) {
-            $query->whereHas('project.semester.coordinators', function (Builder $q) use ($user) {
-                $q->where('users.id', $user->id);
+            $query->whereHas('project', function (Builder $q) use ($user) {
+                $q->where('coordinator_id', $user->id);
             });
         }
 

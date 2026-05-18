@@ -19,6 +19,7 @@ class Project extends Model
         'specialization_id',
         'title',
         'supervisor_id',
+        'coordinator_id',
         'previous_phase_project_id',
         'status',
     ];
@@ -48,6 +49,11 @@ class Project extends Model
         return $this->belongsTo(User::class, 'supervisor_id');
     }
 
+    public function coordinator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'coordinator_id');
+    }
+
     public function previousPhaseProject(): BelongsTo
     {
         return $this->belongsTo(Project::class, 'previous_phase_project_id');
@@ -75,5 +81,20 @@ class Project extends Model
     public function consolidatedMarks(): HasMany
     {
         return $this->hasMany(ConsolidatedMark::class);
+    }
+
+    public function autoTransitionToEvaluating(): void
+    {
+        if ($this->status !== 'setup' || is_null($this->supervisor_id)) {
+            return;
+        }
+
+        $phaseTemplate = $this->phaseTemplate;
+
+        if (! $phaseTemplate || ! $phaseTemplate->phaseRubricRules()->exists()) {
+            return;
+        }
+
+        $this->update(['status' => 'evaluating']);
     }
 }
