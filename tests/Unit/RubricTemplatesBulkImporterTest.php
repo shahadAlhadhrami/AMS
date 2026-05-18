@@ -52,6 +52,54 @@ class RubricTemplatesBulkImporterTest extends TestCase
         }
     }
 
+    public function test_it_fills_down_merged_cell_context_when_importing_levels(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $relativePath = 'csv-imports/rubric-merged-context.csv';
+        $absolutePath = storage_path('app/private/'.$relativePath);
+
+        if (! is_dir(dirname($absolutePath))) {
+            mkdir(dirname($absolutePath), 0775, true);
+        }
+
+        file_put_contents($absolutePath, implode(PHP_EOL, [
+            'deliverable_title,deliverable_max_marks,criterion_title,criterion_description,max_score,is_individual,level_label,level_score,level_description',
+            'Proposal,4,Scope,,2,false,Excellent,2,Excellent scope',
+            ',,,,,,Very Good,1.75,Very good scope',
+            ',,,,,,Good,1.5,Good scope',
+            ',,Technology,,2,false,Excellent,2,Excellent tech',
+            ',,,,,,Very Good,1.75,Very good tech',
+            ',,,,,,Good,1.5,Good tech',
+        ]).PHP_EOL);
+
+        try {
+            $importer = new RubricTemplatesBulkImporter;
+            $result = $importer->validateRows([$relativePath], [], []);
+            $preview = $result['previewData'][0];
+
+            $this->assertFalse($result['hasErrors']);
+            $this->assertSame(1, $preview['deliverables_count']);
+            $this->assertSame(2, $preview['criteria_count']);
+            $this->assertSame(6, $preview['levels_count']);
+            $this->assertSame(4.0, $preview['total_marks']);
+
+            $importer->import($result['previewData'], []);
+
+            $template = RubricTemplate::with('deliverables.criteria.scoreLevels')->first();
+            $deliverable = $template->deliverables->first();
+
+            $this->assertSame('4.00', $template->total_marks);
+            $this->assertSame('Proposal', $deliverable->title);
+            $this->assertSame('4.00', $deliverable->max_marks);
+            $this->assertSame(['Scope', 'Technology'], $deliverable->criteria->pluck('title')->all());
+            $this->assertSame(6, ScoreLevel::count());
+        } finally {
+            @unlink($absolutePath);
+        }
+    }
+
     public function test_import_skips_per_criterion_total_recalculation(): void
     {
         $user = User::factory()->create();

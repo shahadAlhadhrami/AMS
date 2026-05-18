@@ -447,14 +447,51 @@ class RubricTemplatesBulkImporter implements BulkImporter
 
         $hasDeliverableCol = in_array('deliverable_title', $headers, true);
         $deliverableGroups = [];
+        $currentDeliverableTitle = '';
+        $currentDeliverableMaxMarks = '';
+        $currentCriterion = [
+            'title' => '',
+            'description' => '',
+            'max_score' => '',
+            'is_individual' => '',
+        ];
 
         foreach ($rows as $row) {
+            if ($hasDeliverableCol) {
+                $deliverableTitle = trim($row['deliverable_title'] ?? '');
+                $deliverableMaxMarks = trim($row['deliverable_max_marks'] ?? '');
+
+                if ($deliverableTitle !== '') {
+                    $currentDeliverableTitle = $deliverableTitle;
+                    $currentDeliverableMaxMarks = $deliverableMaxMarks;
+                } elseif ($deliverableMaxMarks !== '') {
+                    $currentDeliverableMaxMarks = $deliverableMaxMarks;
+                }
+
+                $row['deliverable_title'] = $currentDeliverableTitle;
+                $row['deliverable_max_marks'] = $currentDeliverableMaxMarks;
+            }
+
             $criterionTitle = trim($row['criterion_title'] ?? '');
-            if (empty($criterionTitle)) {
+            if ($criterionTitle !== '') {
+                $currentCriterion = [
+                    'title' => $criterionTitle,
+                    'description' => $row['criterion_description'] ?? '',
+                    'max_score' => $row['max_score'] ?? '',
+                    'is_individual' => $row['is_individual'] ?? '',
+                ];
+            } elseif ($currentCriterion['title'] !== '') {
+                $row['criterion_title'] = $currentCriterion['title'];
+                $row['criterion_description'] = $currentCriterion['description'];
+                $row['max_score'] = $currentCriterion['max_score'];
+                $row['is_individual'] = $currentCriterion['is_individual'];
+            } else {
                 continue;
             }
+
             $deliverableTitle = $hasDeliverableCol ? trim($row['deliverable_title'] ?? '') : '';
             $deliverableTitle = $deliverableTitle ?: 'General';
+            $criterionTitle = trim($row['criterion_title'] ?? '');
             $deliverableGroups[$deliverableTitle][$criterionTitle][] = $row;
         }
 
