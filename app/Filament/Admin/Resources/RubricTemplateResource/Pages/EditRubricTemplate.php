@@ -3,8 +3,8 @@
 namespace App\Filament\Admin\Resources\RubricTemplateResource\Pages;
 
 use App\Filament\Admin\Resources\RubricTemplateResource;
-use App\Models\RubricTemplate;
 use Filament\Actions;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 
 class EditRubricTemplate extends EditRecord
@@ -45,8 +45,32 @@ class EditRubricTemplate extends EditRecord
     {
         parent::mount($record);
 
-        if ($this->record->is_locked || $this->record->created_by !== auth()->id()) {
-            redirect(RubricTemplateResource::getUrl('view', ['record' => $this->record]));
+        if ($this->record->is_locked) {
+            $reason = $this->record->evaluations()->exists()
+                ? 'This template is locked because it is currently in use by one or more active projects.'
+                : 'This template has been locked and is read-only.';
+
+            Notification::make()
+                ->title('Editing is disabled')
+                ->body($reason.' Use "Clone" to create an editable copy.')
+                ->warning()
+                ->persistent()
+                ->send();
+
+            $this->redirect(RubricTemplateResource::getUrl('view', ['record' => $this->record]));
+
+            return;
+        }
+
+        if ($this->record->created_by !== auth()->id()) {
+            Notification::make()
+                ->title('Editing is disabled')
+                ->body('Only the creator of this rubric template can edit it. Use "Clone" to create your own editable copy.')
+                ->warning()
+                ->persistent()
+                ->send();
+
+            $this->redirect(RubricTemplateResource::getUrl('view', ['record' => $this->record]));
         }
     }
 }

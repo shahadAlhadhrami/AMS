@@ -78,6 +78,7 @@ class CriteriaRelationManager extends RelationManager
                     ->hidden(fn (): bool => $this->ownerRecord->is_locked),
             ])
             ->actions([
+                Actions\ViewAction::make(),
                 Actions\EditAction::make()
                     ->hidden(fn (): bool => $this->ownerRecord->is_locked),
                 Actions\DeleteAction::make()
