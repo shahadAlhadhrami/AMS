@@ -16,6 +16,11 @@ class EvaluationService
     public function isFillOrderMet(Evaluation $evaluation): bool
     {
         $project = $evaluation->project;
+
+        if (! $project) {
+            return false;
+        }
+
         $phaseTemplate = $project->phaseTemplate;
 
         if (! $phaseTemplate) {
@@ -116,6 +121,10 @@ class EvaluationService
      */
     public function submit(Evaluation $evaluation): bool
     {
+        if (! $evaluation->project || ! $evaluation->rubricTemplate) {
+            return false;
+        }
+
         $rubric = $evaluation->rubricTemplate->load('criteria');
         $students = $evaluation->project->students;
 

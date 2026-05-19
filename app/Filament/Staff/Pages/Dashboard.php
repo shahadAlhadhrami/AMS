@@ -12,9 +12,15 @@ class Dashboard extends Page
 
     protected static ?int $navigationSort = -2;
 
-    protected static bool $shouldRegisterNavigation = false;
-
     protected string $view = 'filament.staff.pages.dashboard';
+
+    public static function getNavigationItems(): array
+    {
+        return array_map(
+            fn ($item) => $item->extraAttributes(['hidden' => true]),
+            parent::getNavigationItems(),
+        );
+    }
 
     public function getHeaderWidgets(): array
     {

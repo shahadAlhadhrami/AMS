@@ -21,6 +21,14 @@ class Dashboard extends Page
 
     public ?int $selectedSemester = null;
 
+    public static function getNavigationItems(): array
+    {
+        return array_map(
+            fn ($item) => $item->extraAttributes(['hidden' => true]),
+            parent::getNavigationItems(),
+        );
+    }
+
     public function mount(): void
     {
         $student = auth()->user();

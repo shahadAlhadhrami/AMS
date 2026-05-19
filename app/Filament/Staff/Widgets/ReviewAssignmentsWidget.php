@@ -29,6 +29,7 @@ class ReviewAssignmentsWidget extends TableWidget
                 Evaluation::query()
                     ->where('evaluator_id', auth()->id())
                     ->where('evaluator_role', 'Reviewer')
+                    ->whereHas('project')
                     ->with(['project.semester', 'project.phaseTemplate.phaseRubricRules', 'rubricTemplate'])
             )
             ->columns([
@@ -47,10 +48,10 @@ class ReviewAssignmentsWidget extends TableWidget
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'pending'   => 'warning',
-                        'draft'     => 'info',
+                        'pending' => 'warning',
+                        'draft' => 'info',
                         'submitted' => 'success',
-                        default     => 'gray',
+                        default => 'gray',
                     }),
             ])
             ->actions([
@@ -58,26 +59,29 @@ class ReviewAssignmentsWidget extends TableWidget
                     ->label('Fill Assessment')
                     ->icon('heroicon-o-pencil-square')
                     ->color('primary')
-                    ->url(fn (Evaluation $record) => EvaluationForm::getUrl(['evaluation' => $record->id]))
+                    ->url(fn (Evaluation $record) => EvaluationForm::getUrl(['evaluation' => $record->id], panel: 'staff'))
                     ->visible(fn (Evaluation $record) => in_array($record->status, ['pending', 'draft'])
                         && app(EvaluationService::class)->isFillOrderMet($record)
                     ),
                 Actions\Action::make('viewAssessment')
                     ->label('View')
                     ->icon('heroicon-o-eye')
-                    ->url(fn (Evaluation $record) => EvaluationForm::getUrl(['evaluation' => $record->id]))
+                    ->url(fn (Evaluation $record) => EvaluationForm::getUrl(['evaluation' => $record->id], panel: 'staff'))
                     ->visible(fn (Evaluation $record) => $record->status === 'submitted'),
                 Actions\Action::make('viewProject')
                     ->label('Project Detail')
                     ->icon('heroicon-o-document-text')
-                    ->url(fn (Evaluation $record) => ProjectDetail::getUrl(['project' => $record->project_id])),
+                    ->url(fn (Evaluation $record) => ProjectDetail::getUrl([
+                        'project' => $record->project_id,
+                        'context' => 'reviewer',
+                    ], panel: 'staff')),
             ])
             ->paginated(false);
     }
 
     protected function getFillOrder(Evaluation $evaluation): ?int
     {
-        return $evaluation->project->phaseTemplate
+        return $evaluation->project?->phaseTemplate
             ?->phaseRubricRules
             ->where('rubric_template_id', $evaluation->rubric_template_id)
             ->where('evaluator_role', $evaluation->evaluator_role)

@@ -27,7 +27,7 @@ class StaffPanelProvider extends PanelProvider
         return $panel
             ->id('staff')
             ->path('staff')
-            ->homeUrl(fn (): string => Dashboard::getUrl())
+            ->homeUrl(fn (): string => Dashboard::getUrl(panel: 'staff'))
             ->spa()
             ->topNavigation()
             ->login()

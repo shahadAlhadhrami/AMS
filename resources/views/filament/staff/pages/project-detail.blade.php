@@ -71,7 +71,7 @@
     </x-filament::section>
 
     {{-- Evaluation Status --}}
-    <x-filament::section heading="Evaluation Status">
+    <x-filament::section :heading="$this->evaluationContext === 'supervisor' ? 'Supervisor Assessments' : 'Review Assignments'">
         @if($this->project->evaluations->isNotEmpty())
             <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
                 <table class="w-full text-sm">
@@ -117,7 +117,9 @@
                 </table>
             </div>
         @else
-            <p class="text-sm text-gray-500 dark:text-gray-400">No evaluations created yet.</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">
+                {{ $this->evaluationContext === 'supervisor' ? 'No supervisor assessments created yet.' : 'No review assignments created yet.' }}
+            </p>
         @endif
     </x-filament::section>
 </x-filament-panels::page>

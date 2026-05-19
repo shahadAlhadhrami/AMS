@@ -27,7 +27,7 @@ class StudentPanelProvider extends PanelProvider
         return $panel
             ->id('student')
             ->path('student')
-            ->homeUrl(fn (): string => Dashboard::getUrl())
+            ->homeUrl(fn (): string => Dashboard::getUrl(panel: 'student'))
             ->spa()
             ->topNavigation()
             ->login()

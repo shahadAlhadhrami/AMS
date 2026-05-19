@@ -14,6 +14,7 @@ class PendingEvaluationsWidget extends StatsOverviewWidget
 
         $counts = Evaluation::query()
             ->where('evaluator_id', $userId)
+            ->whereHas('project')
             ->selectRaw('status, COUNT(*) as aggregate')
             ->groupBy('status')
             ->pluck('aggregate', 'status');
