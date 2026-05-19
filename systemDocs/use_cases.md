@@ -1,8 +1,8 @@
 # AMS Use Cases
 
 > **Version:** 1.0
-> **Date:** 2026-03-01
-> **Status:** Draft
+> **Date:** 2026-05-19
+> **Status:** Updated to match current implementation
 > **System:** Assessment Management System (AMS)
 
 ---
@@ -16,11 +16,10 @@ This document defines the formal use cases for every actor in the AMS. Each use 
 
 | Actor | System Role | Description |
 |-------|------------|-------------|
-| **Super Admin** | `super_admin` | System-level administrator seeded at installation. Creates Coordinator accounts and manages master data (departments, specializations, courses, grading scales). |
-| **Coordinator** | `coordinator` | Academic manager who creates semesters, configures workflows, manages users, monitors assessments, and handles grade overrides. Manages only the semesters they are assigned to. |
-| **Supervisor** | `supervisor` | Project supervisor assigned to one or more projects. Fills supervisor rubrics (internal marks). Can also hold reviewer role for different projects. |
-| **Reviewer** | `reviewer` | External examiner assigned to review one or more projects. Fills reviewer rubrics. Can also hold supervisor role for different projects. |
-| **Student** | `student` | Views their internal marks (supervisor) and consolidated marks. Read-only access. |
+| **Super Admin** | `Super Admin` | System-level administrator seeded at installation. Approves Coordinator registrations, manages Coordinator accounts, manages master data, and manages semesters. |
+| **Coordinator** | `Coordinator` | Academic manager who configures workflows, manages non-admin users, owns assigned projects, monitors assessments, and handles grade overrides. |
+| **Staff** | `Reviewer/Supervisor` | Staff user who can supervise projects, review projects, or both depending on assignments. Supervisor/reviewer are responsibilities, not separate stored roles. |
+| **Student** | `Student` | Views their internal marks (supervisor component) and consolidated marks. Read-only access. |
 | **System** | (automated) | Automated processes triggered by state changes (auto-generate evaluations, auto-calculate marks, lock templates, send notifications). |
 
 ### 1.3 Use Case Index
@@ -29,10 +28,10 @@ This document defines the formal use cases for every actor in the AMS. Each use 
 |----|-------|-------|
 | UC-SA-01 | Create Coordinator Account | Super Admin |
 | UC-SA-02 | Manage Master Data | Super Admin |
+| UC-SA-03 | Create Semester | Super Admin |
 | UC-CO-01 | Create Rubric Template | Coordinator |
-| UC-CO-02 | Import Rubric from CSV | Coordinator |
+| UC-CO-02 | Import Rubric Templates from Spreadsheet Files | Coordinator |
 | UC-CO-03 | Create Phase Template | Coordinator |
-| UC-CO-04 | Create Semester | Coordinator |
 | UC-CO-05 | Bulk Import Users | Coordinator |
 | UC-CO-06 | Create Project and Assign Group | Coordinator |
 | UC-CO-07 | Assign Reviewers to Project | Coordinator |
@@ -42,13 +41,13 @@ This document defines the formal use cases for every actor in the AMS. Each use 
 | UC-CO-11 | Override Consolidated Mark | Coordinator |
 | UC-CO-12 | Export Grades for SIS | Coordinator |
 | UC-CO-13 | Generate PDF Report | Coordinator |
-| UC-SU-01 | View Supervised Projects | Supervisor |
-| UC-SU-02 | Fill Assessment Form | Supervisor |
-| UC-SU-03 | Save Draft / Submit Assessment | Supervisor |
-| UC-SU-04 | View Project Evaluation Progress | Supervisor |
-| UC-RE-01 | View Review Assignments | Reviewer |
-| UC-RE-02 | Fill Assessment Form | Reviewer |
-| UC-RE-03 | Save Draft / Submit Assessment | Reviewer |
+| UC-SU-01 | View Supervised Projects | Staff (`Reviewer/Supervisor`) |
+| UC-SU-02 | Fill Supervisor Assessment Form | Staff (`Reviewer/Supervisor`) |
+| UC-SU-03 | Save Draft / Submit Assessment | Staff (`Reviewer/Supervisor`) |
+| UC-SU-04 | View Project Evaluation Progress | Staff (`Reviewer/Supervisor`) |
+| UC-RE-01 | View Review Assignments | Staff (`Reviewer/Supervisor`) |
+| UC-RE-02 | Fill Reviewer Assessment Form | Staff (`Reviewer/Supervisor`) |
+| UC-RE-03 | Save Draft / Submit Assessment | Staff (`Reviewer/Supervisor`) |
 | UC-ST-01 | View Internal Marks | Student |
 | UC-ST-02 | View Consolidated Marks | Student |
 | UC-SY-01 | Auto-Generate Evaluation Records | System |
@@ -72,24 +71,24 @@ This document defines the formal use cases for every actor in the AMS. Each use 
 1. Super Admin navigates to User Management → Users → Create.
 2. System displays the user creation form.
 3. Super Admin enters: university_id, name, email, password.
-4. Super Admin selects the `coordinator` role from the roles checkbox list.
+4. Super Admin selects the `Coordinator` role from the roles checkbox list.
 5. Super Admin optionally selects a specialization.
 6. Super Admin clicks "Create".
 7. System validates all fields (unique university_id, unique email, password meets policy).
-8. System creates the user record and assigns the coordinator role via spatie/laravel-permission.
+8. System creates the user record and assigns the Coordinator role via spatie/laravel-permission.
 9. System displays success notification.
 
 **Postconditions:**
-- New user exists in the `users` table with the `coordinator` role.
+- New user exists in the `users` table with the `Coordinator` role.
 - The coordinator can now log into the Admin Panel.
 
 **Alternative Flows:**
 - **AF1 — Validation Error:** If university_id or email already exists, system displays inline error. Super Admin corrects and retries.
-- **AF2 — Bulk Import:** Super Admin navigates to Bulk Import → Users tab and uploads a CSV containing multiple coordinator records.
+- **AF2 — Coordinator Registration:** A Coordinator can register through the Admin panel registration page. The account is created with `is_approved=false` and cannot access the Admin panel until a Super Admin approves it.
 
 **Business Rules:**
-- Only Super Admin can assign the `coordinator` role.
-- Coordinators cannot self-register; they must be created by Super Admin.
+- Only Super Admin can assign or approve the `Coordinator` role.
+- Coordinator self-registration is allowed only as a pending approval request.
 - Password must pass the Pwned Passwords check.
 
 ---
@@ -170,35 +169,36 @@ This document defines the formal use cases for every actor in the AMS. Each use 
 
 ---
 
-### UC-CO-02: Import Rubric from CSV
+### UC-CO-02: Import Rubric Templates from Spreadsheet Files
 
 | Field | Value |
 |-------|-------|
 | **Actor** | Coordinator |
-| **Preconditions** | Coordinator has a properly formatted CSV file |
-| **Trigger** | Coordinator navigates to Bulk Import → Rubric Import tab |
+| **Preconditions** | Coordinator has one or more properly formatted CSV, XLSX, or ODS rubric files |
+| **Trigger** | Coordinator opens Bulk Imports with `type=rubric-templates` |
 
 **Main Flow:**
-1. Coordinator navigates to Tools → Bulk Import → Import Rubric tab.
-2. Coordinator downloads the CSV template link (to see required format).
-3. Coordinator uploads the CSV file containing one rubric definition.
-4. System parses the CSV and displays a preview of the rubric structure (template name, criteria list with max_scores, score levels).
-5. Coordinator reviews the preview for accuracy.
-6. Coordinator clicks "Import".
-7. System creates the `rubric_template`, all `criteria`, and all `score_levels` records.
-8. System auto-calculates `total_marks`.
-9. System displays success notification with summary (rubric name, criteria count, score level count).
+1. Coordinator navigates to Tools → Bulk Imports → Rubric Templates, or uses the Rubric Templates list header action.
+2. Coordinator optionally selects **Save to Folder**.
+3. Coordinator downloads the spreadsheet template link.
+4. Coordinator uploads one or more CSV, XLSX, or ODS files. Each file represents one rubric template.
+5. System parses the uploaded file(s) and displays a preview of rubric structures, including deliverables, criteria, max_scores, and score levels.
+6. Coordinator reviews the preview for accuracy.
+7. Coordinator clicks "Import".
+8. System creates the `rubric_template`, `deliverables`, `criteria`, and `score_levels` records.
+9. System auto-calculates `total_marks`.
+10. System displays success notification with summary.
 
 **Postconditions:**
 - Complete rubric template with all criteria and score levels exists in the pool.
 
 **Alternative Flows:**
-- **AF1 — Parse Error:** If CSV format is invalid, system displays validation errors with specific row/column references. Import is aborted.
-- **AF2 — Partial Failure:** If some rows fail validation but others succeed, system reports which rows failed and which succeeded. (Decision: import all-or-nothing vs. partial is TBD.)
+- **AF1 — Parse Error:** If a spreadsheet format is invalid, system displays validation errors with specific row/column references. Import is aborted.
 
 **Business Rules:**
-- Only one rubric per CSV file.
-- CSV format/columns are TBD (to be defined during implementation).
+- Each uploaded file becomes one rubric template.
+- The current required fields include criterion title, max score, individual/group flag, level label, and level score; optional fields include deliverable and descriptions.
+- Rubric-template uploads support multiple files in one import operation.
 
 ---
 
@@ -218,7 +218,7 @@ This document defines the formal use cases for every actor in the AMS. Each use 
 5. Coordinator clicks "Create" in the Rules section.
 6. Coordinator configures each rule:
    - Select rubric template from pool dropdown
-   - Enter evaluator_role (e.g., "Reviewer" or "Supervisor")
+   - Enter evaluator_role as a responsibility label (e.g., "Reviewer" or "Supervisor")
    - Enter fill_order (e.g., 1, 2, 3)
    - Enter max_marks (e.g., 10, 20, 30)
    - Select aggregation_method (AVERAGE, WEIGHTED_AVERAGE, SUM, MAX)
@@ -239,33 +239,31 @@ This document defines the formal use cases for every actor in the AMS. Each use 
 
 ---
 
-### UC-CO-04: Create Semester
+### UC-SA-03: Create Semester
 
 | Field | Value |
 |-------|-------|
-| **Actor** | Coordinator |
-| **Preconditions** | Coordinator is logged into the Admin Panel |
-| **Trigger** | Coordinator navigates to Academic Setup → Semesters |
+| **Actor** | Super Admin |
+| **Preconditions** | Super Admin is logged into the Admin Panel |
+| **Trigger** | Super Admin navigates to Academic Setup → Semesters |
 
 **Main Flow:**
-1. Coordinator navigates to Academic Setup → Semesters → Create.
-2. Coordinator enters: name (e.g., "Fall 2026"), academic_year (e.g., "2025-2026"), start_date, end_date.
-3. Coordinator clicks "Create".
+1. Super Admin navigates to Academic Setup → Semesters → Create.
+2. Super Admin enters: name (e.g., "Fall 2026"), academic_year (e.g., "2025-2026"), start_date, end_date.
+3. Super Admin clicks "Create".
 4. System creates the `semesters` record with is_active=true, is_closed=false.
-5. System automatically creates a `coordinator_semester` pivot record linking the current coordinator to the new semester.
 
 **Postconditions:**
 - Active semester exists.
-- Current coordinator is assigned to it.
-- Semester is ready for project creation.
+- Semester is ready for project creation/import by authorized admin users.
 
 **Alternative Flows:**
-- **AF1 — Close Semester:** Coordinator clicks "Close Semester" action, confirming the dialog. System sets is_closed=true, making all data read-only.
-- **AF2 — Deactivate:** Coordinator toggles is_active to false (semester is hidden from active views but data remains).
+- **AF1 — Close Semester:** Super Admin clicks "Close Semester" action, confirming the dialog. System sets is_closed=true, making all data read-only.
+- **AF2 — Deactivate:** Super Admin toggles is_active to false (semester is hidden from active views but data remains).
 
 **Business Rules:**
 - Multiple semesters can be active simultaneously.
-- A coordinator can only manage semesters they are assigned to.
+- Coordinators do not manage semester records directly in the current implementation; project access is scoped by `projects.coordinator_id`.
 - Closing a semester prevents any further evaluation submissions or mark changes.
 
 ---
@@ -275,14 +273,14 @@ This document defines the formal use cases for every actor in the AMS. Each use 
 | Field | Value |
 |-------|-------|
 | **Actor** | Coordinator |
-| **Preconditions** | Coordinator has a CSV file with user data |
-| **Trigger** | Coordinator navigates to Bulk Import → Users tab |
+| **Preconditions** | Coordinator has a CSV, XLSX, or ODS file with user data |
+| **Trigger** | Coordinator opens Bulk Imports with `type=users` |
 
 **Main Flow:**
-1. Coordinator navigates to Tools → Bulk Import → Import Users tab.
-2. Coordinator downloads the CSV template.
-3. Coordinator uploads the CSV file (columns: university_id, name, email, role).
-4. System parses and validates the CSV, displaying a preview table.
+1. Coordinator navigates to Tools → Bulk Imports → Users, or uses the Users list header action.
+2. Coordinator downloads the spreadsheet template.
+3. Coordinator uploads the file (columns: university_id, name, email, role).
+4. System parses and validates the spreadsheet, displaying a preview table.
 5. Coordinator reviews the preview.
 6. Coordinator clicks "Import".
 7. System creates user records, assigns specified roles, and generates temporary passwords (or sets default password).
@@ -297,8 +295,8 @@ This document defines the formal use cases for every actor in the AMS. Each use 
 - **AF2 — Invalid Role:** If a specified role is invalid, system reports the error for that row.
 
 **Business Rules:**
-- Imported users receive the role specified in the CSV.
-- Coordinator cannot import users with the `super_admin` or `coordinator` role.
+- Imported staff role aliases `Supervisor`, `Reviewer`, `Supervisor/Reviewer`, and `Reviewer/Supervisor` are normalized to the stored `Reviewer/Supervisor` role.
+- Coordinator cannot import users with the `Super Admin` or `Coordinator` role.
 - Passwords must meet the system's password policy.
 
 ---
@@ -319,25 +317,25 @@ This document defines the formal use cases for every actor in the AMS. Each use 
    - Course (select)
    - Phase Template (select from pool)
    - Specialization (select)
-   - Supervisor (select from users with supervisor role)
+   - Supervisor (select from users with the `Reviewer/Supervisor` role)
 3. Coordinator saves. System creates the `projects` record with status="setup".
 4. System redirects to the project view/edit page with RelationManagers.
 5. Coordinator navigates to the Students tab.
-6. Coordinator clicks "Attach" and selects 1-4 students. System creates `project_student` pivot records.
+6. Coordinator clicks "Attach" and selects one or more students. If the selected student is already assigned to another project in the same semester, the system shows an assignment warning and moves the student only after confirmation. System creates `project_student` pivot records.
 7. Coordinator navigates to the Reviewers tab.
 8. Coordinator clicks "Attach" and selects one or more reviewers. System creates `project_reviewer` pivot records.
 
 **Postconditions:**
 - Project exists with status "setup".
-- Students (1-4), one supervisor, and one or more reviewers are assigned.
+- Students, one supervisor, and one or more reviewers are assigned.
 
 **Alternative Flows:**
-- **AF1 — Bulk CSV Import:** Coordinator uploads a CSV that creates projects and assigns students, supervisor, and reviewers in one operation (see Bulk Import page).
+- **AF1 — Bulk Spreadsheet Import:** Coordinator uploads a spreadsheet that creates projects and assigns students and supervisors. Semester, course, phase template, specialization, and phase-template reviewers are selected in the Bulk Imports context step.
 - **AF2 — Link to Phase 1:** For Phase 2 projects, Coordinator selects a Phase 1 project via previous_phase_project_id.
 
 **Business Rules:**
-- Maximum 4 students per project.
-- Each student can only belong to one project per semester.
+- There is no fixed student-count cap per project in the current implementation.
+- A student conflict within the same import file is a validation error. A student already assigned in the selected semester triggers warning-and-overwrite reassignment.
 - Exactly one supervisor per project.
 - Supervisor cannot be assigned as reviewer for the same project.
 - One or more reviewers per project (flexible count).
@@ -356,7 +354,7 @@ This document defines the formal use cases for every actor in the AMS. Each use 
 1. Coordinator opens the project view/edit page.
 2. Coordinator navigates to the Reviewers tab.
 3. Coordinator clicks "Attach".
-4. System displays a searchable dropdown of users with the reviewer role, excluding the project's supervisor.
+4. System displays a searchable dropdown of users with the `Reviewer/Supervisor` role, excluding the project's supervisor.
 5. Coordinator selects one or more reviewers.
 6. System creates `project_reviewer` pivot records.
 7. System displays success notification.
@@ -565,28 +563,28 @@ This document defines the formal use cases for every actor in the AMS. Each use 
 
 ---
 
-## 4. Supervisor Use Cases
+## 4. Staff Supervisor-Responsibility Use Cases
 
 ### UC-SU-01: View Supervised Projects
 
 | Field | Value |
 |-------|-------|
-| **Actor** | Supervisor |
-| **Preconditions** | Supervisor is logged into the Staff Panel; has projects assigned as supervisor |
-| **Trigger** | Supervisor navigates to Dashboard or Supervised Projects list |
+| **Actor** | Staff (`Reviewer/Supervisor`) |
+| **Preconditions** | Staff user is logged into the Staff Panel and has projects assigned as supervisor |
+| **Trigger** | Staff user navigates to Dashboard and reviews the supervised-projects widget |
 
 **Main Flow:**
-1. Supervisor logs into the Staff Panel (`/staff`).
+1. Staff user logs into the Staff Panel (`/staff`).
 2. System displays the Dashboard with the "Projects I am Supervising" widget.
-3. Supervisor sees a table of their supervised projects: title, semester, student names, evaluation progress.
-4. Supervisor clicks on a project to view full detail (see UC-SU-04).
+3. Staff user sees a table of their supervised projects: title, semester, student names, evaluation progress.
+4. Staff user clicks on a project to view full detail (see UC-SU-04).
 
 **Postconditions:**
-- Supervisor has visibility into all projects where they are the assigned supervisor.
+- Staff user has visibility into all projects where they are the assigned supervisor.
 
 **Business Rules:**
-- Supervisor can only see projects where `projects.supervisor_id` matches their user ID.
-- If the supervisor also has a reviewer role, the "Projects I am Reviewing" widget appears separately.
+- Staff user can only see projects where `projects.supervisor_id` matches their user ID.
+- If the same staff user also has review assignments, the "Projects I am Reviewing" widget appears separately.
 
 ---
 
@@ -594,13 +592,13 @@ This document defines the formal use cases for every actor in the AMS. Each use 
 
 | Field | Value |
 |-------|-------|
-| **Actor** | Supervisor |
+| **Actor** | Staff (`Reviewer/Supervisor`) |
 | **Preconditions** | Project is in "evaluating" status; evaluation record exists for this supervisor; prerequisite fill_order rubrics are submitted (if applicable) |
-| **Trigger** | Supervisor clicks "Fill Assessment" from their project list |
+| **Trigger** | Staff user clicks "Fill Assessment" from their supervised-projects widget/list |
 
 **Main Flow:**
-1. Supervisor navigates to their supervised project.
-2. Supervisor clicks "Fill Assessment" for the current rubric.
+1. Staff user navigates to their supervised project.
+2. Staff user clicks "Fill Assessment" for the current supervisor rubric.
 3. System renders the dynamic evaluation form based on the rubric template:
    - Header: Project title, rubric name, "Supervisor" role context
    - **Group Criteria section:** For each criterion where is_individual=false:
@@ -614,15 +612,15 @@ This document defines the formal use cases for every actor in the AMS. Each use 
        - Score input: dropdown or manual entry
        - Feedback textarea (optional)
    - General feedback textarea
-4. Supervisor fills scores and feedback for all criteria.
-5. Supervisor clicks "Save Draft" or "Submit" (see UC-SU-03).
+4. Staff user fills scores and feedback for all criteria.
+5. Staff user clicks "Save Draft" or "Submit" (see UC-SU-03).
 
 **Postconditions:**
 - Evaluation scores are stored in `evaluation_scores` table.
 
 **Alternative Flows:**
 - **AF1 — Fill Order Not Met:** If prerequisite rubrics at earlier fill_order are not yet submitted, system shows a message: "Previous assessment must be completed first." Form is not accessible.
-- **AF2 — Resume Draft:** If supervisor previously saved a draft, the form is pre-populated with saved scores.
+- **AF2 — Resume Draft:** If the staff user previously saved a draft, the form is pre-populated with saved scores.
 
 **Business Rules:**
 - Score must be between 0 and the criterion's max_score.
@@ -636,22 +634,22 @@ This document defines the formal use cases for every actor in the AMS. Each use 
 
 | Field | Value |
 |-------|-------|
-| **Actor** | Supervisor |
+| **Actor** | Staff (`Reviewer/Supervisor`) |
 | **Preconditions** | Evaluation form has been partially or fully filled |
-| **Trigger** | Supervisor clicks "Save Draft" or "Submit" |
+| **Trigger** | Staff user clicks "Save Draft" or "Submit" |
 
 **Main Flow (Save Draft):**
-1. Supervisor clicks "Save Draft".
+1. Staff user clicks "Save Draft".
 2. System persists all entered scores to `evaluation_scores`.
 3. System sets evaluation status to "draft".
 4. System displays success notification: "Draft saved."
-5. Supervisor can return later to continue editing.
+5. Staff user can return later to continue editing.
 
 **Main Flow (Submit):**
-1. Supervisor clicks "Submit".
+1. Staff user clicks "Submit".
 2. System validates that all required criteria have scores.
 3. System displays confirmation dialog: "Once submitted, this assessment will be locked. Continue?"
-4. Supervisor confirms.
+4. Staff user confirms.
 5. System sets evaluation status to "submitted".
 6. System locks the evaluation (all form fields become read-only).
 7. System displays success notification: "Assessment submitted successfully."
@@ -662,7 +660,7 @@ This document defines the formal use cases for every actor in the AMS. Each use 
 
 **Alternative Flows:**
 - **AF1 — Validation Failure on Submit:** If any required criterion is missing a score, system highlights the missing fields and prevents submission.
-- **AF2 — Cancel Submit:** Supervisor clicks "Cancel" on the confirmation dialog. No status change occurs.
+- **AF2 — Cancel Submit:** Staff user clicks "Cancel" on the confirmation dialog. No status change occurs.
 
 **Business Rules:**
 - Submission requires all criteria to have a score.
@@ -675,12 +673,12 @@ This document defines the formal use cases for every actor in the AMS. Each use 
 
 | Field | Value |
 |-------|-------|
-| **Actor** | Supervisor |
+| **Actor** | Staff (`Reviewer/Supervisor`) |
 | **Preconditions** | Project has evaluations in various states |
-| **Trigger** | Supervisor clicks on a project from their list |
+| **Trigger** | Staff user clicks on a supervised project |
 
 **Main Flow:**
-1. Supervisor clicks on a project from the "Projects I am Supervising" list.
+1. Staff user clicks on a project from the "Projects I am Supervising" widget/list.
 2. System displays the Project Detail View:
    - Project info (title, course, semester, phase template)
    - Team members table (student names, university IDs)
@@ -688,38 +686,38 @@ This document defines the formal use cases for every actor in the AMS. Each use 
      - All rubrics in the phase (from phase_rubric_rules)
      - Which evaluators are assigned (supervisor, reviewers)
      - Each evaluator's submission status (pending/draft/submitted)
-3. Supervisor can see which assessments are still outstanding.
+3. Staff user can see which assessments are still outstanding.
 
 **Postconditions:**
-- Supervisor has visibility into the overall evaluation progress for their project.
+- Staff user has visibility into the overall evaluation progress for their supervised project.
 
 **Business Rules:**
-- Supervisor sees evaluation status but NOT the actual scores entered by reviewers.
+- Staff user sees evaluation status but NOT the actual scores entered by reviewers.
 
 ---
 
-## 5. Reviewer Use Cases
+## 5. Staff Reviewer-Responsibility Use Cases
 
 ### UC-RE-01: View Review Assignments
 
 | Field | Value |
 |-------|-------|
-| **Actor** | Reviewer |
-| **Preconditions** | Reviewer is logged into the Staff Panel; has projects assigned as reviewer |
-| **Trigger** | Reviewer navigates to Dashboard or Review Assignments list |
+| **Actor** | Staff (`Reviewer/Supervisor`) |
+| **Preconditions** | Staff user is logged into the Staff Panel and has projects assigned as reviewer |
+| **Trigger** | Staff user navigates to Dashboard and reviews the review-assignments widget |
 
 **Main Flow:**
-1. Reviewer logs into the Staff Panel (`/staff`).
+1. Staff user logs into the Staff Panel (`/staff`).
 2. System displays the Dashboard with the "Projects I am Reviewing" widget.
-3. Reviewer sees a table of assigned projects: title, semester, rubric to fill, fill_order, their evaluation status (pending/draft/submitted).
-4. Reviewer clicks "Fill Assessment" to begin grading (see UC-RE-02).
+3. Staff user sees a table of assigned review projects: title, semester, rubric to fill, fill_order, their evaluation status (pending/draft/submitted).
+4. Staff user clicks "Fill Assessment" to begin grading (see UC-RE-02).
 
 **Postconditions:**
-- Reviewer has visibility into all projects assigned to them for review.
+- Staff user has visibility into all projects assigned to them for review.
 
 **Business Rules:**
-- Reviewer can only see projects where they appear in `project_reviewer`.
-- If the reviewer also has a supervisor role, the "Projects I am Supervising" widget appears separately, clearly distinguished.
+- Staff user can only see projects where they appear in `project_reviewer`.
+- If the same staff user also supervises projects, the "Projects I am Supervising" widget appears separately, clearly distinguished.
 
 ---
 
@@ -727,17 +725,17 @@ This document defines the formal use cases for every actor in the AMS. Each use 
 
 | Field | Value |
 |-------|-------|
-| **Actor** | Reviewer |
+| **Actor** | Staff (`Reviewer/Supervisor`) |
 | **Preconditions** | Project is in "evaluating" status; evaluation record exists for this reviewer; prerequisite fill_order rubrics are submitted |
-| **Trigger** | Reviewer clicks "Fill Assessment" from their assignment list |
+| **Trigger** | Staff user clicks "Fill Assessment" from their review-assignments widget/list |
 
 **Main Flow:**
-1. Reviewer clicks "Fill Assessment" for the assigned rubric.
+1. Staff user clicks "Fill Assessment" for the assigned reviewer rubric.
 2. System renders the dynamic evaluation form (same as UC-SU-02 but in the reviewer context).
 3. Header shows: Project title, rubric name, "Reviewer" role context.
-4. Reviewer fills group criteria scores (one per project) and individual criteria scores (one per student).
-5. Reviewer adds feedback as needed.
-6. Reviewer saves draft or submits.
+4. Staff user fills group criteria scores (one per project) and individual criteria scores (one per student).
+5. Staff user adds feedback as needed.
+6. Staff user saves draft or submits.
 
 **Postconditions:**
 - Same as UC-SU-02.
@@ -755,9 +753,9 @@ This document defines the formal use cases for every actor in the AMS. Each use 
 
 | Field | Value |
 |-------|-------|
-| **Actor** | Reviewer |
+| **Actor** | Staff (`Reviewer/Supervisor`) |
 | **Preconditions** | Evaluation form has been partially or fully filled |
-| **Trigger** | Reviewer clicks "Save Draft" or "Submit" |
+| **Trigger** | Staff user clicks "Save Draft" or "Submit" |
 
 **Main Flow:** Same as UC-SU-03.
 

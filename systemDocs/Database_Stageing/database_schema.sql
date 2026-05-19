@@ -1,6 +1,9 @@
--- Domain 1: Users, Access & Master Data
--- Note: User Roles and Permissions will be handled automatically by spatie/laravel-permission package
+-- AMS domain schema reference
+-- Updated: 2026-05-19
+-- Note: User roles and permissions are handled by spatie/laravel-permission package tables.
+-- Current stored roles: Super Admin, Coordinator, Reviewer/Supervisor, Student.
 
+-- Domain 1: Users, Access & Master Data
 CREATE TABLE `departments` (
     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     `name` VARCHAR(255) NOT NULL,
@@ -24,8 +27,12 @@ CREATE TABLE `users` (
     `university_id` VARCHAR(255) NOT NULL UNIQUE,
     `name` VARCHAR(255) NOT NULL,
     `email` VARCHAR(255) NOT NULL UNIQUE,
+    `email_verified_at` TIMESTAMP NULL,
+    `is_approved` BOOLEAN NOT NULL DEFAULT 1,
     `password` VARCHAR(255) NOT NULL,
     `specialization_id` BIGINT UNSIGNED NULL,
+    `remember_token` VARCHAR(100) NULL,
+    `master_data_setup_progress` JSON NULL,
     `created_at` TIMESTAMP NULL,
     `updated_at` TIMESTAMP NULL,
     `deleted_at` TIMESTAMP NULL,
@@ -55,11 +62,24 @@ CREATE TABLE `grading_scales` (
 
 -- Domain 2: The Template Pool (The Workflow Engine)
 
+CREATE TABLE `rubric_folders` (
+    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `name` VARCHAR(255) NOT NULL,
+    `parent_id` BIGINT UNSIGNED NULL,
+    `created_by` BIGINT UNSIGNED NOT NULL,
+    `created_at` TIMESTAMP NULL,
+    `updated_at` TIMESTAMP NULL,
+    `deleted_at` TIMESTAMP NULL,
+    FOREIGN KEY (`parent_id`) REFERENCES `rubric_folders`(`id`) ON DELETE SET NULL,
+    FOREIGN KEY (`created_by`) REFERENCES `users`(`id`) ON DELETE CASCADE
+);
+
 CREATE TABLE `rubric_templates` (
     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     `name` VARCHAR(255) NOT NULL,
     `version` INT NOT NULL DEFAULT 1,
     `parent_template_id` BIGINT UNSIGNED NULL,
+    `rubric_folder_id` BIGINT UNSIGNED NULL,
     `total_marks` DECIMAL(8,2) NOT NULL DEFAULT 0.00,
     `is_locked` BOOLEAN NOT NULL DEFAULT 0,
     `created_by` BIGINT UNSIGNED NOT NULL,
@@ -67,7 +87,20 @@ CREATE TABLE `rubric_templates` (
     `updated_at` TIMESTAMP NULL,
     `deleted_at` TIMESTAMP NULL,
     FOREIGN KEY (`parent_template_id`) REFERENCES `rubric_templates`(`id`) ON DELETE SET NULL,
+    FOREIGN KEY (`rubric_folder_id`) REFERENCES `rubric_folders`(`id`) ON DELETE SET NULL,
     FOREIGN KEY (`created_by`) REFERENCES `users`(`id`) ON DELETE CASCADE
+);
+
+CREATE TABLE `deliverables` (
+    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `rubric_template_id` BIGINT UNSIGNED NOT NULL,
+    `title` VARCHAR(255) NOT NULL,
+    `max_marks` DECIMAL(8,2) NOT NULL,
+    `sort_order` INT NOT NULL DEFAULT 0,
+    `created_at` TIMESTAMP NULL,
+    `updated_at` TIMESTAMP NULL,
+    `deleted_at` TIMESTAMP NULL,
+    FOREIGN KEY (`rubric_template_id`) REFERENCES `rubric_templates`(`id`) ON DELETE CASCADE
 );
 
 CREATE TABLE `criteria` (
@@ -77,10 +110,13 @@ CREATE TABLE `criteria` (
     `max_score` DECIMAL(8,2) NOT NULL,
     `is_individual` BOOLEAN NOT NULL,
     `rubric_template_id` BIGINT UNSIGNED NOT NULL,
+    `deliverable_id` BIGINT UNSIGNED NULL,
+    `sort_order` INT NOT NULL DEFAULT 0,
     `created_at` TIMESTAMP NULL,
     `updated_at` TIMESTAMP NULL,
     `deleted_at` TIMESTAMP NULL,
-    FOREIGN KEY (`rubric_template_id`) REFERENCES `rubric_templates`(`id`) ON DELETE CASCADE
+    FOREIGN KEY (`rubric_template_id`) REFERENCES `rubric_templates`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`deliverable_id`) REFERENCES `deliverables`(`id`) ON DELETE SET NULL
 );
 
 CREATE TABLE `score_levels` (
@@ -105,6 +141,28 @@ CREATE TABLE `phase_templates` (
     `updated_at` TIMESTAMP NULL,
     `deleted_at` TIMESTAMP NULL,
     FOREIGN KEY (`created_by`) REFERENCES `users`(`id`) ON DELETE CASCADE
+);
+
+CREATE TABLE `phase_template_reviewer` (
+    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `phase_template_id` BIGINT UNSIGNED NOT NULL,
+    `user_id` BIGINT UNSIGNED NOT NULL,
+    `created_at` TIMESTAMP NULL,
+    `updated_at` TIMESTAMP NULL,
+    UNIQUE KEY `phase_template_reviewer_unique` (`phase_template_id`, `user_id`),
+    FOREIGN KEY (`phase_template_id`) REFERENCES `phase_templates`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+);
+
+CREATE TABLE `phase_template_external` (
+    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `phase_template_id` BIGINT UNSIGNED NOT NULL,
+    `user_id` BIGINT UNSIGNED NOT NULL,
+    `created_at` TIMESTAMP NULL,
+    `updated_at` TIMESTAMP NULL,
+    UNIQUE KEY `phase_template_external_unique` (`phase_template_id`, `user_id`),
+    FOREIGN KEY (`phase_template_id`) REFERENCES `phase_templates`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
 );
 
 CREATE TABLE `phase_rubric_rules` (
@@ -156,6 +214,7 @@ CREATE TABLE `projects` (
     `specialization_id` BIGINT UNSIGNED NOT NULL,
     `title` VARCHAR(255) NOT NULL,
     `supervisor_id` BIGINT UNSIGNED NOT NULL,
+    `coordinator_id` BIGINT UNSIGNED NULL,
     `previous_phase_project_id` BIGINT UNSIGNED NULL,
     `status` ENUM('setup', 'evaluating', 'completed') NOT NULL DEFAULT 'setup',
     `created_at` TIMESTAMP NULL,
@@ -166,6 +225,7 @@ CREATE TABLE `projects` (
     FOREIGN KEY (`phase_template_id`) REFERENCES `phase_templates`(`id`) ON DELETE CASCADE,
     FOREIGN KEY (`specialization_id`) REFERENCES `specializations`(`id`) ON DELETE CASCADE,
     FOREIGN KEY (`supervisor_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`coordinator_id`) REFERENCES `users`(`id`) ON DELETE SET NULL,
     FOREIGN KEY (`previous_phase_project_id`) REFERENCES `projects`(`id`) ON DELETE SET NULL
 );
 
@@ -199,6 +259,7 @@ CREATE TABLE `evaluations` (
     `rubric_template_id` BIGINT UNSIGNED NOT NULL,
     `evaluator_id` BIGINT UNSIGNED NOT NULL,
     `evaluator_role` VARCHAR(255) NOT NULL,
+    `fill_order` INT NOT NULL DEFAULT 1,
     `on_behalf_of_user_id` BIGINT UNSIGNED NULL,
     `evidence_attachment_path` VARCHAR(255) NULL,
     `status` ENUM('pending', 'draft', 'submitted') NOT NULL DEFAULT 'pending',

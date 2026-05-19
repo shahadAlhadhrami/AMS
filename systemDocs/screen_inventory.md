@@ -1,8 +1,8 @@
 # AMS Screen Inventory (FilamentPHP v5)
 
 > **Version:** 1.0
-> **Date:** 2026-03-01
-> **Status:** Draft
+> **Date:** 2026-05-19
+> **Status:** Updated to match current implementation
 > **UI Framework:** FilamentPHP v5.3 (Livewire-based admin panel builder)
 
 ---
@@ -16,13 +16,13 @@ The AMS uses three isolated Filament panels, each with its own URL path, PanelPr
 | Panel | URL Path | Roles | Purpose |
 |-------|----------|-------|---------|
 | **Admin Panel** | `/admin` | Super Admin, Coordinator | System configuration, template management, semester setup, monitoring, exports |
-| **Staff Panel** | `/staff` | Supervisor, Reviewer | Assessment filling, project viewing, limited dashboards |
+| **Staff Panel** | `/staff` | Reviewer/Supervisor | Assessment filling, project viewing, limited dashboards |
 | **Student Panel** | `/student` | Student | Read-only mark viewing |
 
 ### 1.2 Rationale
 1. **Security by separation** — Students cannot accidentally access admin routes or staff grading forms.
 2. **Tailored UX** — Each panel shows only relevant screens for that role category.
-3. **Dual-role handling** — A user who is both Supervisor and Reviewer accesses the Staff Panel where the dashboard separates those responsibilities. If they are also a Coordinator, they can access the Admin Panel with the same credentials at a different URL.
+3. **Responsibility separation** — The stored staff role is `Reviewer/Supervisor`. The Staff Panel dashboard separates projects where the user is the assigned supervisor from projects where the user is assigned as a reviewer. If they are also a Coordinator, they can access the Admin Panel with the same credentials at a different URL.
 4. **Native FilamentPHP architecture** — v5 is built around multi-panel support via separate `PanelProvider` classes in `app/Providers/Filament/`.
 
 ### 1.3 Implementation Files
@@ -62,7 +62,7 @@ Admin Panel (/admin)
 ├── Grade Consolidation
 │   └── Consolidated Marks
 ├── Tools
-│   └── Bulk Import
+│   └── Bulk Imports
 └── Reports & Export
     └── Grade Export
 ```
@@ -192,7 +192,7 @@ Admin Panel (/admin)
 - Columns: `university_id`, `name`, `email`, roles (badge column), specialization (relationship)
 - Filters: Role, Specialization
 - Searchable: `university_id`, `name`, `email`
-- Header Action: **"Import CSV"** button (opens modal or redirects to A-13)
+- Header Action: **"Import Users"** button (routes to A-13 with `type=users`)
 
 **Form (Create/Edit):**
 - `university_id` — TextInput (required, unique)
@@ -200,11 +200,11 @@ Admin Panel (/admin)
 - `email` — TextInput (required, unique, email validation)
 - `password` — TextInput (required on create, optional on edit, hashed)
 - `specialization_id` — Select (nullable, relationship to specializations)
-- `roles` — CheckboxList (spatie roles: coordinator, supervisor, reviewer, student)
+- `roles` — CheckboxList (spatie roles: `Super Admin`, `Coordinator`, `Reviewer/Supervisor`, `Student`)
 
 **Policy Notes:**
-- Super Admin can assign all roles including `coordinator`
-- Coordinator cannot assign `super_admin` or `coordinator` roles
+- Super Admin can assign all roles including `Coordinator`
+- Coordinator cannot assign `Super Admin` or `Coordinator` roles
 
 ---
 
@@ -224,7 +224,7 @@ Admin Panel (/admin)
 - Filters: Locked status, created_by
 - Searchable: `name`
 - Header Actions:
-  - **"Import from CSV"** — opens CSV upload modal
+  - **"Import Rubrics"** — routes to A-13 with `type=rubric-templates`
 
 **Record Actions:**
 - **"Clone"** — creates new version (increments version, sets parent_template_id, duplicates all criteria + score levels)
@@ -249,7 +249,7 @@ Admin Panel (/admin)
     - `score_value` — TextInput (numeric)
     - `description` — Textarea (nullable, descriptive text)
     - `sort_order` — Hidden/auto-set from repeater order
-  - Optional Action: **"Save Criterion to Pool"** — saves this criterion as reusable (separate from rubric template)
+  - Optional reusable-criteria behavior is not a separate current screen; criteria are normally managed through rubric deliverables/criteria.
 
 **Architecture Note:** FilamentPHP v5 does not support nested RelationManagers. Score levels are managed via a `Repeater` component inside the criterion create/edit form, not as a separate RelationManager.
 
@@ -263,7 +263,7 @@ Admin Panel (/admin)
 | **Purpose** | Manage phase template blueprints |
 | **Navigation** | Sidebar → Template Pool → Phase Templates |
 | **Access** | Coordinator |
-| **Tables** | `phase_templates`, `phase_rubric_rules` |
+| **Tables** | `phase_templates`, `phase_rubric_rules`, `phase_template_reviewer`, `phase_template_external` |
 | **Related** | A-07 (Rubric Templates) |
 
 **List Page:**
@@ -272,14 +272,16 @@ Admin Panel (/admin)
 
 **Form (Create/Edit):**
 - `name` — TextInput (required)
-- `total_phase_marks` — TextInput (numeric, required)
+- `reviewers` — multi-select of users with `Reviewer/Supervisor` role
+- `externals` — multi-select of users with `Reviewer/Supervisor` role; mutually excluded from selected reviewers
+- `total_phase_marks` — calculated from phase rubric rules
 
 **RelationManager: PhaseRubricRulesRelationManager**
 - Table columns: rubric template name (relationship), `evaluator_role`, `fill_order`, `max_marks`, `aggregation_method`
 - Sorted by: `fill_order` ascending
 - Create/Edit form fields:
   - `rubric_template_id` — Select (from rubric template pool, searchable)
-  - `evaluator_role` — TextInput (flexible string, e.g., "Supervisor", "Reviewer")
+  - `evaluator_role` — TextInput (responsibility label, e.g., "Supervisor", "Reviewer")
   - `fill_order` — TextInput (integer, required)
   - `max_marks` — TextInput (numeric, required)
   - `aggregation_method` — Select (enum: AVERAGE, WEIGHTED_AVERAGE, SUM, MAX; default: AVERAGE)
@@ -293,7 +295,7 @@ Admin Panel (/admin)
 | **Filament Type** | Resource |
 | **Purpose** | Manage academic semesters |
 | **Navigation** | Sidebar → Academic Setup → Semesters |
-| **Access** | Super Admin (create + assign coordinators), Coordinator (manage their own semesters) |
+| **Access** | Super Admin |
 | **Tables** | `semesters`, `coordinator_semester` |
 | **Related** | A-10 (Projects) |
 
@@ -312,8 +314,6 @@ Admin Panel (/admin)
 - `end_date` — DatePicker (nullable)
 
 **RelationManagers:**
-- `CoordinatorsRelationManager` — manage coordinator_semester pivot
-  - Attach/Detach coordinators (Select filtered to users with coordinator role)
 - `ProjectsRelationManager` — list projects in this semester
   - Table: title, course, supervisor, status, student count
   - Link: Opens project in A-10
@@ -327,7 +327,7 @@ Admin Panel (/admin)
 | **Filament Type** | Resource |
 | **Purpose** | Manage projects within semesters |
 | **Navigation** | Sidebar → Academic Setup → Projects |
-| **Access** | Coordinator |
+| **Access** | Super Admin and Coordinator. Coordinators are scoped to projects where `projects.coordinator_id` is their own user ID. |
 | **Tables** | `projects`, `project_student`, `project_reviewer` |
 | **Related** | A-09 (Semesters), A-11 (Evaluations) |
 
@@ -335,7 +335,7 @@ Admin Panel (/admin)
 - Columns: `title`, semester (relationship), course (relationship), specialization, supervisor (relationship), `status` (BadgeColumn), student count, reviewer count
 - Filters: Semester, Status, Course, Supervisor
 - Searchable: `title`
-- Header Action: **"Import Projects CSV"**
+- Header Action: **"Import Projects"** (routes to A-13 with `type=projects`)
 
 **Form (Create/Edit):**
 - `title` — TextInput (required)
@@ -343,17 +343,18 @@ Admin Panel (/admin)
 - `course_id` — Select (required)
 - `phase_template_id` — Select (from phase template pool, required)
 - `specialization_id` — Select (required)
-- `supervisor_id` — Select (filtered to users with supervisor role; validated: cannot match any reviewer)
+- `supervisor_id` — Select (filtered to users with `Reviewer/Supervisor` role; validated so the same person cannot also be a reviewer on the project)
+- `coordinator_id` — Select (defaults to current Coordinator; visible to admin users)
 - `previous_phase_project_id` — Select (nullable, for Phase 2 linking)
 - `status` — Select (setup/evaluating/completed; default: setup)
 
 **RelationManagers:**
 - `StudentsRelationManager` — project_student pivot
   - Attach action: Select filtered to student role users
-  - Validation: max 4 students; student not already in another project this semester
+  - Existing same-semester assignment: warning is shown, and attach moves the student from the previous project after confirmation
   - Detach action
 - `ReviewersRelationManager` — project_reviewer pivot
-  - Attach action: Select filtered to reviewer role users
+  - Attach action: Select filtered to `Reviewer/Supervisor` role users
   - Validation: cannot be the same as supervisor_id
   - Detach action
 
@@ -411,28 +412,35 @@ Admin Panel (/admin)
 
 ---
 
-### A-13: Bulk Import (Distributed Architecture)
+### A-13: Bulk Imports
 
 | Field | Value |
 |-------|-------|
-| **Status** | Implemented (distributed across multiple screens) |
+| **Filament Type** | Custom Page (`Pages/BulkImports.php`) |
+| **Status** | Implemented |
 | **Access** | Coordinator |
 
-> **Architecture Decision:** The original design specified a single page with 3 tabs. During implementation, the import functionality was distributed to place each import action where users naturally expect it. This provides better UX since users can import directly from the relevant resource page.
+> **Architecture Decision:** The current implementation uses one shared import workflow with contextual entry points from Users, Projects, and Rubric Templates. The `type` URL parameter selects the active importer.
 
 **Implemented Import Locations:**
 
 | Import Type | Location | File |
 |-------------|----------|------|
-| **Import Users** | Standalone page: Sidebar → Tools → Bulk Import | `Pages/BulkImportUsers.php` |
-| **Import Projects & Groups** | Header action on Projects list page: Sidebar → Academic Setup → Projects → "Import from CSV" button | `ProjectResource/Pages/ListProjects.php` |
-| **Import Rubric** | Header action on Rubric Templates list page: Sidebar → Template Pool → Rubric Templates → "Import from CSV" button | `RubricTemplateResource/Pages/ListRubricTemplates.php` |
+| **Import Users** | Sidebar → Tools → Bulk Imports or Users list header action | `Pages/BulkImports.php?type=users` |
+| **Import Projects & Groups** | Projects list header action | `Pages/BulkImports.php?type=projects` |
+| **Import Rubric Templates** | Rubric Templates list header action | `Pages/BulkImports.php?type=rubric-templates` |
 
 All imports include:
-- CSV file upload with validation
+- CSV, XLSX, or ODS upload with validation
 - Preview with row-by-row validation and error reporting
+- Optional column mapping for importers that support renamed headers
 - Download template functionality
 - Success/error count after import
+
+Importer-specific behavior:
+- Users: imports `university_id`, `name`, `email`, `role`; accepts `Supervisor`, `Reviewer`, `Supervisor/Reviewer`, and `Reviewer/Supervisor` as staff aliases, storing them as `Reviewer/Supervisor`; returns generated passwords in a results CSV.
+- Projects: one row per student; `project_title` and `supervisor_id` repeat across rows. Semester, course, phase template, specialization, and reviewers are chosen in the context step. Existing same-semester student assignments become warnings; clicking import again confirms overwrite/move.
+- Rubric Templates: supports multiple files in one upload; each file becomes one rubric template. `Save to Folder` appears before the file upload and stores the template under a rubric folder when selected.
 
 ---
 
@@ -453,26 +461,26 @@ All imports include:
 
 ---
 
-### A-15: Semester Setup Wizard
+### A-15: Master Data Setup Wizard
 
 | Field | Value |
 |-------|-------|
-| **Filament Type** | Custom Page with Wizard component (`Pages/SemesterSetupWizard.php`) |
+| **Filament Type** | Custom Page with Wizard component (`Pages/MasterDataSetupWizard.php`) |
 | **Status** | Implemented |
-| **Purpose** | Guided flow for setting up a new semester end-to-end |
-| **Navigation** | Sidebar → Academic Setup → Semester Setup Wizard (also accessible via "Setup Wizard" button on Semester list) |
-| **Access** | Super Admin, Coordinator |
+| **Purpose** | First-login/foundation flow for creating required master data before the rest of the Admin panel is used |
+| **Navigation** | Sidebar item appears only while master data setup is incomplete; middleware redirects Super Admins here until complete |
+| **Access** | Super Admin |
 
 **Wizard Steps:**
-1. **Create Semester** — name, academic_year, start_date, end_date (auto-assigns current coordinator)
-2. **Select Phase Template(s)** — CheckboxList from phase template pool (filters Step 3 options)
-3. **Import/Create Projects** — Radio toggle between Manual entry (Repeater form) or CSV import (with preview & validation), or Skip
-4. **Review Summary** — Read-only overview of semester, selected templates, and created projects
+1. **Departments** — add required departments; duplicate names are rejected.
+2. **Specializations** — add required specializations linked to departments; duplicate names in the same department are rejected.
+3. **Courses** — add required course codes and titles; duplicate course codes are rejected.
+4. **Grading Scales** — review or edit default grading-scale rows; overlapping ranges are rejected.
 
 **Key Features:**
-- Idempotent: going back to Step 1 updates the existing semester rather than creating a duplicate
-- Step 3 CSV import reuses the same validation rules as the standalone Projects CSV import
-- "Finish Setup" button redirects to the Semester edit page
+- Progress is persisted in `users.master_data_setup_progress`, allowing the wizard to resume after refresh/login.
+- Current departments, specializations, courses, and grading scales are displayed in readable summaries.
+- Once setup is complete, normal Admin navigation is released.
 
 ---
 
@@ -482,11 +490,8 @@ All imports include:
 ```
 Staff Panel (/staff)
 ├── Dashboard
-├── Supervision
-│   └── My Supervised Projects
-├── Reviews
-│   └── My Review Assignments
-└── (Evaluation Form — accessed via action buttons, not sidebar)
+├── Project Detail (reached from dashboard widget actions)
+└── Evaluation Form (reached from action buttons, not sidebar)
 ```
 
 ---
@@ -496,30 +501,30 @@ Staff Panel (/staff)
 | Field | Value |
 |-------|-------|
 | **Filament Type** | Custom Page (`Pages/Dashboard.php`) |
-| **Purpose** | Entry point for Supervisors and Reviewers with dual-role separation |
+| **Purpose** | Entry point for staff users with supervisor/reviewer responsibility separation |
 | **Navigation** | Top-level (default landing page) |
-| **Access** | Supervisor, Reviewer |
+| **Access** | Reviewer/Supervisor |
 
 **Widgets:**
 
 | Widget | Type | Content | Shown To |
 |--------|------|---------|----------|
 | My Pending Evaluations | `StatsOverviewWidget` | Count of evaluations in pending/draft state assigned to current user | All staff |
-| Projects I am Supervising | `TableWidget` | Table of supervised projects (title, semester, student count, evaluation progress) | Users with supervisor role |
-| Projects I am Reviewing | `TableWidget` | Table of review assignments (title, semester, rubric, my status) | Users with reviewer role |
+| Projects I am Supervising | `TableWidget` | Table of supervised projects (title, semester, student count, evaluation progress) | `Reviewer/Supervisor` users with supervised projects |
+| Projects I am Reviewing | `TableWidget` | Table of review assignments (title, semester, rubric, my status) | `Reviewer/Supervisor` users with review assignments |
 
-**Design Note:** These two table widgets are the cornerstone of the "dual role" UI. They are visually separated with distinct headings. A user who is both supervisor and reviewer sees both widgets. A user with only one role sees only the relevant widget.
+**Design Note:** These two table widgets are the cornerstone of the staff UI. They are visually separated with distinct headings. A staff user can supervise one project and review another without needing separate stored roles.
 
 ---
 
-### S-02: My Supervised Projects
+### S-02: Supervised Projects Widget
 
 | Field | Value |
 |-------|-------|
-| **Filament Type** | Custom Page (read-only list) |
+| **Filament Type** | Dashboard table widget (`Widgets/SupervisedProjectsWidget.php`) |
 | **Purpose** | List all projects where current user is the supervisor |
-| **Navigation** | Sidebar → Supervision → My Supervised Projects |
-| **Access** | Supervisor (scoped to own projects) |
+| **Navigation** | Staff Dashboard |
+| **Access** | Reviewer/Supervisor (scoped to own supervised projects) |
 
 **Table Columns:**
 - Project title, student names, semester, course, phase template, status, evaluation progress (X/Y submitted)
@@ -528,14 +533,14 @@ Staff Panel (/staff)
 
 ---
 
-### S-03: My Review Assignments
+### S-03: Review Assignments Widget
 
 | Field | Value |
 |-------|-------|
-| **Filament Type** | Custom Page (read-only list) |
+| **Filament Type** | Dashboard table widget (`Widgets/ReviewAssignmentsWidget.php`) |
 | **Purpose** | List all projects where current user is assigned as reviewer |
-| **Navigation** | Sidebar → Reviews → My Review Assignments |
-| **Access** | Reviewer (scoped to assigned projects) |
+| **Navigation** | Staff Dashboard |
+| **Access** | Reviewer/Supervisor (scoped to assigned review projects) |
 
 **Table Columns:**
 - Project title, semester, rubric template name, fill_order, my evaluation status (pending/draft/submitted)
@@ -551,7 +556,7 @@ Staff Panel (/staff)
 | **Filament Type** | Custom Page (read-only, ViewRecord-style) |
 | **Purpose** | Read-only detail of a project's team, evaluation status, and marks |
 | **Navigation** | Reached from S-02 or S-03 row click |
-| **Access** | Supervisor (for supervised projects), Reviewer (for assigned projects) |
+| **Access** | Reviewer/Supervisor (for supervised projects or assigned review projects) |
 
 **Sections:**
 1. **Project Info** — title, course, semester, phase template, specialization
@@ -567,7 +572,7 @@ Staff Panel (/staff)
 | **Filament Type** | Custom Page (`Pages/EvaluationForm.php`) — NOT a standard Resource form |
 | **Purpose** | Dynamic grading interface where evaluators fill rubrics |
 | **Navigation** | Reached from S-02 or S-03 "Fill Assessment" action |
-| **Access** | Supervisor (for supervisor rubrics), Reviewer (for reviewer rubrics) |
+| **Access** | Reviewer/Supervisor (the evaluation's `evaluator_role` stores whether the assignment is a supervisor or reviewer responsibility) |
 | **Tables** | `evaluations`, `evaluation_scores`, `criteria`, `score_levels` |
 
 **Why Custom Page:** The form structure is entirely dynamic — driven by the rubric template's criteria and score levels. Standard Filament Resource forms have a fixed schema. This screen must programmatically compose form components based on database data.
@@ -636,8 +641,7 @@ Staff Panel (/staff)
 ### Navigation Sidebar Structure
 ```
 Student Panel (/student)
-├── Dashboard
-└── My Marks
+└── Dashboard
 ```
 
 ---
@@ -660,13 +664,13 @@ Student Panel (/student)
 
 ---
 
-### ST-02: My Marks Page
+### ST-02: Marks Section on Student Dashboard
 
 | Field | Value |
 |-------|-------|
-| **Filament Type** | Custom Page (`Pages/MyMarks.php`) |
+| **Filament Type** | Dashboard content (`Pages/Dashboard.php`) |
 | **Purpose** | Student views their internal and consolidated marks |
-| **Navigation** | Sidebar → My Marks |
+| **Navigation** | Student Dashboard |
 | **Access** | Student (scoped to own data via policy) |
 
 **UI Structure:**
@@ -739,10 +743,10 @@ Student Panel (/student)
 
 | Panel | Resources | Custom Pages | RelationManagers | Widgets | Total Screens |
 |-------|-----------|-------------|------------------|---------|---------------|
-| Admin | 9 | 4 | 8 | 4 | 13+ |
-| Staff | 0 | 5 | 0 | 3 | 5 |
-| Student | 0 | 2 | 0 | 2 | 2 |
-| **Total** | **9** | **11** | **8** | **9** | **20+** |
+| Admin | 9 | 6 | 6+ | 6 | 21+ |
+| Staff | 0 | 3 | 0 | 3 | 6 |
+| Student | 0 | 1 | 0 | 2 | 3 |
+| **Total** | **9** | **10** | **6+** | **11** | **30+** |
 
 ---
 
@@ -755,9 +759,9 @@ The build order follows a strict dependency chain dictated by database foreign k
 
 | Step | Task | Produces |
 |------|------|---------|
-| A1 | Create Laravel migrations for all 16 tables across 4 domains (convert `database_schema.sql`) | Database schema |
-| A2 | Create Eloquent models with relationships, casts, and SoftDeletes trait (16 models) | Models |
-| A3 | Install and configure `spatie/laravel-permission` — seed roles: super_admin, coordinator, supervisor, reviewer, student | RBAC |
+| A1 | Create Laravel migrations for AMS domain tables across 4 domains (convert `database_schema.sql`) | Database schema |
+| A2 | Create Eloquent models with relationships, casts, and SoftDeletes trait | Models |
+| A3 | Install and configure `spatie/laravel-permission` — seed roles: `Super Admin`, `Coordinator`, `Reviewer/Supervisor`, `Student` | RBAC |
 | A4 | Install and configure `laravel/fortify` — login, MFA, password rules | Auth |
 | A5 | Create three Filament PanelProviders (Admin, Staff, Student) with auth middleware | Panels |
 | A6 | Seed Super Admin account | Bootstrap user |
@@ -771,7 +775,7 @@ The build order follows a strict dependency chain dictated by database foreign k
 | B2 | CourseResource | A-04 |
 | B3 | GradingScaleResource | A-05 |
 | B4 | UserResource with role management | A-06 |
-| B5 | CSV import for users (BulkImport page, users tab) | A-13 (partial) |
+| B5 | Spreadsheet import for users through the shared Bulk Imports page | A-13 (partial) |
 
 ### Phase C: Template Pool
 > Depends on Phase B (rubric_templates.created_by references users).
@@ -781,7 +785,7 @@ The build order follows a strict dependency chain dictated by database foreign k
 | C1 | RubricTemplateResource with CriteriaRelationManager | A-07 |
 | C2 | Score Levels management via Repeater inside criterion form | A-07 (nested) |
 | C3 | Clone / Version / Lock actions on RubricTemplateResource | A-07 (actions) |
-| C4 | CSV import for rubrics | A-13 (partial) |
+| C4 | Multi-file spreadsheet import for rubric templates | A-13 (partial) |
 | C5 | PhaseTemplateResource with PhaseRubricRulesRelationManager | A-08 |
 
 ### Phase D: Academic Sandbox
@@ -789,11 +793,11 @@ The build order follows a strict dependency chain dictated by database foreign k
 
 | Step | Task | Screens Built |
 |------|------|---------------|
-| D1 | SemesterResource with CoordinatorsRelationManager | A-09 |
+| D1 | SemesterResource with projects relation | A-09 |
 | D2 | ProjectResource with Students + Reviewers RelationManagers | A-10 |
-| D3 | Supervisor/reviewer validation rules (no self-review, max 4 students) | A-10 (validation) |
-| D4 | CSV import for projects/groups | A-13 (complete) |
-| D5 | Semester Setup Wizard (Could-have) | A-15 |
+| D3 | Supervisor/reviewer validation rules and warning-based same-semester student reassignment | A-10 (validation) |
+| D4 | Spreadsheet import for projects/groups | A-13 (complete) |
+| D5 | Master Data Setup Wizard | A-15 |
 
 ### Phase E: Assessment Engine
 > Depends on Phase D (evaluations reference projects, rubric_templates, users).
@@ -802,7 +806,7 @@ The build order follows a strict dependency chain dictated by database foreign k
 |------|------|---------------|
 | E1 | Evaluation model logic (auto-create pending evaluations on project status change) | Backend logic |
 | E2 | Staff Dashboard with dual-role widgets | S-01 |
-| E3 | Supervised Projects List + Review Assignments List | S-02, S-03 |
+| E3 | Supervised Projects + Review Assignments dashboard widgets | S-02, S-03 |
 | E4 | Project Detail View | S-04 |
 | E5 | **Evaluation Form** (dynamic rubric, group vs individual, draft/submit) | S-05 |
 | E6 | EvaluationResource (admin monitoring + unlock action) | A-11 |
@@ -818,7 +822,7 @@ The build order follows a strict dependency chain dictated by database foreign k
 | F3 | Admin Dashboard widgets | A-01 |
 | F4 | Grade Export page (CSV/Excel) | A-14 |
 | F5 | PDF report generation | A-14 (PDF action) |
-| F6 | Student Dashboard + My Marks page | ST-01, ST-02 |
+| F6 | Student Dashboard with marks section | ST-01, ST-02 |
 | F7 | Email notifications (assignment, submission, unlock, finalization) | Backend |
 | F8 | Spatie Activitylog integration (audit logging) | Backend |
 | F9 | Policy refinement (Filament Policies for all resources) | Security |

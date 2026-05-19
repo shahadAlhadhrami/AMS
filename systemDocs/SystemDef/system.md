@@ -1629,8 +1629,7 @@ Before any students or projects exist, the Coordinator sets up the rules of the 
   
 * **Manage Rubric Templates:** They can bundle criteria together to create Rubrics (e.g., "Phase 1 - Reviewer Rubric"). They can build these manually via the UI or, eventually, upload them via a formatted CSV. These live in a "folder-like" pool and can be edited, versioned, or archived without affecting active semesters.
   
-  regarding the formatted CSV, it is supposed to create the whole rubric with its Criteria. Only one rubric at a time.
-  (Note: The exact CSV format/columns are TBD and will be decided later).
+  Current implementation note: formatted rubric imports support CSV/XLSX/ODS and allow multiple files in one upload. Each file becomes one rubric template with deliverables, criteria, and score levels.
   
 * **Manage Phase Templates:** They create a blueprint for a Phase (e.g., "B.Tech Phase 1"). Here, they map the rules: *"Supervisors must complete Rubric A, and Reviewers must complete Rubric B."*
   exactly its like a blueprint, it will have template name, rubrics and their fill order, rules.
@@ -1644,9 +1643,9 @@ Before any students or projects exist, the Coordinator sets up the rules of the 
 ### 2. Semester & User Onboarding (Execution)
 When a new academic term starts, the Coordinator brings the system to life.
 * **Create Semesters:** They create a new entity (e.g., "Fall 2026"). Since Courses map to Phase Templates, Semester can contain Phase 1 and Phase 2 projects within the same term.
-* **User Management (Bulk & Manual):** They can manually add users or **upload a CSV** to populate the system with Students, Supervisors, and Reviewers. 
-* **Role Assignment:** They can assign multiple roles to a single user (e.g., Dr. Smith is given both the `Supervisor` and `Reviewer` roles).
-* **Project & Group Allocation:** They can create Projects, assign 1-4 students to a project, assign **one** Supervisor, and assign **one or more** Reviewers to that project. *Crucially, they can do all of this in bulk via CSV upload to save time.*
+* **User Management (Bulk & Manual):** They can manually add users or upload a spreadsheet to populate the system with Students and staff.
+* **Role Assignment:** The stored staff role is `Reviewer/Supervisor`; whether someone is acting as supervisor or reviewer is determined by project/phase assignment.
+* **Project & Group Allocation:** They can create Projects, assign one or more students to a project, assign **one** Supervisor, and assign **one or more** Reviewers to that project. Project spreadsheet import creates projects with students and supervisors; semester/course/phase/specialization/reviewer context is selected in the UI.
 
 ### 3. Active Semester Monitoring & Moderation (The Sandbox)
 While the semester is running and staff are grading, the Coordinator acts as the overseer.
@@ -1669,7 +1668,7 @@ When all marks are finalized, the Coordinator handles the official outputs.
 > **Note:** The system ships with a **Super Admin** account seeded via `php artisan db:seed` (or a dedicated artisan command) during initial installation. The Super Admin is responsible for: **(1)** creating and managing **Coordinator** accounts, **(2)** managing master data (Departments, Specializations, Courses). Coordinators then manage their own semesters, users, rubrics, and projects. The Super Admin is NOT a Coordinator — it is a system-level bootstrap/admin role.
 
 ### Domain 1: Users, Access & Master Data
-*(Note: User Roles and Permissions will be handled automatically by the `spatie/laravel-permission` package, which generates its own pivot tables. Roles include: `super_admin`, `coordinator`, `supervisor`, `reviewer`, `student`).*
+*(Note: User Roles and Permissions are handled automatically by the `spatie/laravel-permission` package, which generates its own pivot tables. Current stored roles are: `Super Admin`, `Coordinator`, `Reviewer/Supervisor`, `Student`.)*
 
 | Table Name | Column Name | Data Type | Modifiers / Notes |
 | :--- | :--- | :--- | :--- |
@@ -1678,6 +1677,8 @@ When all marks are finalized, the Coordinator handles the official outputs.
 | | `email` | String | Unique |
 | | `password` | String | Hashed. Managed locally via Laravel Fortify + MFA. |
 | | `specialization_id`| Foreign ID | Nullable. Links to `specializations` (Useful for filtering/assigning groups). |
+| | `is_approved` | Boolean | Coordinator registrations are blocked from panel access until approved by a Super Admin. |
+| | `master_data_setup_progress` | JSON | Nullable. Persists Super Admin progress through the Master Data Setup Wizard. |
 | **departments** | `name` | String | e.g., "Information Technology" |
 | **specializations** | `department_id` | Foreign ID | Links to `departments` |
 | | `name` | String | e.g., "Software Engineering" |
@@ -1698,14 +1699,23 @@ When all marks are finalized, the Coordinator handles the official outputs.
 | **rubric_templates** | `name` | String | e.g., "Phase 1 Final Reviewer" |
 | | `version` | Integer | Default: 1. Increments when a template is cloned/revised. |
 | | `parent_template_id`| Foreign ID | Nullable. Links to `rubric_templates`. Points to the template this was cloned from (version lineage). NULL for originals. |
+| | `rubric_folder_id` | Foreign ID | Nullable. Links to `rubric_folders` for folder-style organization. |
 | | `total_marks` | Decimal | Calculated sum of criteria |
 | | `is_locked` | Boolean | Default: False. Locks once used in evaluation. |
 | | `created_by` | Foreign ID | Links to `users` (Coordinator who created this template) |
+| **rubric_folders** | `name` | String | Folder name in the rubric pool |
+| | `parent_id` | Foreign ID | Nullable. Links to `rubric_folders` for nested folders. |
+| | `created_by` | Foreign ID | Links to `users` |
+| **deliverables** | `rubric_template_id` | Foreign ID | Links to `rubric_templates` |
+| | `title` | String | Deliverable/section heading inside a rubric |
+| | `max_marks` | Decimal | Marks allocated to the deliverable |
+| | `sort_order` | Integer | Display ordering |
 | **criteria** | `title` | String | e.g., "Literature Review" |
 | | `description` | Text | Nullable (instructions for evaluator) |
 | | `max_score` | Decimal | e.g., 2.5, 5.0, 10.0 |
 | | `is_individual` | Boolean | **CRITICAL:** True = Score per student. False = Score per project. |
 | | `rubric_template_id`| Foreign ID | Links to `rubric_templates` (1-to-Many to preserve history when cloning) |
+| | `deliverable_id` | Foreign ID | Nullable. Links to `deliverables` |
 | **score_levels** | `criterion_id` | Foreign ID | Links to `criteria` |
 | *(Rating Scale)* | `label` | String | e.g., "Excellent", "Very Good", "Good", etc. |
 | | `score_value` | Decimal | e.g., 5.0, 4.0, 3.0 — the point value for this level |
@@ -1714,6 +1724,10 @@ When all marks are finalized, the Coordinator handles the official outputs.
 | **phase_templates** | `name` | String | e.g., "B.Tech Phase I" |
 | | `total_phase_marks`| Decimal | e.g., 100.00 |
 | | `created_by` | Foreign ID | Links to `users` (Coordinator who created this template) |
+| **phase_template_reviewer** | `phase_template_id` | Foreign ID | Links to `phase_templates` |
+| *(Pivot Table)* | `user_id` | Foreign ID | Links to `users` with `Reviewer/Supervisor` role |
+| **phase_template_external** | `phase_template_id` | Foreign ID | Links to `phase_templates` |
+| *(Pivot Table)* | `user_id` | Foreign ID | Links to `users` with `Reviewer/Supervisor` role |
 | **phase_rubric_rules** | `phase_template_id` | Foreign ID | Links to `phase_templates` |
 | *(Pivot Table)* | `rubric_template_id`| Foreign ID | Links to `rubric_templates` |
 | | `evaluator_role` | String | Flexible role identifier (e.g., 'Supervisor', 'Reviewer', or institution-specific roles like 'External Examiner'). Not a hardcoded enum — allows the system to be adopted by different institutions without schema changes. |
@@ -1742,9 +1756,10 @@ When all marks are finalized, the Coordinator handles the official outputs.
 | | `specialization_id`| Foreign ID | Links to `specializations` |
 | | `title` | String | The project name |
 | | `supervisor_id` | Foreign ID | Links to `users` (The single Supervisor) |
+| | `coordinator_id` | Foreign ID | Nullable. Links to `users`; scopes Coordinator access to assigned projects. |
 | | `previous_phase_project_id` | Foreign ID | Nullable. Links to `projects` (Phase 1 to Phase 2 continuity) |
 | | `status` | Enum | `setup`, `evaluating`, `completed` |
-| **project_student** | `project_id` | Foreign ID | Pivot for 1-4 students per project |
+| **project_student** | `project_id` | Foreign ID | Pivot for students assigned to a project; current implementation has no fixed group-size cap. |
 | *(Pivot Table)* | `user_id` | Foreign ID | Links to `users` (Student) |
 | **project_reviewer** | `project_id` | Foreign ID | Pivot for 1+ reviewers per project |
 | *(Pivot Table)* | `user_id` | Foreign ID | Links to `users` (Reviewer) |

@@ -17,9 +17,9 @@ flowchart LR
     %% External Entities (Left Side - Inputs)
     subgraph Inputs [Administrators & Staff]
         direction TB
+        Admin([Super Admin]):::entity
         Coord([Coordinator]):::entity
-        Sup([Supervisor]):::entity
-        Rev([Reviewer]):::entity
+        Staff([Reviewer/Supervisor Staff]):::entity
     end
 
     %% External Entities (Right Side - Outputs/Consumers)
@@ -30,14 +30,14 @@ flowchart LR
     end
 
     %% Left Side Data Flows
-    Coord -- "Master Data & Rubrics" --> System
+    Admin -- "Master Data, Semesters & Approvals" --> System
+    Coord -- "Users, Rubrics & Projects" --> System
     Coord -- "Project Allocations" --> System
-    Sup -- "Internal Marks" --> System
-    Rev -- "External Marks" --> System
+    Staff -- "Supervisor/Reviewer Marks" --> System
 
     %% Right Side Data Flows
     System -- "Final Dashboard" --> Coord
-    System -- "Supervisee Progress" --> Sup
+    System -- "Assigned Project Progress" --> Staff
     System -- "Final & Internal Marks" --> Stu
     System -- "Grade Export (CSV)" --> SIS
 
@@ -63,9 +63,9 @@ flowchart LR
     classDef entity fill:#f8fafc,stroke:#475569,stroke-width:2px,color:#1e293b;
 
     %% External Entities
+    Admin([Super Admin]):::entity
     Coord([Coordinator]):::entity
-    Sup([Supervisor]):::entity
-    Rev([Reviewer]):::entity
+    Staff([Reviewer/Supervisor Staff]):::entity
     Stu([Student]):::entity
     SIS([Student Info System]):::entity
 
@@ -89,7 +89,8 @@ flowchart LR
     end
 
     %% Flows for Setup
-    Coord -- "Data" --> P1
+    Admin -- "Master Data & Approvals" --> P1
+    Coord -- "Staff/Student Users" --> P1
     P1 --> D1
     Coord -- "Rubrics" --> P2
     P2 --> D2
@@ -102,8 +103,7 @@ flowchart LR
     %% Flows for Execution
     D3 -.-> P4
     D2 -.-> P4
-    Sup -- "Marks" --> P4
-    Rev -- "Marks" --> P4
+    Staff -- "Supervisor/Reviewer Marks" --> P4
     P4 --> D4
     D4 -.-> P5
     D3 -.-> P5
@@ -117,9 +117,9 @@ flowchart LR
 ```
 
 ### Detailed Breakdown of Level 1 Processes
-1.  **1.0 Manage Master Data:** Coordinator handles users, courses, and baseline academic routing constraints. *(Uses: Users, Departments, Specializations tables).*
+1.  **1.0 Manage Master Data:** Super Admin manages foundation master data and Coordinator approval; Coordinators manage non-admin staff/student users. *(Uses: Users, Departments, Specializations, Courses, Grading Scales tables).*
 2.  **2.0 Build Workflow Rules:** Coordinator creates the Rubrics, Criteria, and Phase structure logic. This defines *how* a project will be marked and handles the "Is Individual vs Group" boolean logic. *(Uses: Template Pool Tables).*
-3.  **3.0 Configure Semester Sandbox:** Coordinator formally binds students to projects and links Supervisors/Reviewers to the appropriate phase templates. This "activates" the grading system for those users. *(Uses: Semesters, Projects, Project_Student, Project_Reviewer).*
-4.  **4.0 Process Assessments:** Supervisors and Reviewers actually fill out their dynamic rubrics. The system enforces the rule that evaluations move from 'Draft' to 'Submitted' (locked). *(Uses: Evaluations, Evaluation Scores).*
+3.  **3.0 Configure Semester Sandbox:** Coordinator formally binds students to projects and links `Reviewer/Supervisor` staff to supervisor/reviewer responsibilities through projects and phase templates. This "activates" the grading system for those users. *(Uses: Semesters, Projects, Project_Student, Project_Reviewer).*
+4.  **4.0 Process Assessments:** Staff users fill out their dynamic rubrics as the assigned supervisor or reviewer. The system enforces the rule that evaluations move from 'Draft' to 'Submitted' (locked). *(Uses: Evaluations, Evaluation Scores).*
 5.  **5.0 Consolidate Grades:** When all required evaluations for a project reach the 'Submitted' state, the system automatically pulls the logic built in Step 2.0 (like Weights/Averages) and crunches the math to calculate final Phase marks. Coordinators can also apply manual overrides here. *(Uses: Consolidated Marks).*
 6.  **6.0 Generate Reports & Export:** Pulls the finalized grade data. Distributes the internal/final component marks dynamically so Students only see what they are allowed to see, provides dashboards to staff, and allows Coordinators to export CSVs for external SIS data entry.
