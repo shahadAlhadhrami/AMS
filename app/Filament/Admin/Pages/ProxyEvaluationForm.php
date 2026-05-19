@@ -6,6 +6,7 @@ use App\Filament\Admin\Resources\EvaluationResource;
 use App\Filament\Concerns\BuildsEvaluationForm;
 use App\Models\Evaluation;
 use App\Services\EvaluationService;
+use Filament\Actions\Action;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
@@ -111,6 +112,30 @@ class ProxyEvaluationForm extends Page implements HasForms
     public function getTitle(): string|\Illuminate\Contracts\Support\Htmlable
     {
         return 'Proxy Assessment: '.$this->evaluation->rubricTemplate->name;
+    }
+
+    public function submitEvaluationAction(): Action
+    {
+        return Action::make('submitEvaluation')
+            ->label('Submit Assessment')
+            ->color('success')
+            ->icon('heroicon-o-check-circle')
+            ->requiresConfirmation()
+            ->modalHeading('Submit Assessment')
+            ->modalDescription('You are submitting this assessment on behalf of the evaluator. Once submitted, it will be locked. Are you sure?')
+            ->modalSubmitActionLabel('Submit')
+            ->action(function () {
+                try {
+                    $this->submitEvaluation();
+                } catch (\Illuminate\Validation\ValidationException $e) {
+                    Notification::make()
+                        ->title('Some scores are invalid')
+                        ->body('Please review the highlighted fields and correct any errors before submitting.')
+                        ->danger()
+                        ->send();
+                    throw $e;
+                }
+            });
     }
 
     public function getSubheading(): ?string

@@ -181,7 +181,25 @@ trait BuildsEvaluationForm
             ->step(0.01)
             ->disabled($isReadOnly)
             ->suffix('/ '.$criterion->max_score)
-            ->required();
+            ->required()
+            ->live(onBlur: true)
+            ->afterStateUpdated(function ($state, $livewire) use ($criterion, $prefix) {
+                $errorKey = 'data.'.$prefix.'.score_awarded';
+                $livewire->resetValidation($errorKey);
+
+                if ($state === null || $state === '') {
+                    return;
+                }
+
+                $value = (float) $state;
+                $max = (float) $criterion->max_score;
+
+                if ($value > $max) {
+                    $livewire->addError($errorKey, "The score cannot exceed {$max}.");
+                } elseif ($value < 0) {
+                    $livewire->addError($errorKey, 'The score cannot be negative.');
+                }
+            });
 
         // Feedback textarea
         $fields[] = Forms\Components\Textarea::make("{$prefix}.feedback")

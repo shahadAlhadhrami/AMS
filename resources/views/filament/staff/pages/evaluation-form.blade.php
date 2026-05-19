@@ -56,14 +56,7 @@
                 Save Draft
             </x-filament::button>
 
-            <x-filament::button
-                wire:click="submitEvaluation"
-                color="success"
-                icon="heroicon-o-check-circle"
-                wire:confirm="Once submitted, this assessment will be locked and you will not be able to make changes. Are you sure you want to submit?"
-            >
-                Submit Assessment
-            </x-filament::button>
+            {{ ($this->submitEvaluationAction)([]) }}
         </div>
     @endif
 </x-filament-panels::page>
