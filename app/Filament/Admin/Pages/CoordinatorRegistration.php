@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Pages;
 
 use App\Models\User;
+use App\Support\FilamentLookupCache;
 use Filament\Auth\Http\Responses\Contracts\RegistrationResponse;
 use Filament\Auth\Pages\Register;
 use Filament\Forms\Components\TextInput;
@@ -70,6 +71,8 @@ class CoordinatorRegistration extends Register
         ]);
 
         $user->assignRole('Coordinator');
+
+        FilamentLookupCache::forgetPendingCoordinatorApprovals();
 
         return $user;
     }
