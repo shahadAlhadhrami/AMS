@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Student\Auth\Pages\Login as StudentLogin;
 use App\Filament\Student\Pages\Dashboard;
 use App\Http\Middleware\EnsurePanelAccess;
 use Illuminate\Support\HtmlString;
@@ -30,7 +31,7 @@ class StudentPanelProvider extends PanelProvider
             ->homeUrl(fn (): string => Dashboard::getUrl(panel: 'student'))
             ->spa()
             ->topNavigation()
-            ->login()
+            ->login(StudentLogin::class)
             ->passwordReset()
             ->profile()
             ->multiFactorAuthentication([

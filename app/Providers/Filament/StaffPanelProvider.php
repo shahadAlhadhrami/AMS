@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Staff\Auth\Pages\Login as StaffLogin;
 use App\Filament\Staff\Pages\Dashboard;
 use App\Http\Middleware\EnsurePanelAccess;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
@@ -30,7 +31,7 @@ class StaffPanelProvider extends PanelProvider
             ->homeUrl(fn (): string => Dashboard::getUrl(panel: 'staff'))
             ->spa()
             ->topNavigation()
-            ->login()
+            ->login(StaffLogin::class)
             ->passwordReset()
             ->profile()
             ->multiFactorAuthentication([

@@ -98,10 +98,28 @@ class ViewProject extends ViewRecord
                                     $m->id => "{$m->student->name} ({$m->student->university_id})",
                                 ]);
                         })
-                        ->required(),
+                        ->required()
+                        ->live(),
                     Forms\Components\TextInput::make('override_score')
                         ->numeric()
                         ->required()
+                        ->minValue(0)
+                        ->rules(fn (Forms\Get $get): array => [
+                            function (string $attribute, mixed $value, \Closure $fail) use ($get) {
+                                $markId = $get('mark_id');
+                                if (! $markId) {
+                                    return;
+                                }
+                                $mark = ConsolidatedMark::with('phaseTemplate')->find($markId);
+                                if (! $mark) {
+                                    return;
+                                }
+                                $max = (float) $mark->phaseTemplate->total_phase_marks;
+                                if ((float) $value > $max) {
+                                    $fail("Override score cannot exceed the maximum of {$max}.");
+                                }
+                            },
+                        ])
                         ->label('Override Score'),
                     Forms\Components\Textarea::make('override_reason')
                         ->required()

@@ -109,11 +109,14 @@ class ConsolidatedMarkResource extends Resource
                     ->label('Override Mark')
                     ->icon('heroicon-o-pencil-square')
                     ->color('warning')
-                    ->form([
+                    ->form(fn (ConsolidatedMark $record) => [
                         Forms\Components\TextInput::make('override_score')
                             ->numeric()
                             ->required()
-                            ->label('Override Score'),
+                            ->minValue(0)
+                            ->maxValue((float) $record->phaseTemplate->total_phase_marks)
+                            ->label('Override Score')
+                            ->suffix('/ ' . number_format((float) $record->phaseTemplate->total_phase_marks, 2)),
                         Forms\Components\Textarea::make('override_reason')
                             ->required()
                             ->label('Reason for Override'),
